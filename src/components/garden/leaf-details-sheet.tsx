@@ -47,10 +47,10 @@ export function LeafDetailsSheet({
   }, [leaf]);
   
   useEffect(() => {
-    if (debouncedFormData) {
+    if (debouncedFormData && JSON.stringify(debouncedFormData) !== JSON.stringify(leaf)) {
       onSave(debouncedFormData);
     }
-  }, [debouncedFormData, onSave]);
+  }, [debouncedFormData, onSave, leaf]);
 
   const masteryLevel = useMemo(() => {
     if (!formData) return 0;
