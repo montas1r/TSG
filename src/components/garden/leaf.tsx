@@ -4,13 +4,15 @@ import type { Leaf as LeafType } from '@/lib/types';
 import { cn, calculateMasteryLevel } from '@/lib/utils';
 import { Leaf as LeafIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { Highlight } from '@/components/ui/highlight';
 
 interface LeafProps {
   leaf: LeafType;
   onClick: () => void;
+  searchQuery?: string;
 }
 
-export function Leaf({ leaf, onClick }: LeafProps) {
+export function Leaf({ leaf, onClick, searchQuery = '' }: LeafProps) {
   const [animationDelay, setAnimationDelay] = useState('0s');
 
   useEffect(() => {
@@ -67,7 +69,7 @@ export function Leaf({ leaf, onClick }: LeafProps) {
         />
       </div>
       <p className="w-full truncate text-center text-sm text-muted-foreground group-hover:text-foreground">
-        {leaf.name}
+        <Highlight text={leaf.name} query={searchQuery} />
       </p>
     </button>
   );

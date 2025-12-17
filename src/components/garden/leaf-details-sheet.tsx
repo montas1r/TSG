@@ -15,9 +15,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { Leaf, Quest } from '@/lib/types';
 import { useState, useEffect, useMemo } from 'react';
-import { Flower2, Link as LinkIcon, Trash2, PlusCircle, GripVertical } from 'lucide-react';
+import { Flower2, Link as LinkIcon, Trash2, PlusCircle } from 'lucide-react';
 import { calculateMasteryLevel } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
+import { Highlight } from '@/components/ui/highlight';
 
 
 interface LeafDetailsSheetProps {
@@ -26,6 +27,7 @@ interface LeafDetailsSheetProps {
   onOpenChange: (isOpen: boolean) => void;
   onSave: (updatedLeaf: Leaf) => void;
   onDelete: (leafId: string) => void;
+  searchQuery?: string;
 }
 
 export function LeafDetailsSheet({
@@ -34,6 +36,7 @@ export function LeafDetailsSheet({
   onOpenChange,
   onSave,
   onDelete,
+  searchQuery = '',
 }: LeafDetailsSheetProps) {
   const [formData, setFormData] = useState<Leaf | null>(leaf);
 
@@ -101,7 +104,9 @@ export function LeafDetailsSheet({
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent className="flex flex-col sm:max-w-lg">
         <SheetHeader>
-          <SheetTitle className="font-headline text-2xl">{formData.name}</SheetTitle>
+          <SheetTitle className="font-headline text-2xl">
+            <Highlight text={formData.name} query={searchQuery} />
+          </SheetTitle>
           <SheetDescription>Nurture your skill. Add quests, notes, and track your progress.</SheetDescription>
         </SheetHeader>
         <div className="flex-grow space-y-6 overflow-y-auto py-4 pr-4">

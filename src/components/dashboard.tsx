@@ -8,10 +8,11 @@ import { LeafDetailsSheet } from '@/components/garden/leaf-details-sheet';
 import { AddStemDialog } from '@/components/garden/add-stem-dialog';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Wand2, Sprout } from 'lucide-react';
+import { Wand2, Sprout, Search } from 'lucide-react';
 import { AddLeafDialog } from '@/components/garden/add-leaf-dialog';
 import { SuggestionDialog } from '@/components/garden/suggestion-dialog';
 import { calculateMasteryLevel } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
 
 export function Dashboard() {
   const [garden, setGarden] = useState<Garden>(initialGarden);
@@ -22,6 +23,7 @@ export function Dashboard() {
   const [isAddLeafOpen, setIsAddLeafOpen] = useState(false);
   const [stemToAddLeafTo, setStemToAddLeafTo] = useState<string | null>(null);
   const [isSuggestionOpen, setIsSuggestionOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const allLeaves = useMemo(() => garden.flatMap(stem => stem.leaves), [garden]);
 
@@ -36,6 +38,33 @@ export function Dashboard() {
   }, [allLeaves]);
   
   const currentSkillNames = allLeaves.map(leaf => leaf.name);
+
+  const filteredGarden = useMemo(() => {
+    if (!searchQuery) {
+      return garden;
+    }
+
+    const lowerCaseQuery = searchQuery.toLowerCase();
+
+    return garden.map(stem => {
+        const matchingLeaves = stem.leaves.filter(leaf => {
+            const inName = leaf.name.toLowerCase().includes(lowerCaseQuery);
+            const inNotes = leaf.notes.toLowerCase().includes(lowerCaseQuery);
+            const inQuests = leaf.quests.some(quest => quest.text.toLowerCase().includes(lowerCaseQuery));
+            return inName || inNotes || inQuests;
+        });
+
+        if (stem.name.toLowerCase().includes(lowerCaseQuery)) {
+            return { ...stem, leaves: matchingLeaves.length > 0 ? matchingLeaves : stem.leaves }; // If stem matches, show all leaves unless some leaves match
+        }
+
+        if (matchingLeaves.length > 0) {
+            return { ...stem, leaves: matchingLeaves };
+        }
+        
+        return null;
+    }).filter((stem): stem is StemType => stem !== null);
+  }, [garden, searchQuery]);
 
   const handleSelectLeaf = (leaf: LeafType) => {
     setSelectedLeaf(leaf);
@@ -112,10 +141,21 @@ export function Dashboard() {
               </div>
               <p className="text-muted-foreground">Nurture your skills and watch them grow.</p>
           </div>
-          <Button onClick={() => setIsSuggestionOpen(true)} className="w-full sm:w-auto">
-              <Wand2 className="mr-2" />
-              Get Suggestions
-          </Button>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input 
+                placeholder="Search your garden..."
+                className="w-full pl-10 sm:w-64"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <Button onClick={() => setIsSuggestionOpen(true)} className="w-full sm:w-auto">
+                <Wand2 className="mr-2" />
+                Get Suggestions
+            </Button>
+          </div>
         </div>
         <div className="mt-6 space-y-2">
             <div className="flex justify-between text-sm text-muted-foreground">
@@ -127,17 +167,22 @@ export function Dashboard() {
       </header>
       
       <main className="space-y-8">
-        {garden.length > 0 ? garden.map((stem) => (
+        {filteredGarden.length > 0 ? filteredGarden.map((stem) => (
           <Stem 
             key={stem.id} 
             stem={stem} 
             onSelectLeaf={handleSelectLeaf}
             onAddLeaf={handleOpenAddLeaf}
+            searchQuery={searchQuery}
           />
         )) : (
           <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-24 text-center">
-            <h3 className="font-headline text-2xl">Your garden is empty</h3>
-            <p className="text-muted-foreground">Start by planting a new stem for your skills.</p>
+            <h3 className="font-headline text-2xl">
+              {searchQuery ? "No skills found" : "Your garden is empty"}
+            </h3>
+            <p className="text-muted-foreground">
+              {searchQuery ? "Try a different search term." : "Start by planting a new stem for your skills."}
+            </p>
           </div>
         )}
       </main>
@@ -151,6 +196,7 @@ export function Dashboard() {
         }}
         onSave={handleSaveLeaf}
         onDelete={handleDeleteLeaf}
+        searchQuery={searchQuery}
       />
       
       <AddStemDialog
