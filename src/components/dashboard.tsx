@@ -104,7 +104,7 @@ export function Dashboard() {
       <header className="mb-12">
         <div className="flex flex-col items-center justify-between gap-6 rounded-lg border bg-card p-6 sm:flex-row">
           <div className="text-center sm:text-left">
-              <h1 className="font-headline text-4xl tracking-tight">The Skill Garden</h1>
+              <h1 className="font-headline text-4xl tracking-tight text-primary">The Skill Garden</h1>
               <p className="text-muted-foreground">Nurture your skills and watch them grow.</p>
           </div>
           <Button onClick={() => setIsSuggestionOpen(true)} className="w-full sm:w-auto">
