@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { onAuthStateChanged, type User, type Auth } from 'firebase/auth';
-import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
+import { initializeApp, getApps, getApp, type FirebaseApp, type FirebaseOptions } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 import { firebaseConfig } from '@/lib/firebase';
@@ -26,6 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 
   useEffect(() => {
+    // This check ensures firebase is only initialized on the client side
     if (typeof window !== 'undefined') {
       const appInstance = !getApps().length ? initializeApp(firebaseConfig) : getApp();
       const authInstance = getAuth(appInstance);
@@ -40,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false);
       });
 
+      // Cleanup subscription on unmount
       return () => unsubscribe();
     }
   }, []);
