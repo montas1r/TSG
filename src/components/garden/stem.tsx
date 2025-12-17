@@ -4,6 +4,7 @@ import { PlusCircle } from 'lucide-react';
 import { Leaf } from './leaf';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Highlight } from '../ui/highlight';
+import { SkillCarousel } from './skill-carousel';
 
 interface StemProps {
   stem: StemType;
@@ -13,6 +14,8 @@ interface StemProps {
 }
 
 export function Stem({ stem, onSelectLeaf, onAddLeaf, searchQuery = '' }: StemProps) {
+  const useCarousel = stem.leaves.length > 5;
+
   return (
     <div className="space-y-4 rounded-lg border border-dashed bg-card/50 p-6">
       <div className="flex items-center gap-4">
@@ -23,16 +26,25 @@ export function Stem({ stem, onSelectLeaf, onAddLeaf, searchQuery = '' }: StemPr
           <PlusCircle className="size-6 text-muted-foreground/50 transition-colors group-hover:text-primary" />
         </Button>
       </div>
-      <div className="relative">
-        <ScrollArea>
-          <div className="flex space-x-4 pb-4">
-            {stem.leaves.map((leaf) => (
-              <Leaf key={leaf.id} leaf={leaf} onClick={() => onSelectLeaf(leaf)} searchQuery={searchQuery} />
-            ))}
-          </div>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
-      </div>
+      
+      {useCarousel ? (
+          <SkillCarousel 
+            leaves={stem.leaves} 
+            onSelectLeaf={onSelectLeaf} 
+            searchQuery={searchQuery} 
+          />
+      ) : (
+        <div className="relative">
+            <ScrollArea>
+              <div className="flex gap-4 pb-4">
+                {stem.leaves.map((leaf) => (
+                  <Leaf key={leaf.id} leaf={leaf} onClick={() => onSelectLeaf(leaf)} searchQuery={searchQuery} />
+                ))}
+              </div>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+        </div>
+      )}
     </div>
   );
 }
