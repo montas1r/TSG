@@ -5,16 +5,28 @@ import { Leaf } from './leaf';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Highlight } from '../ui/highlight';
 import { HybridCarousel } from './hybrid-carousel';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import type { User } from 'firebase/auth';
 
 interface StemProps {
   stem: StemType;
   onSelectLeaf: (leaf: LeafType) => void;
   onAddLeaf: (stemId: string) => void;
   searchQuery?: string;
+  user: User;
 }
 
-export function Stem({ stem, onSelectLeaf, onAddLeaf, searchQuery = '' }: StemProps) {
-  const useCarousel = stem.leaves.length > 1;
+export function Stem({ stem, onSelectLeaf, onAddLeaf, searchQuery = '', user }: StemProps) {
+  const firestore = useFirestore();
+  const leavesRef = useMemoFirebase(
+    () => collection(firestore, 'users', user.uid, 'stems', stem.id, 'leaves'),
+    [firestore, user.uid, stem.id]
+  );
+  const { data: leaves } = useCollection<LeafType>(leavesRef);
+
+  const leafList = leaves || [];
+  const useCarousel = leafList.length > 1;
 
   return (
     <div className="space-y-4 rounded-lg border border-dashed bg-card/50 p-6">
@@ -29,7 +41,7 @@ export function Stem({ stem, onSelectLeaf, onAddLeaf, searchQuery = '' }: StemPr
       
       {useCarousel ? (
           <HybridCarousel 
-            leaves={stem.leaves} 
+            leaves={leafList} 
             onSelectLeaf={onSelectLeaf} 
             searchQuery={searchQuery} 
           />
@@ -37,7 +49,7 @@ export function Stem({ stem, onSelectLeaf, onAddLeaf, searchQuery = '' }: StemPr
         <div className="relative">
             <ScrollArea>
               <div className="flex gap-4 pb-4">
-                {stem.leaves.map((leaf) => (
+                {leafList.map((leaf) => (
                   <Leaf key={leaf.id} leaf={leaf} onClick={() => onSelectLeaf(leaf)} searchQuery={searchQuery} />
                 ))}
               </div>

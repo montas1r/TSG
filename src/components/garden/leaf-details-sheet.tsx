@@ -20,6 +20,7 @@ import { calculateMasteryLevel } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Highlight } from '@/components/ui/highlight';
 import { useDebounce } from '@/hooks/use-debounce';
+import { v4 as uuidv4 } from 'uuid';
 
 
 interface LeafDetailsSheetProps {
@@ -27,7 +28,7 @@ interface LeafDetailsSheetProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onSave: (updatedLeaf: Leaf) => void;
-  onDelete: (leafId: string) => void;
+  onDelete: (leafId: string, stemId: string) => void;
   searchQuery?: string;
 }
 
@@ -74,7 +75,7 @@ export function LeafDetailsSheet({
   const handleAddQuest = () => {
     if(formData) {
         const newQuest: Quest = {
-            id: `quest-${Date.now()}`,
+            id: uuidv4(),
             text: '',
             completed: false,
         };
@@ -102,7 +103,7 @@ export function LeafDetailsSheet({
 
   const handleDelete = () => {
     if (formData) {
-      onDelete(formData.id);
+      onDelete(formData.id, formData.stemId);
       onOpenChange(false);
     }
   };

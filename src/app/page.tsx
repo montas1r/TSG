@@ -1,9 +1,45 @@
-import { Dashboard } from "@/components/dashboard";
+'use client';
+
+import { useUser, useAuth, initiateAnonymousSignIn } from '@/firebase';
+import { Dashboard } from '@/components/dashboard';
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 export default function Home() {
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+
+  const handleSignIn = () => {
+    if (auth) {
+      initiateAnonymousSignIn(auth);
+    }
+  };
+
+  if (isUserLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
+        <div className="text-center">
+          <h1 className="font-headline text-5xl text-primary">Welcome to the Skill Garden</h1>
+          <p className="mt-4 text-lg text-muted-foreground">Please sign in to continue</p>
+          <Button onClick={handleSignIn} className="mt-8" size="lg">
+            Sign In Anonymously
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto p-4 sm:p-8 h-screen">
-      <Dashboard />
+    <div className="container mx-auto h-screen p-4 sm:p-8">
+      <Dashboard user={user} />
     </div>
   );
 }
