@@ -68,7 +68,7 @@ export function Dashboard() {
       name,
       leaves: [],
     };
-    setGarden([...garden, newStem]);
+    setGarden([newStem, ...garden]);
   };
 
   const handleOpenAddLeaf = (stemId: string) => {
@@ -104,7 +104,12 @@ export function Dashboard() {
       <header className="mb-12">
         <div className="flex flex-col items-center justify-between gap-6 rounded-lg border bg-card p-6 sm:flex-row">
           <div className="text-center sm:text-left">
-              <h1 className="font-headline text-4xl tracking-tight text-primary">The Skill Garden</h1>
+              <div className="flex items-center gap-4">
+                <h1 className="font-headline text-4xl tracking-tight text-primary">The Skill Garden</h1>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setIsAddStemOpen(true)} aria-label="Plant a New Stem">
+                    <Sprout className="size-6 text-muted-foreground/50 transition-colors group-hover:text-primary" />
+                </Button>
+              </div>
               <p className="text-muted-foreground">Nurture your skills and watch them grow.</p>
           </div>
           <Button onClick={() => setIsSuggestionOpen(true)} className="w-full sm:w-auto">
@@ -135,12 +140,6 @@ export function Dashboard() {
             <p className="text-muted-foreground">Start by planting a new stem for your skills.</p>
           </div>
         )}
-        <div className="flex justify-center pt-4">
-            <Button variant="outline" className="gap-2" onClick={() => setIsAddStemOpen(true)}>
-                <Sprout />
-                Plant a New Stem
-            </Button>
-        </div>
       </main>
 
       <LeafDetailsSheet
