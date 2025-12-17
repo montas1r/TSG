@@ -1,0 +1,237 @@
+{
+  "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a user profile in the Skill Garden application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user profile."
+        },
+        "userName": {
+          "type": "string",
+          "description": "The user's display name."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address.",
+          "format": "email"
+        },
+        "dateJoined": {
+          "type": "string",
+          "description": "The date and time the user joined the Skill Garden.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userName",
+        "email",
+        "dateJoined"
+      ]
+    },
+    "SkillGarden": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "SkillGarden",
+      "type": "object",
+      "description": "Represents the user's skill garden, containing stems and leaves (skills).",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the skill garden."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:1 SkillGarden)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the skill garden."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of the skill garden."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "name"
+      ]
+    },
+    "Stem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Stem",
+      "type": "object",
+      "description": "Represents a stem in the skill garden, used to organize related skills.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the stem."
+        },
+        "gardenId": {
+          "type": "string",
+          "description": "Reference to SkillGarden. (Relationship: SkillGarden 1:N Stem)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the stem."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of the stem."
+        }
+      },
+      "required": [
+        "id",
+        "gardenId",
+        "name"
+      ]
+    },
+    "Leaf": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Leaf",
+      "type": "object",
+      "description": "Represents a leaf (skill) in the skill garden.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the leaf."
+        },
+        "stemId": {
+          "type": "string",
+          "description": "Reference to Stem. (Relationship: Stem 1:N Leaf)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the skill (leaf)."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of the skill."
+        },
+        "bloomed": {
+          "type": "boolean",
+          "description": "Indicates whether the skill is 'bloomed' (mastered)."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Notes related to the skill."
+        },
+        "links": {
+          "type": "array",
+          "description": "Links to resources related to the skill.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "stemId",
+        "name"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}/profile",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores user profile information. Only the authenticated user can read/write their own profile.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/gardens/{gardenId}",
+        "definition": {
+          "entityName": "SkillGarden",
+          "schema": {
+            "$ref": "#/backend/entities/SkillGarden"
+          },
+          "description": "Stores skill garden information for a specific user.  Only the authenticated user can read/write their own garden.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "gardenId",
+              "description": "The unique identifier of the skill garden."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/gardens/{gardenId}/stems/{stemId}",
+        "definition": {
+          "entityName": "Stem",
+          "schema": {
+            "$ref": "#/backend/entities/Stem"
+          },
+          "description": "Stores stem information for a specific skill garden. Only the authenticated user can read/write stems within their garden.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "gardenId",
+              "description": "The unique identifier of the skill garden."
+            },
+            {
+              "name": "stemId",
+              "description": "The unique identifier of the stem."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/gardens/{gardenId}/stems/{stemId}/leaves/{leafId}",
+        "definition": {
+          "entityName": "Leaf",
+          "schema": {
+            "$ref": "#/backend/entities/Leaf"
+          },
+          "description": "Stores leaf (skill) information for a specific stem. Only the authenticated user can read/write leaves within their stems.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "gardenId",
+              "description": "The unique identifier of the skill garden."
+            },
+            {
+              "name": "stemId",
+              "description": "The unique identifier of the stem."
+            },
+            {
+              "name": "leafId",
+              "description": "The unique identifier of the leaf."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to ensure security, scalability, and ease of debugging, aligning with the principles of Authorization Independence and Structural Segregation. User profiles, skill gardens, stems, and leaves are organized into distinct collections with clear ownership and relationships. This avoids complex rule logic that could compromise security and debuggability.\n\nAuthorization Independence is achieved by using path-based ownership for user-specific data. For example, skill gardens, stems, and leaves are stored under the user's document (`/users/{userId}/...`), eliminating the need for `get()` calls to verify ownership.  This allows for atomic operations and simplifies security rules.\n\nThe data structure also supports required QAPs, and enforces data integrity:\n\n*   **Private User Data:** The `users/{userId}/profile` path ensures that user profile data is private and only accessible to the authenticated user.  Rules will allow `read/write` only if `request.auth.uid == userId`.\n*   **Garden Structure:** The nested structure of `/users/{userId}/gardens/{gardenId}/stems/{stemId}/leaves/{leafId}` explicitly captures the relationships between the entities. This allows efficient querying and management of user-owned skills. Rules will allow `read/write` only if `request.auth.uid == userId`.\n"
+  }
+}
