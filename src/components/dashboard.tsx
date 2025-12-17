@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import type { Garden, Stem as StemType, Leaf as LeafType } from '@/lib/types';
 import { initialGarden } from '@/lib/data';
 import { Stem } from '@/components/garden/stem';
@@ -11,6 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { Wand2, Sprout } from 'lucide-react';
 import { AddLeafDialog } from '@/components/garden/add-leaf-dialog';
 import { SuggestionDialog } from '@/components/garden/suggestion-dialog';
+import { calculateMasteryLevel } from '@/lib/utils';
 
 export function Dashboard() {
   const [garden, setGarden] = useState<Garden>(initialGarden);
@@ -22,10 +23,15 @@ export function Dashboard() {
   const [stemToAddLeafTo, setStemToAddLeafTo] = useState<string | null>(null);
   const [isSuggestionOpen, setIsSuggestionOpen] = useState(false);
 
-  const allLeaves = garden.flatMap(stem => stem.leaves);
-  const totalMastery = allLeaves.reduce((sum, leaf) => sum + leaf.masteryLevel, 0);
-  const maxMastery = allLeaves.length * 100;
-  const progress = maxMastery > 0 ? (totalMastery / maxMastery) * 100 : 0;
+  const allLeaves = useMemo(() => garden.flatMap(stem => stem.leaves), [garden]);
+
+  const progress = useMemo(() => {
+    if (allLeaves.length === 0) return 0;
+    const totalMastery = allLeaves.reduce((sum, leaf) => sum + calculateMasteryLevel(leaf.quests), 0);
+    const maxMastery = allLeaves.length * 100;
+    return maxMastery > 0 ? (totalMastery / maxMastery) * 100 : 0;
+  }, [allLeaves]);
+  
   const currentSkillNames = allLeaves.map(leaf => leaf.name);
 
   const handleSelectLeaf = (leaf: LeafType) => {
@@ -34,15 +40,13 @@ export function Dashboard() {
   };
 
   const handleSaveLeaf = (updatedLeaf: LeafType) => {
-    setGarden(
-      garden.map((stem) => ({
-        ...stem,
-        leaves: stem.leaves.map((leaf) =>
-          leaf.id === updatedLeaf.id ? updatedLeaf : leaf
-        ),
-      }))
-    );
-    // Also update the selectedLeaf to reflect changes instantly in the sheet
+    const newGarden = garden.map((stem) => ({
+      ...stem,
+      leaves: stem.leaves.map((leaf) =>
+        leaf.id === updatedLeaf.id ? { ...updatedLeaf, masteryLevel: calculateMasteryLevel(updatedLeaf.quests) } : leaf
+      ),
+    }));
+    setGarden(newGarden);
     setSelectedLeaf(updatedLeaf);
   };
   
@@ -74,9 +78,14 @@ export function Dashboard() {
         id: `leaf-${Date.now()}`,
         name,
         stemId,
-        masteryLevel: 0,
+        masteryLevel: 10,
         notes: '',
         link: '',
+        quests: {
+            learn: { text: '', completed: false },
+            practice: { text: '', completed: false },
+            prove: { text: '', completed: false },
+        }
     };
     setGarden(garden.map(stem => {
         if (stem.id === stemId) {

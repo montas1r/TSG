@@ -1,10 +1,23 @@
+
+export interface Quest {
+  text: string;
+  completed: boolean;
+}
+
+export interface LeafQuests {
+  learn: Quest;
+  practice: Quest;
+  prove: Quest;
+}
+
 export interface Leaf {
   id: string;
   name: string;
   stemId: string;
-  masteryLevel: number; // 0-100
+  masteryLevel: number; // This will now be calculated
   notes: string;
   link: string;
+  quests: LeafQuests;
 }
 
 export interface Stem {

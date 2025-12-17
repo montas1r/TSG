@@ -1,7 +1,7 @@
 'use client';
 
 import type { Leaf as LeafType } from '@/lib/types';
-import { cn } from '@/lib/utils';
+import { cn, calculateMasteryLevel } from '@/lib/utils';
 import { Leaf as LeafIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -14,11 +14,14 @@ export function Leaf({ leaf, onClick }: LeafProps) {
   const [animationDelay, setAnimationDelay] = useState('0s');
 
   useEffect(() => {
+    // Only run on the client to prevent hydration mismatch
     setAnimationDelay(`${Math.random() * 2}s`);
   }, []);
 
+  const masteryLevel = calculateMasteryLevel(leaf.quests);
+
   const getMasteryColor = () => {
-    const level = leaf.masteryLevel;
+    const level = masteryLevel;
     // Sage Green (secondary) -> Forest Green (primary)
     // HSL for Sage: 110 20% 88%
     // HSL for Forest: 125 28% 25%
@@ -39,7 +42,7 @@ export function Leaf({ leaf, onClick }: LeafProps) {
     return `hsl(${h}, ${s}%, ${l}%)`;
   };
 
-  const isMastered = leaf.masteryLevel > 80;
+  const isMastered = masteryLevel > 80;
 
   return (
     <button
