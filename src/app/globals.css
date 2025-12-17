@@ -4,73 +4,73 @@
 
 @layer base {
   :root {
-    --background: 240 100% 98%; /* #F5F5FF */
-    --foreground: 240 10% 3.9%;
-    --card: 240 60% 99%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 240 60% 99%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 300 26% 86%; /* #D8BFD8 */
-    --primary-foreground: 240 10% 3.9%;
-    --secondary: 240 67% 97%; /* #E6E6FA */
-    --secondary-foreground: 240 10% 3.9%;
-    --muted: 240 20% 94%;
-    --muted-foreground: 240 5% 45%;
-    --accent: 240 67% 97%; /* #E6E6FA */
-    --accent-foreground: 240 10% 3.9%;
+    --background: 220 20% 95%; /* Light Gray-Blue */
+    --foreground: 220 30% 10%;
+    --card: 220 25% 98%;
+    --card-foreground: 220 30% 10%;
+    --popover: 220 25% 98%;
+    --popover-foreground: 220 30% 10%;
+    --primary: 260 85% 65%; /* Vibrant Purple */
+    --primary-foreground: 260 20% 98%;
+    --secondary: 190 80% 60%; /* Bright Cyan */
+    --secondary-foreground: 190 30% 10%;
+    --muted: 220 20% 90%;
+    --muted-foreground: 220 10% 45%;
+    --accent: 140 80% 55%; /* Neon Green */
+    --accent-foreground: 140 30% 10%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 10% 90%;
-    --input: 240 10% 92%;
-    --ring: 300 26% 86%; /* Muted Rose for focus rings */
-    --chart-1: 300 26% 86%;
-    --chart-2: 240 50% 80%;
-    --chart-3: 300 30% 70%;
-    --chart-4: 240 40% 70%;
-    --chart-5: 300 20% 60%;
+    --border: 220 15% 88%;
+    --input: 220 15% 92%;
+    --ring: 140 80% 55%; /* Neon Green for focus */
+    --chart-1: 260 85% 65%;
+    --chart-2: 190 80% 60%;
+    --chart-3: 140 80% 55%;
+    --chart-4: 340 90% 65%;
+    --chart-5: 40 90% 60%;
     --radius: 0.5rem;
-    --sidebar-background: 240 60% 99%;
-    --sidebar-foreground: 240 10% 3.9%;
-    --sidebar-primary: 300 26% 86%;
-    --sidebar-primary-foreground: 240 10% 3.9%;
-    --sidebar-accent: 240 67% 97%;
-    --sidebar-accent-foreground: 240 10% 3.9%;
-    --sidebar-border: 240 10% 90%;
-    --sidebar-ring: 300 26% 86%;
+    --sidebar-background: 220 25% 98%;
+    --sidebar-foreground: 220 30% 10%;
+    --sidebar-primary: 260 85% 65%;
+    --sidebar-primary-foreground: 260 20% 98%;
+    --sidebar-accent: 140 80% 55%;
+    --sidebar-accent-foreground: 140 30% 10%;
+    --sidebar-border: 220 15% 88%;
+    --sidebar-ring: 140 80% 55%;
   }
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 300 26% 86%;
-    --primary-foreground: 240 10% 3.9%;
-    --secondary: 240 5% 15%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 5% 15%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 240 5% 15%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --background: 220 40% 5%; /* Very Dark Blue */
+    --foreground: 220 15% 90%;
+    --card: 220 40% 10%;
+    --card-foreground: 220 15% 90%;
+    --popover: 220 40% 5%;
+    --popover-foreground: 220 15% 90%;
+    --primary: 190 90% 50%; /* Neon Cyan/Blue */
+    --primary-foreground: 190 20% 5%;
+    --secondary: 260 70% 60%; /* Vibrant Purple */
+    --secondary-foreground: 260 10% 95%;
+    --muted: 220 40% 15%;
+    --muted-foreground: 220 10% 65%;
+    --accent: 140 80% 55%; /* Neon Green */
+    --accent-foreground: 140 20% 5%;
+    --destructive: 0 70% 55%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 5% 15%;
-    --input: 240 5% 15%;
-    --ring: 300 26% 86%;
-    --chart-1: 300 26% 86%;
-    --chart-2: 240 50% 70%;
-    --chart-3: 300 30% 60%;
-    --chart-4: 240 40% 60%;
-    --chart-5: 300 20% 50%;
-    --sidebar-background: 240 10% 3.9%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 300 26% 86%;
-    --sidebar-primary-foreground: 240 10% 3.9%;
-    --sidebar-accent: 240 5% 15%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 240 5% 15%;
-    --sidebar-ring: 300 26% 86%;
+    --border: 220 40% 20%;
+    --input: 220 40% 15%;
+    --ring: 140 80% 55%; /* Neon Green for focus */
+    --chart-1: 190 90% 50%;
+    --chart-2: 260 70% 60%;
+    --chart-3: 140 80% 55%;
+    --chart-4: 340 90% 65%;
+    --chart-5: 40 90% 60%;
+    --sidebar-background: 220 40% 5%;
+    --sidebar-foreground: 220 15% 90%;
+    --sidebar-primary: 190 90% 50%;
+    --sidebar-primary-foreground: 190 20% 5%;
+    --sidebar-accent: 140 80% 55%;
+    --sidebar-accent-foreground: 140 20% 5%;
+    --sidebar-border: 220 40% 20%;
+    --sidebar-ring: 140 80% 55%;
   }
 }
 
