@@ -2,7 +2,7 @@
  * This ruleset enforces a strict user-ownership security model for the Skill Garden application.
  *
  * Core Philosophy:
- * Every piece of data, including profiles, gardens, stems, and leaves, is considered private
+ * Every piece of data, including profiles, stems, and leaves, is considered private
  * and is accessible only by the user who created it. There is no concept of public data
  * or shared access between users.
  *
@@ -17,8 +17,7 @@
  * - No Public Listing: It is impossible for any user, authenticated or not, to list all
  *   users in the `/users` collection.
  * - Relational Integrity: On creation, documents must contain an ID field that correctly
- *   references their parent in the path (e.g., a new SkillGarden must have a `userId` field
- *   matching the path). These relational IDs are immutable and cannot be changed on update.
+ *   references their parent in the path. These relational IDs are immutable and cannot be changed on update.
  *
  * Denormalization for Authorization:
  * The security model relies entirely on the path structure for authorization. This avoids
@@ -72,33 +71,18 @@ service cloud.firestore {
     }
 
     /**
-     * Validates that the SkillGarden being created has a `userId` field that
+     * Validates that the Stem being created has a `userId` field that
      * correctly matches the user's UID from the path.
      */
-    function isValidGardenCreate(userId) {
+    function isValidStemCreate(userId) {
       return request.resource.data.userId == userId;
     }
 
     /**
-     * Validates that the SkillGarden's `userId` field is immutable on update.
-     */
-    function isImmutableGarden() {
-      return request.resource.data.userId == resource.data.userId;
-    }
-
-    /**
-     * Validates that the Stem being created has a `gardenId` field that
-     * correctly matches the garden's ID from the path.
-     */
-    function isValidStemCreate(gardenId) {
-      return request.resource.data.gardenId == gardenId;
-    }
-
-    /**
-     * Validates that the Stem's `gardenId` field is immutable on update.
+     * Validates that the Stem's `userId` field is immutable on update.
      */
     function isImmutableStem() {
-      return request.resource.data.gardenId == resource.data.gardenId;
+      return request.resource.data.userId == resource.data.userId;
     }
 
     /**
@@ -124,9 +108,6 @@ service cloud.firestore {
     /**
      * @description Secures user profile documents. Only the owner can manage their profile.
      * @path /users/{userId}/profile/{profileId}
-     * @allow A user (auth.uid='user123') can (create) their own profile document at /users/user123/profile/main.
-     * @deny A user (auth.uid='user456') cannot (get) a profile at /users/user123/profile/main.
-     * @principle Restricts access to a user's own data tree.
      */
     match /users/{userId}/profile/{profileId} {
       allow get: if isOwner(userId);
@@ -137,43 +118,22 @@ service cloud.firestore {
     }
 
     /**
-     * @description Secures a user's collection of Skill Gardens.
-     * @path /users/{userId}/gardens/{gardenId}
-     * @allow A user (auth.uid='user123') can (list) all their gardens at /users/user123/gardens.
-     * @deny A user (auth.uid='user456') cannot (create) a garden at /users/user123/gardens/garden_abc.
-     * @principle Restricts access to a user's own data tree.
+     * @description Secures Stems within a user's collection.
+     * @path /users/{userId}/stems/{stemId}
      */
-    match /users/{userId}/gardens/{gardenId} {
+    match /users/{userId}/stems/{stemId} {
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && isValidGardenCreate(userId);
-      allow update: if isExistingOwner(userId) && isImmutableGarden();
-      allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Secures Stems within a user's Skill Garden.
-     * @path /users/{userId}/gardens/{gardenId}/stems/{stemId}
-     * @allow A user (auth.uid='user123') can (update) a stem at /users/user123/gardens/garden_abc/stems/stem_def.
-     * @deny A user (auth.uid='user456') cannot (delete) a stem at /users/user123/gardens/garden_abc/stems/stem_def.
-     * @principle Path-based ownership restricts access to nested subcollections.
-     */
-    match /users/{userId}/gardens/{gardenId}/stems/{stemId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && isValidStemCreate(gardenId);
+      allow create: if isOwner(userId) && isValidStemCreate(userId);
       allow update: if isExistingOwner(userId) && isImmutableStem();
       allow delete: if isExistingOwner(userId);
     }
 
     /**
      * @description Secures Leaves (skills) within a Stem.
-     * @path /users/{userId}/gardens/{gardenId}/stems/{stemId}/leaves/{leafId}
-     * @allow A user (auth.uid='user123') can (create) a leaf with a valid `stemId` at /users/user123/gardens/g1/stems/s1/leaves/l1.
-     * @deny A user (auth.uid='user456') cannot (get) a leaf at /users/user123/gardens/g1/stems/s1/leaves/l1.
-     * @principle Path-based ownership restricts access to nested subcollections.
+     * @path /users/{userId}/stems/{stemId}/leaves/{leafId}
      */
-    match /users/{userId}/gardens/{gardenId}/stems/{stemId}/leaves/{leafId} {
+    match /users/{userId}/stems/{stemId}/leaves/{leafId} {
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
       allow create: if isOwner(userId) && isValidLeafCreate(stemId);

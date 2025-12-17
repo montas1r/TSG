@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useRef, useEffect } from 'react';
-import type { Leaf as LeafType, Stem as StemType, Garden } from '@/lib/types';
+import type { Leaf as LeafType, Stem as StemType } from '@/lib/types';
 import { Stem } from '@/components/garden/stem';
 import { LeafDetailsSheet } from '@/components/garden/leaf-details-sheet';
 import { AddStemDialog } from '@/components/garden/add-stem-dialog';
@@ -17,7 +17,6 @@ import type { User } from 'firebase/auth';
 import { collection, doc } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import {
-  addDocumentNonBlocking,
   deleteDocumentNonBlocking,
   setDocumentNonBlocking
 } from '@/firebase/non-blocking-updates';
@@ -35,30 +34,20 @@ export function Dashboard({ user }: { user: User }) {
 
   const firestore = useFirestore();
 
-  const gardenRef = useMemoFirebase(() => collection(firestore, 'users', user.uid, 'stems'), [firestore, user.uid]);
-  const { data: garden, isLoading: isGardenLoading } = useCollection<StemType>(gardenRef);
-  
-  const leavesByStemId = useMemo(() => {
-    const map = new Map<string, LeafType[]>();
-    garden?.forEach(stem => {
-      // Create a collection reference for the leaves subcollection
-      const leavesRef = collection(firestore, 'users', user.uid, 'stems', stem.id, 'leaves');
-      // Here you would typically use another hook or fetch logic to get the leaves
-      // For this example, we'll assume leaves are fetched and grouped.
-      // This part needs a proper implementation with another useCollection call per stem.
-      // For now, we will leave it as an exercise. The UI will expect `stem.leaves`.
-    });
-    return map;
-  }, [garden, firestore, user.uid]);
+  const stemsRef = useMemoFirebase(() => collection(firestore, 'users', user.uid, 'stems'), [firestore, user.uid]);
+  const { data: stems, isLoading: areStemsLoading } = useCollection<Omit<StemType, 'leaves'>>(stemsRef);
+
+  const [leavesByStem, setLeavesByStem] = useState<Record<string, LeafType[]>>({});
+
+  const allLeaves = useMemo(() => Object.values(leavesByStem).flat(), [leavesByStem]);
   
   const gardenWithLeaves = useMemo(() => {
-    return garden || [];
-  }, [garden]);
-  
-  const allLeaves = useMemo(() => {
-    return gardenWithLeaves.flatMap(stem => (stem as any).leaves || []);
-  }, [gardenWithLeaves]);
-  
+    return (stems || []).map(stem => ({
+      ...stem,
+      leaves: leavesByStem[stem.id] || [],
+    }));
+  }, [stems, leavesByStem]);
+
   const progress = useMemo(() => {
     if (allLeaves.length === 0) return 0;
     const totalMastery = allLeaves.reduce((sum, leaf) => {
@@ -79,7 +68,7 @@ export function Dashboard({ user }: { user: User }) {
     const lowerCaseQuery = searchQuery.toLowerCase();
 
     return gardenWithLeaves.map(stem => {
-        const matchingLeaves = ((stem as any).leaves || []).filter((leaf: LeafType) => {
+        const matchingLeaves = (stem.leaves || []).filter((leaf: LeafType) => {
             const inName = leaf.name.toLowerCase().includes(lowerCaseQuery);
             const inNotes = leaf.notes.toLowerCase().includes(lowerCaseQuery);
             const inQuests = leaf.quests.some(quest => quest.text.toLowerCase().includes(lowerCaseQuery));
@@ -87,7 +76,10 @@ export function Dashboard({ user }: { user: User }) {
         });
 
         if (stem.name.toLowerCase().includes(lowerCaseQuery)) {
-            return { ...stem, leaves: matchingLeaves };
+            // If stem name matches, we might want to show all its leaves or only matching ones.
+            // Current implementation shows only matching leaves if there are any, or all if search doesn't filter leaves.
+            // Let's adjust to return the stem with its matching leaves.
+             return { ...stem, leaves: matchingLeaves };
         }
 
         if (matchingLeaves.length > 0) {
@@ -115,7 +107,12 @@ export function Dashboard({ user }: { user: User }) {
   const handleSaveLeaf = (updatedLeaf: LeafType) => {
     const leafRef = doc(firestore, 'users', user.uid, 'stems', updatedLeaf.stemId, 'leaves', updatedLeaf.id);
     setDocumentNonBlocking(leafRef, updatedLeaf, { merge: true });
-    // Also update the selectedLeaf in case the sheet is still open
+    
+    setLeavesByStem(prev => ({
+      ...prev,
+      [updatedLeaf.stemId]: (prev[updatedLeaf.stemId] || []).map(l => l.id === updatedLeaf.id ? updatedLeaf : l)
+    }));
+
     if (selectedLeaf && selectedLeaf.id === updatedLeaf.id) {
       setSelectedLeaf(updatedLeaf);
     }
@@ -124,13 +121,18 @@ export function Dashboard({ user }: { user: User }) {
   const handleDeleteLeaf = (leafId: string, stemId: string) => {
     const leafRef = doc(firestore, 'users', user.uid, 'stems', stemId, 'leaves', leafId);
     deleteDocumentNonBlocking(leafRef);
+    setLeavesByStem(prev => ({
+      ...prev,
+      [stemId]: (prev[stemId] || []).filter(l => l.id !== leafId)
+    }));
   }
 
   const handleAddStem = (name: string) => {
     const stemId = uuidv4();
-    const newStem: Omit<StemType, 'id'> = {
+    const newStem = {
       name,
-      leaves: [],
+      userId: user.uid,
+      id: stemId
     };
     const stemRef = doc(firestore, 'users', user.uid, 'stems', stemId);
     setDocumentNonBlocking(stemRef, newStem, { merge: false });
@@ -154,10 +156,10 @@ export function Dashboard({ user }: { user: User }) {
         ]
     };
     const leafRef = doc(firestore, 'users', user.uid, 'stems', stemId, 'leaves', leafId);
-    setDocumentNonBlocking(leafRef, newLeaf, { merge: false });
+    setDocumentNonBlocking(leafRef, { ...newLeaf, id: leafId }, { merge: false });
   }
 
-  if (isGardenLoading) {
+  if (areStemsLoading) {
     return <div className="flex h-full items-center justify-center"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>
   }
 
@@ -203,6 +205,7 @@ export function Dashboard({ user }: { user: User }) {
         <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
         {rowVirtualizer.getVirtualItems().map((virtualItem) => {
           const stem = filteredGarden[virtualItem.index];
+          if (!stem) return null;
           return (
              <div
                 key={virtualItem.key}
@@ -220,6 +223,7 @@ export function Dashboard({ user }: { user: User }) {
                     onAddLeaf={handleOpenAddLeaf}
                     searchQuery={searchQuery}
                     user={user}
+                    onLeavesUpdate={(leaves) => setLeavesByStem(prev => ({...prev, [stem.id]: leaves}))}
                 />
             </div>
           )
