@@ -4,7 +4,7 @@ import { PlusCircle } from 'lucide-react';
 import { Leaf } from './leaf';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Highlight } from '../ui/highlight';
-import { SkillMarquee } from './skill-marquee';
+import { HybridCarousel } from './hybrid-carousel';
 
 interface StemProps {
   stem: StemType;
@@ -14,7 +14,7 @@ interface StemProps {
 }
 
 export function Stem({ stem, onSelectLeaf, onAddLeaf, searchQuery = '' }: StemProps) {
-  const useMarquee = stem.leaves.length > 5;
+  const useCarousel = stem.leaves.length > 5;
 
   return (
     <div className="space-y-4 rounded-lg border border-dashed bg-card/50 p-6">
@@ -27,8 +27,8 @@ export function Stem({ stem, onSelectLeaf, onAddLeaf, searchQuery = '' }: StemPr
         </Button>
       </div>
       
-      {useMarquee ? (
-          <SkillMarquee 
+      {useCarousel ? (
+          <HybridCarousel 
             leaves={stem.leaves} 
             onSelectLeaf={onSelectLeaf} 
             searchQuery={searchQuery} 
