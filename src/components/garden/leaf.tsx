@@ -3,7 +3,6 @@
 import type { Leaf as LeafType } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Leaf as LeafIcon } from 'lucide-react';
-import { useState, useEffect } from 'react';
 
 interface LeafProps {
   leaf: LeafType;
@@ -11,12 +10,6 @@ interface LeafProps {
 }
 
 export function Leaf({ leaf, onClick }: LeafProps) {
-  const [animationDelay, setAnimationDelay] = useState('0s');
-
-  useEffect(() => {
-    setAnimationDelay(`${Math.random() * 2}s`);
-  }, []);
-
   return (
     <button
       onClick={onClick}
@@ -24,7 +17,7 @@ export function Leaf({ leaf, onClick }: LeafProps) {
         'group relative flex w-32 cursor-pointer flex-col items-center gap-1 rounded-lg p-2 transition-all hover:bg-accent/50',
         leaf.isBloomed && 'animate-sway'
       )}
-      style={{ animationDelay }}
+      style={{ animationDelay: `${Math.random() * 2}s` }}
       aria-label={`View details for ${leaf.name}`}
     >
       <div className="relative flex h-16 w-16 items-center justify-center">
@@ -33,7 +26,7 @@ export function Leaf({ leaf, onClick }: LeafProps) {
           className={cn(
             'size-10 transition-colors duration-500',
             leaf.isBloomed
-              ? 'fill-primary text-primary-foreground/20'
+              ? 'fill-accent text-accent-foreground/20'
               : 'fill-green-300/30 text-green-800/30'
           )}
         />

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import type { Garden, Stem as StemType, Leaf as LeafType } from '@/lib/types';
 import { initialGarden } from '@/lib/data';
 import { Stem } from '@/components/garden/stem';
@@ -22,14 +22,10 @@ export function Dashboard() {
   const [stemToAddLeafTo, setStemToAddLeafTo] = useState<string | null>(null);
   const [isSuggestionOpen, setIsSuggestionOpen] = useState(false);
 
-  const { allLeaves, bloomedLeaves, progress, currentSkillNames } = useMemo(() => {
-    const allLeaves = garden.flatMap(stem => stem.leaves);
-    const bloomedLeaves = allLeaves.filter(leaf => leaf.isBloomed);
-    const progress = allLeaves.length > 0 ? (bloomedLeaves.length / allLeaves.length) * 100 : 0;
-    const currentSkillNames = allLeaves.map(leaf => leaf.name);
-    return { allLeaves, bloomedLeaves, progress, currentSkillNames };
-  }, [garden]);
-
+  const allLeaves = garden.flatMap(stem => stem.leaves);
+  const bloomedLeaves = allLeaves.filter(leaf => leaf.isBloomed);
+  const progress = allLeaves.length > 0 ? (bloomedLeaves.length / allLeaves.length) * 100 : 0;
+  const currentSkillNames = allLeaves.map(leaf => leaf.name);
 
   const handleSelectLeaf = (leaf: LeafType) => {
     setSelectedLeaf(leaf);
