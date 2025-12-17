@@ -92,7 +92,7 @@ export function Dashboard() {
         if (stem.id === stemId) {
             return {
                 ...stem,
-                leaves: [...stem.leaves, newLeaf]
+                leaves: [newLeaf, ...stem.leaves]
             }
         }
         return stem;
