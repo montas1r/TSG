@@ -14,7 +14,7 @@ interface StemProps {
 }
 
 export function Stem({ stem, onSelectLeaf, onAddLeaf, searchQuery = '' }: StemProps) {
-  const useCarousel = stem.leaves.length > 5;
+  const useCarousel = stem.leaves.length > 1;
 
   return (
     <div className="space-y-4 rounded-lg border border-dashed bg-card/50 p-6">
