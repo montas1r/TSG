@@ -1,32 +1,51 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, type User } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
-import { Skeleton } from './ui/skeleton';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { onAuthStateChanged, type User, type Auth } from 'firebase/auth';
+import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore, type Firestore } from "firebase/firestore";
+import { firebaseConfig } from '@/lib/firebase';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  app: FirebaseApp | null;
+  auth: Auth | null;
+  firestore: Firestore | null;
 }
 
-const AuthContext = createContext<AuthContextType>({ user: null, loading: true });
+const AuthContext = createContext<AuthContextType>({ user: null, loading: true, app: null, auth: null, firestore: null });
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [app, setApp] = useState<FirebaseApp | null>(null);
+  const [auth, setAuth] = useState<Auth | null>(null);
+  const [firestore, setFirestore] = useState<Firestore | null>(null);
+
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(false);
-    });
+    if (typeof window !== 'undefined') {
+      const appInstance = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+      const authInstance = getAuth(appInstance);
+      const firestoreInstance = getFirestore(appInstance);
 
-    return () => unsubscribe();
+      setApp(appInstance);
+      setAuth(authInstance);
+      setFirestore(firestoreInstance);
+
+      const unsubscribe = onAuthStateChanged(authInstance, (user) => {
+        setUser(user);
+        setLoading(false);
+      });
+
+      return () => unsubscribe();
+    }
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, loading, app, auth, firestore }}>
       {children}
     </AuthContext.Provider>
   );

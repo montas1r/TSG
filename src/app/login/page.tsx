@@ -2,7 +2,6 @@
 
 import { useRouter } from 'next/navigation';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/components/auth-provider';
 import { useEffect } from 'react';
@@ -10,9 +9,10 @@ import { Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, auth, loading } = useAuth();
 
   const handleSignIn = async () => {
+    if (!auth) return;
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
@@ -46,6 +46,7 @@ export default function LoginPage() {
           onClick={handleSignIn}
           className="mt-8 w-full max-w-xs"
           size="lg"
+          disabled={!auth}
         >
           Sign in with Google
         </Button>
