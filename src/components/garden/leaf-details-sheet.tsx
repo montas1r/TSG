@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { Leaf } from '@/lib/types';
 import { useState, useEffect } from 'react';
-import { Switch } from '../ui/switch';
+import { Slider } from '@/components/ui/slider';
 import { Flower2, Link as LinkIcon, Trash2 } from 'lucide-react';
 
 interface LeafDetailsSheetProps {
@@ -62,20 +62,23 @@ export function LeafDetailsSheet({
           <SheetDescription>Nurture your skill. Add notes, links, and track your progress.</SheetDescription>
         </SheetHeader>
         <div className="flex-grow space-y-6 py-4">
-          <div className="flex items-center justify-between rounded-lg border p-4">
+          <div className="space-y-4 rounded-lg border p-4">
             <div className="space-y-0.5">
-              <Label htmlFor="bloomed-switch" className="flex items-center gap-2 text-base">
+              <Label htmlFor="mastery-slider" className="flex items-center gap-2 text-base">
                 <Flower2 className="size-5 text-primary" />
-                Skill Bloomed
+                Mastery Level: {formData.masteryLevel}%
               </Label>
               <p className="text-sm text-muted-foreground">
-                Mark this skill as learned or mastered.
+                Slide to update your mastery of this skill.
               </p>
             </div>
-            <Switch
-              id="bloomed-switch"
-              checked={formData.isBloomed}
-              onCheckedChange={(checked) => setFormData({ ...formData, isBloomed: checked })}
+            <Slider
+              id="mastery-slider"
+              min={0}
+              max={100}
+              step={1}
+              value={[formData.masteryLevel]}
+              onValueChange={(value) => setFormData({ ...formData, masteryLevel: value[0] })}
             />
           </div>
           <div className="space-y-2">

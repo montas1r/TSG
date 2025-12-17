@@ -23,8 +23,9 @@ export function Dashboard() {
   const [isSuggestionOpen, setIsSuggestionOpen] = useState(false);
 
   const allLeaves = garden.flatMap(stem => stem.leaves);
-  const bloomedLeaves = allLeaves.filter(leaf => leaf.isBloomed);
-  const progress = allLeaves.length > 0 ? (bloomedLeaves.length / allLeaves.length) * 100 : 0;
+  const totalMastery = allLeaves.reduce((sum, leaf) => sum + leaf.masteryLevel, 0);
+  const maxMastery = allLeaves.length * 100;
+  const progress = maxMastery > 0 ? (totalMastery / maxMastery) * 100 : 0;
   const currentSkillNames = allLeaves.map(leaf => leaf.name);
 
   const handleSelectLeaf = (leaf: LeafType) => {
@@ -41,6 +42,8 @@ export function Dashboard() {
         ),
       }))
     );
+    // Also update the selectedLeaf to reflect changes instantly in the sheet
+    setSelectedLeaf(updatedLeaf);
   };
   
   const handleDeleteLeaf = (leafId: string) => {
@@ -71,7 +74,7 @@ export function Dashboard() {
         id: `leaf-${Date.now()}`,
         name,
         stemId,
-        isBloomed: false,
+        masteryLevel: 0,
         notes: '',
         link: '',
     };
@@ -101,8 +104,8 @@ export function Dashboard() {
         </div>
         <div className="mt-6 space-y-2">
             <div className="flex justify-between text-sm text-muted-foreground">
-                <span>Garden Progress</span>
-                <span>{bloomedLeaves.length} / {allLeaves.length} Bloomed</span>
+                <span>Overall Mastery</span>
+                <span>{Math.round(progress)}% Complete</span>
             </div>
             <Progress value={progress} />
         </div>

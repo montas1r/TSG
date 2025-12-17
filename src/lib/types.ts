@@ -2,7 +2,7 @@ export interface Leaf {
   id: string;
   name: string;
   stemId: string;
-  isBloomed: boolean;
+  masteryLevel: number; // 0-100
   notes: string;
   link: string;
 }

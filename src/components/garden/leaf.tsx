@@ -18,13 +18,30 @@ export function Leaf({ leaf, onClick }: LeafProps) {
     setAnimationDelay(`${Math.random() * 2}s`);
   }, []);
 
+  const getMasteryColor = () => {
+    const level = leaf.masteryLevel;
+    if (level <= 20) return 'hsl(var(--primary) / 0.2)'; // Soft Lavender
+    if (level > 20 && level <= 80) {
+      const percentage = (level - 20) / 60;
+      // This is a simple interpolation. For a true gradient feel, we'd need more complex logic
+      // or rely on CSS `background: linear-gradient`. However, for fill, we interpolate.
+      // HSL: 250, 60%, 90% (Lavender) -> 330, 40%, 80% (Rose)
+      const h = 250 + (330 - 250) * percentage;
+      const s = 60 + (40 - 60) * percentage;
+      const l = 90 + (80 - 90) * percentage;
+      return `hsl(${h}, ${s}%, ${l}%)`;
+    }
+    return 'hsl(var(--accent) / 0.5)'; // Muted Rose with higher opacity
+  };
+
+  const isMastered = leaf.masteryLevel > 80;
 
   return (
     <button
       onClick={onClick}
       className={cn(
-        'group relative flex w-32 cursor-pointer flex-col items-center gap-1 rounded-lg p-2 transition-all hover:bg-accent/50',
-        leaf.isBloomed && 'animate-sway'
+        'group relative flex w-32 cursor-pointer flex-col items-center gap-1 rounded-lg p-2 transition-all hover:bg-accent/20',
+        isMastered && 'animate-sway'
       )}
       style={{ animationDelay }}
       aria-label={`View details for ${leaf.name}`}
@@ -34,10 +51,11 @@ export function Leaf({ leaf, onClick }: LeafProps) {
         <LeafIcon
           className={cn(
             'size-10 transition-colors duration-500',
-            leaf.isBloomed
-              ? 'fill-accent text-accent-foreground/20'
-              : 'fill-green-300/30 text-green-800/30'
+             isMastered ? 'text-accent-foreground/30' : 'text-primary-foreground/30',
           )}
+          style={{
+            fill: getMasteryColor(),
+          }}
         />
       </div>
       <p className="w-full truncate text-center text-sm text-muted-foreground group-hover:text-foreground">
