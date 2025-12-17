@@ -14,24 +14,29 @@ export function Leaf({ leaf, onClick }: LeafProps) {
   const [animationDelay, setAnimationDelay] = useState('0s');
 
   useEffect(() => {
-    // This code runs only on the client, after hydration
     setAnimationDelay(`${Math.random() * 2}s`);
   }, []);
 
   const getMasteryColor = () => {
     const level = leaf.masteryLevel;
-    if (level <= 20) return 'hsl(var(--primary) / 0.2)'; // Soft Lavender
-    if (level > 20 && level <= 80) {
-      const percentage = (level - 20) / 60;
-      // This is a simple interpolation. For a true gradient feel, we'd need more complex logic
-      // or rely on CSS `background: linear-gradient`. However, for fill, we interpolate.
-      // HSL: 250, 60%, 90% (Lavender) -> 330, 40%, 80% (Rose)
-      const h = 250 + (330 - 250) * percentage;
-      const s = 60 + (40 - 60) * percentage;
-      const l = 90 + (80 - 90) * percentage;
-      return `hsl(${h}, ${s}%, ${l}%)`;
+    // Sage Green (secondary) -> Forest Green (primary)
+    // HSL for Sage: 110 20% 88%
+    // HSL for Forest: 125 28% 25%
+
+    if (level <= 20) {
+      return `hsl(var(--secondary))`; // Sage Green
     }
-    return 'hsl(var(--accent) / 0.5)'; // Muted Rose with higher opacity
+    if (level > 80) {
+      return `hsl(var(--primary))`; // Forest Green
+    }
+    
+    // Interpolate between Sage and Forest
+    const percentage = (level - 20) / 60;
+    const h = 110 + (125 - 110) * percentage;
+    const s = 20 + (28 - 20) * percentage;
+    const l = 88 + (25 - 88) * percentage;
+    
+    return `hsl(${h}, ${s}%, ${l}%)`;
   };
 
   const isMastered = leaf.masteryLevel > 80;
@@ -40,7 +45,7 @@ export function Leaf({ leaf, onClick }: LeafProps) {
     <button
       onClick={onClick}
       className={cn(
-        'group relative flex w-32 cursor-pointer flex-col items-center gap-1 rounded-lg p-2 transition-all hover:bg-accent/20',
+        'group relative flex w-32 cursor-pointer flex-col items-center gap-1 rounded-lg p-2 transition-all hover:bg-accent/50',
         isMastered && 'animate-sway'
       )}
       style={{ animationDelay }}
@@ -50,11 +55,11 @@ export function Leaf({ leaf, onClick }: LeafProps) {
         <div className="absolute bottom-0 h-1/2 w-0.5 bg-muted-foreground/30" />
         <LeafIcon
           className={cn(
-            'size-10 transition-colors duration-500',
-             isMastered ? 'text-accent-foreground/30' : 'text-primary-foreground/30',
+            'size-10 text-primary-foreground transition-colors duration-500',
           )}
           style={{
             fill: getMasteryColor(),
+            stroke: isMastered ? 'hsl(var(--primary))' : 'hsl(var(--muted))'
           }}
         />
       </div>

@@ -4,40 +4,37 @@
 
 @layer base {
   :root {
-    --background: 220 20% 95%; /* Light Gray-Blue */
-    --foreground: 220 30% 10%;
-    --card: 220 25% 98%;
-    --card-foreground: 220 30% 10%;
-    --popover: 220 25% 98%;
-    --popover-foreground: 220 30% 10%;
-    --primary: 260 85% 65%; /* Vibrant Purple */
-    --primary-foreground: 260 20% 98%;
-    --secondary: 190 80% 60%; /* Bright Cyan */
-    --secondary-foreground: 190 30% 10%;
-    --muted: 220 20% 90%;
-    --muted-foreground: 220 10% 45%;
-    --accent: 140 80% 55%; /* Neon Green */
-    --accent-foreground: 140 30% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 220 15% 88%;
-    --input: 220 15% 92%;
-    --ring: 140 80% 55%; /* Neon Green for focus */
-    --chart-1: 260 85% 65%;
-    --chart-2: 190 80% 60%;
-    --chart-3: 140 80% 55%;
-    --chart-4: 340 90% 65%;
-    --chart-5: 40 90% 60%;
+    --background: 39 33% 98%; /* Creamy White */
+    --foreground: 120 2% 24%; /* Charcoal Text */
+
+    --card: 39 33% 98%;
+    --card-foreground: 120 2% 24%;
+
+    --popover: 39 33% 98%;
+    --popover-foreground: 120 2% 24%;
+
+    --primary: 125 28% 25%; /* Forest Green */
+    --primary-foreground: 100 0% 100%; /* White */
+
+    --secondary: 110 20% 88%; /* Sage Green */
+    --secondary-foreground: 125 28% 25%;
+
+    --muted: 110 20% 88%;
+    --muted-foreground: 40 8% 50%;
+
+    --accent: 110 20% 88%;
+    --accent-foreground: 125 28% 25%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 40 10% 80%; /* Earthy Brown Border */
+    --input: 40 10% 80%;
+    --ring: 125 28% 25%;
+
     --radius: 0.5rem;
-    --sidebar-background: 220 25% 98%;
-    --sidebar-foreground: 220 30% 10%;
-    --sidebar-primary: 260 85% 65%;
-    --sidebar-primary-foreground: 260 20% 98%;
-    --sidebar-accent: 140 80% 55%;
-    --sidebar-accent-foreground: 140 30% 10%;
-    --sidebar-border: 220 15% 88%;
-    --sidebar-ring: 140 80% 55%;
   }
+
   .dark {
     --background: 220 40% 5%; /* Very Dark Blue */
     --foreground: 220 15% 90%;
