@@ -1,10 +1,8 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useMemo } from 'react';
 import type { Garden, Stem as StemType, Leaf as LeafType } from '@/lib/types';
 import { initialGarden } from '@/lib/data';
-import { useAuth } from '@/components/auth-provider';
 import { Stem } from '@/components/garden/stem';
 import { LeafDetailsSheet } from '@/components/garden/leaf-details-sheet';
 import { AddStemDialog } from '@/components/garden/add-stem-dialog';
@@ -13,12 +11,8 @@ import { Progress } from '@/components/ui/progress';
 import { Wand2, Sprout } from 'lucide-react';
 import { AddLeafDialog } from '@/components/garden/add-leaf-dialog';
 import { SuggestionDialog } from '@/components/garden/suggestion-dialog';
-import { Skeleton } from './ui/skeleton';
 
 export function Dashboard() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-
   const [garden, setGarden] = useState<Garden>(initialGarden);
   const [selectedLeaf, setSelectedLeaf] = useState<LeafType | null>(null);
   const [isLeafSheetOpen, setIsLeafSheetOpen] = useState(false);
@@ -27,12 +21,6 @@ export function Dashboard() {
   const [isAddLeafOpen, setIsAddLeafOpen] = useState(false);
   const [stemToAddLeafTo, setStemToAddLeafTo] = useState<string | null>(null);
   const [isSuggestionOpen, setIsSuggestionOpen] = useState(false);
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
-  }, [user, loading, router]);
 
   const { allLeaves, bloomedLeaves, progress, currentSkillNames } = useMemo(() => {
     const allLeaves = garden.flatMap(stem => stem.leaves);
@@ -102,23 +90,13 @@ export function Dashboard() {
     }));
   }
 
-  if (loading || !user) {
-    return (
-      <div className="space-y-12">
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-64 w-full" />
-        <Skeleton className="h-64 w-full" />
-      </div>
-    )
-  }
-
   return (
     <>
       <header className="mb-12">
         <div className="flex flex-col items-center justify-between gap-6 rounded-lg border bg-card p-6 sm:flex-row">
           <div className="text-center sm:text-left">
               <h1 className="font-headline text-4xl tracking-tight">The Skill Garden</h1>
-              <p className="text-muted-foreground">Welcome, {user.displayName || 'Gardener'}! Nurture your skills and watch them grow.</p>
+              <p className="text-muted-foreground">Nurture your skills and watch them grow.</p>
           </div>
           <Button onClick={() => setIsSuggestionOpen(true)} className="w-full sm:w-auto">
               <Wand2 className="mr-2" />
