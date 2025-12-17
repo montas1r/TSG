@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import type { Garden, Stem as StemType, Leaf as LeafType } from '@/lib/types';
 import { initialGarden } from '@/lib/data';
 import { Stem } from '@/components/garden/stem';
@@ -13,6 +13,7 @@ import { AddLeafDialog } from '@/components/garden/add-leaf-dialog';
 import { SuggestionDialog } from '@/components/garden/suggestion-dialog';
 import { calculateMasteryLevel } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 export function Dashboard() {
   const [garden, setGarden] = useState<Garden>(initialGarden);
@@ -55,7 +56,9 @@ export function Dashboard() {
         });
 
         if (stem.name.toLowerCase().includes(lowerCaseQuery)) {
-            return { ...stem, leaves: matchingLeaves.length > 0 ? matchingLeaves : stem.leaves }; // If stem matches, show all leaves unless some leaves match
+            // If stem name matches, we can decide if we want to show all its leaves or just the matching ones.
+            // For now, let's show the stem with its matching leaves. If no leaves match, the stem header will still show.
+            return { ...stem, leaves: matchingLeaves };
         }
 
         if (matchingLeaves.length > 0) {
@@ -65,6 +68,15 @@ export function Dashboard() {
         return null;
     }).filter((stem): stem is StemType => stem !== null);
   }, [garden, searchQuery]);
+
+  // Virtualization logic
+  const parentRef = useRef<HTMLDivElement>(null);
+  const rowVirtualizer = useVirtualizer({
+    count: filteredGarden.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 250, // Estimate height for a stem component
+    overscan: 5,
+  });
 
   const handleSelectLeaf = (leaf: LeafType) => {
     setSelectedLeaf(leaf);
@@ -79,7 +91,10 @@ export function Dashboard() {
       ),
     }));
     setGarden(newGarden);
-    setSelectedLeaf(updatedLeaf); // Keep the sheet in sync with the latest data
+    // Also update the selectedLeaf in case the sheet is still open
+    if (selectedLeaf && selectedLeaf.id === updatedLeaf.id) {
+      setSelectedLeaf(updatedLeaf);
+    }
   };
   
   const handleDeleteLeaf = (leafId: string) => {
@@ -129,8 +144,8 @@ export function Dashboard() {
   }
 
   return (
-    <>
-      <header className="mb-12">
+    <div className="flex flex-col h-[calc(100vh-2rem)]">
+      <header className="mb-6 shrink-0">
         <div className="flex flex-col items-center justify-between gap-6 rounded-lg border bg-card p-6 sm:flex-row">
           <div className="text-center sm:text-left">
               <div className="flex items-center gap-4">
@@ -166,17 +181,33 @@ export function Dashboard() {
         </div>
       </header>
       
-      <main className="space-y-8">
-        {filteredGarden.length > 0 ? filteredGarden.map((stem) => (
-          <Stem 
-            key={stem.id} 
-            stem={stem} 
-            onSelectLeaf={handleSelectLeaf}
-            onAddLeaf={handleOpenAddLeaf}
-            searchQuery={searchQuery}
-          />
-        )) : (
-          <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-24 text-center">
+      <main ref={parentRef} className="flex-grow space-y-8 overflow-y-auto">
+        <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
+        {rowVirtualizer.getVirtualItems().map((virtualItem) => {
+          const stem = filteredGarden[virtualItem.index];
+          return (
+             <div
+                key={virtualItem.key}
+                style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    transform: `translateY(${virtualItem.start}px)`,
+                }}
+             >
+                <Stem 
+                    stem={stem} 
+                    onSelectLeaf={handleSelectLeaf}
+                    onAddLeaf={handleOpenAddLeaf}
+                    searchQuery={searchQuery}
+                />
+            </div>
+          )
+        })}
+        </div>
+        {!rowVirtualizer.getVirtualItems().length && (
+           <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-24 text-center">
             <h3 className="font-headline text-2xl">
               {searchQuery ? "No skills found" : "Your garden is empty"}
             </h3>
@@ -217,6 +248,6 @@ export function Dashboard() {
           onOpenChange={setIsSuggestionOpen}
           currentSkills={currentSkillNames}
       />
-    </>
+    </div>
   );
 }
