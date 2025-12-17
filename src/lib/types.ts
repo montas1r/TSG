@@ -1,13 +1,8 @@
 
 export interface Quest {
+  id: string;
   text: string;
   completed: boolean;
-}
-
-export interface LeafQuests {
-  learn: Quest;
-  practice: Quest;
-  prove: Quest;
 }
 
 export interface Leaf {
@@ -17,7 +12,7 @@ export interface Leaf {
   masteryLevel: number; // This will now be calculated
   notes: string;
   link: string;
-  quests: LeafQuests;
+  quests: Quest[];
 }
 
 export interface Stem {

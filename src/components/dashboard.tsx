@@ -27,7 +27,10 @@ export function Dashboard() {
 
   const progress = useMemo(() => {
     if (allLeaves.length === 0) return 0;
-    const totalMastery = allLeaves.reduce((sum, leaf) => sum + calculateMasteryLevel(leaf.quests), 0);
+    const totalMastery = allLeaves.reduce((sum, leaf) => {
+        const mastery = calculateMasteryLevel(leaf.quests);
+        return sum + mastery;
+    }, 0);
     const maxMastery = allLeaves.length * 100;
     return maxMastery > 0 ? (totalMastery / maxMastery) * 100 : 0;
   }, [allLeaves]);
@@ -43,11 +46,11 @@ export function Dashboard() {
     const newGarden = garden.map((stem) => ({
       ...stem,
       leaves: stem.leaves.map((leaf) =>
-        leaf.id === updatedLeaf.id ? { ...updatedLeaf, masteryLevel: calculateMasteryLevel(updatedLeaf.quests) } : leaf
+        leaf.id === updatedLeaf.id ? updatedLeaf : leaf
       ),
     }));
     setGarden(newGarden);
-    setSelectedLeaf(updatedLeaf);
+    setSelectedLeaf(updatedLeaf); // Keep the sheet in sync with the latest data
   };
   
   const handleDeleteLeaf = (leafId: string) => {
@@ -78,14 +81,12 @@ export function Dashboard() {
         id: `leaf-${Date.now()}`,
         name,
         stemId,
-        masteryLevel: 10,
+        masteryLevel: 0, // Will be calculated
         notes: '',
         link: '',
-        quests: {
-            learn: { text: '', completed: false },
-            practice: { text: '', completed: false },
-            prove: { text: '', completed: false },
-        }
+        quests: [
+            { id: `quest-${Date.now()}`, text: 'Read the official documentation', completed: false }
+        ]
     };
     setGarden(garden.map(stem => {
         if (stem.id === stemId) {
