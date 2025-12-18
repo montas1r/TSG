@@ -8,7 +8,6 @@ import { HybridCarousel } from './hybrid-carousel';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import type { User } from 'firebase/auth';
-import { useEffect } from 'react';
 
 interface StemProps {
   stem: StemType;
@@ -18,7 +17,7 @@ interface StemProps {
   user: User;
 }
 
-export function Stem({ stem, onSelectLeaf, onAddLeaf, searchQuery = '' }: StemProps) {
+export function Stem({ stem, onSelectLeaf, onAddLeaf, searchQuery = '', user }: StemProps) {
   const firestore = useFirestore();
   const leavesRef = useMemoFirebase(
     () => collection(firestore, 'users', user.uid, 'stems', stem.id, 'leaves'),
@@ -61,3 +60,5 @@ export function Stem({ stem, onSelectLeaf, onAddLeaf, searchQuery = '' }: StemPr
     </div>
   );
 }
+
+    

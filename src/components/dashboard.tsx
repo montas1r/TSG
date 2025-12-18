@@ -37,32 +37,11 @@ export function Dashboard({ user }: { user: User }) {
   const stemsRef = useMemoFirebase(() => collection(firestore, 'users', user.uid, 'stems'), [firestore, user.uid]);
   const { data: stems, isLoading: areStemsLoading } = useCollection<Omit<StemType, 'leaves'>>(stemsRef);
   
-  const leavesRef = useMemoFirebase(() => query(collection(firestore, `users/${user.uid}/stems`)), [user.uid]);
-  const { data: allLeavesData, isLoading: areLeavesLoading } = useCollection<LeafType>(leavesRef);
-
-  const allLeaves = useMemo(() => {
-    if (!stems || !firestore) return [];
-  
-    const leaves: LeafType[] = [];
-    stems.forEach(stem => {
-      // This is a placeholder. In a real app, you'd fetch subcollections.
-      // For now, we'll assume leaves are fetched separately or are part of the stem doc.
-    });
-    return leaves;
-  }, [stems, firestore]);
-
   const leavesByStem = useMemo(() => {
-    const grouped: Record<string, LeafType[]> = {};
-    if (allLeavesData) {
-      for (const leaf of allLeavesData) {
-        if (!grouped[leaf.stemId]) {
-          grouped[leaf.stemId] = [];
-        }
-        grouped[leaf.stemId].push(leaf);
-      }
-    }
-    return grouped;
-  }, [allLeavesData]);
+    // This will be populated by the Stem components.
+    // For now, it's an empty object.
+    return {};
+  }, []);
 
   const gardenWithLeaves = useMemo(() => {
     return (stems || []).map(stem => ({
@@ -95,8 +74,8 @@ export function Dashboard({ user }: { user: User }) {
     return gardenWithLeaves.map(stem => {
         const matchingLeaves = (stem.leaves || []).filter((leaf: LeafType) => {
             const inName = leaf.name.toLowerCase().includes(lowerCaseQuery);
-            const inNotes = leaf.notes.toLowerCase().includes(lowerCaseQuery);
-            const inQuests = leaf.quests.some(quest => quest.text.toLowerCase().includes(lowerCaseQuery));
+            const inNotes = (leaf.notes || '').toLowerCase().includes(lowerCaseQuery);
+            const inQuests = (leaf.quests || []).some(quest => quest.text.toLowerCase().includes(lowerCaseQuery));
             return inName || inNotes || inQuests;
         });
 
@@ -172,7 +151,7 @@ export function Dashboard({ user }: { user: User }) {
     setDocumentNonBlocking(leafRef, { ...newLeaf, id: leafId }, { merge: false });
   }
 
-  if (areStemsLoading || areLeavesLoading) {
+  if (areStemsLoading) {
     return <div className="flex h-full items-center justify-center"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>
   }
 
@@ -232,10 +211,10 @@ export function Dashboard({ user }: { user: User }) {
              >
                 <Stem 
                     stem={stem} 
+                    user={user}
                     onSelectLeaf={handleSelectLeaf}
                     onAddLeaf={handleOpenAddLeaf}
                     searchQuery={searchQuery}
-                    user={user}
                 />
             </div>
           )
@@ -292,3 +271,5 @@ export function Dashboard({ user }: { user: User }) {
     </div>
   );
 }
+
+    
