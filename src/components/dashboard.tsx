@@ -41,7 +41,7 @@ const GardenTrunk = () => (
             <path 
                 d="M 50,400 Q 80,350 50,300"
                 stroke="hsl(var(--border))"
-                strokeWidth_2="2"
+                strokeWidth="2"
                 fill="none"
             />
              <path 
