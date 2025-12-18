@@ -81,10 +81,10 @@ export function HybridCarousel({
               className="flex-shrink-0 flex-grow-0 basis-1/4 min-w-0 pl-4 relative"
               key={leaf.id}
               style={{
-                ...(tweenValues.length && {
+                ...(tweenValues.length && tweenValues[index] !== undefined ? {
                     transform: `scale(${1 - Math.abs(tweenValues[index]) * TWEEN_FACTOR})`,
                     opacity: 1 - Math.abs(tweenValues[index]),
-                }),
+                } : {}),
               }}
             >
               <Leaf
