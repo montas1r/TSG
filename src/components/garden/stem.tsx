@@ -19,7 +19,7 @@ interface StemProps {
 
 const StemTrunk = ({ progress }: { progress: number }) => {
     const height = 150; // The max height of the SVG
-    const animatedHeight = height * (progress / 100);
+    const animatedHeight = (height + 16) * (progress / 100);
   
     // Interpolate color from border (hsl(40, 10%, 80%)) to primary (hsl(125, 28%, 25%))
     const percentage = progress / 100;
@@ -27,20 +27,25 @@ const StemTrunk = ({ progress }: { progress: number }) => {
     const s = 10 + (28 - 10) * percentage;
     const l = 80 + (25 - 80) * percentage;
     const animatedColor = `hsl(${h}, ${s}%, ${l}%)`;
+
+    const pathD = `M 16,${height + 16} C 16,${height} 0,${height/1.5} 16,${height/2} C 32,${height/3} 16,${height/4} 16,0`;
+    const pathLength = 250; // Approximate length of the curved path
   
     return (
       <div className="absolute left-8 -top-4 bottom-0 w-8" aria-hidden="true">
         <svg width="100%" height="100%" viewBox={`0 0 32 ${height + 16}`} preserveAspectRatio="xMidYMax meet">
           {/* Background Trunk */}
-          <path d={`M 16,${height+16} L 16,0`} stroke="hsl(var(--border))" strokeWidth="2" fill="none" />
+          <path d={pathD} stroke="hsl(var(--border))" strokeWidth="2" fill="none" />
   
           {/* Animated Growth */}
           <path
-            d={`M 16,${height+16} L 16,${(height+16) - animatedHeight}`}
+            d={pathD}
             stroke={animatedColor}
             strokeWidth="4"
             fill="none"
-            style={{ transition: 'all 1s ease-in-out' }}
+            strokeDasharray={pathLength}
+            strokeDashoffset={pathLength - (animatedHeight / (height+16) * pathLength)}
+            style={{ transition: 'stroke-dashoffset 1s ease-in-out, stroke 1s ease-in-out' }}
           />
         </svg>
       </div>
