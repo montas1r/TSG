@@ -42,14 +42,13 @@ export function Leaf({ leaf, onClick, searchQuery = '' }: LeafProps) {
     <button
       onClick={onClick}
       className={cn(
-        'group relative flex w-32 cursor-pointer flex-col items-center gap-1 rounded-lg p-2 transition-all hover:bg-accent/50',
+        'group relative flex w-36 cursor-pointer flex-col items-center gap-1 rounded-lg p-2 transition-all hover:bg-accent/50',
         isMastered && 'animate-sway'
       )}
       style={{ animationDelay }}
       aria-label={`View details for ${leaf.name}`}
     >
       <div className="relative flex h-16 w-16 items-center justify-center">
-        <div className="absolute bottom-0 h-1/2 w-0.5 bg-muted-foreground/30" />
         <LeafIcon
           className={cn(
             'size-10 text-primary-foreground transition-colors duration-500',

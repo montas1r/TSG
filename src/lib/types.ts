@@ -18,6 +18,7 @@ export interface Leaf {
 
 export interface Stem {
   id: string;
+  userId: string;
   name: string;
   leaves: Leaf[];
   createdAt: string;

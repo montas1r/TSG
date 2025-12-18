@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useRef } from 'react';
-import type { Leaf as LeafType, Stem as StemType } from '@/lib/types';
+import type { Leaf as LeafType, Stem as StemTypeWithLeaves } from '@/lib/types';
 import { Stem } from '@/components/garden/stem';
 import { LeafDetailsSheet } from '@/components/garden/leaf-details-sheet';
 import { AddStemDialog } from '@/components/garden/add-stem-dialog';
@@ -21,41 +21,7 @@ import {
   setDocumentNonBlocking,
 } from '@/firebase/non-blocking-updates';
 import { v4 as uuidv4 } from 'uuid';
-
-const GardenTrunk = ({ progress }: { progress: number }) => {
-    const height = 800;
-    const animatedHeight = height * (progress / 100);
-  
-    // Interpolate color from brown (hsl(40, 10%, 80%)) to green (hsl(125, 28%, 25%))
-    const percentage = progress / 100;
-    const h = 40 + (125 - 40) * percentage;
-    const s = 10 + (28 - 10) * percentage;
-    const l = 80 + (25 - 80) * percentage;
-    const animatedColor = `hsl(${h}, ${s}%, ${l}%)`;
-  
-    return (
-      <div className="h-full w-24 flex-shrink-0" aria-hidden="true">
-        <svg width="100%" height="100%" viewBox="0 0 100 800" preserveAspectRatio="none">
-          {/* Background Trunk */}
-          <path d="M 50,800 L 50,0" stroke="hsl(var(--border))" strokeWidth="2" fill="none" />
-  
-          {/* Animated Growth */}
-          <path
-            d={`M 50,800 L 50,${height - animatedHeight}`}
-            stroke={animatedColor}
-            strokeWidth="4"
-            fill="none"
-            style={{ transition: 'all 1s ease-in-out' }}
-          />
-  
-          {/* Static Branches */}
-          <path d="M 50,600 Q 20,550 50,500" stroke="hsl(var(--border))" strokeWidth="2" fill="none" />
-          <path d="M 50,400 Q 80,350 50,300" stroke="hsl(var(--border))" strokeWidth="2" fill="none" />
-          <path d="M 50,200 Q 20,150 50,100" stroke="hsl(var(--border))" strokeWidth="2" fill="none" />
-        </svg>
-      </div>
-    );
-};
+import type { Stem as StemType } from '@/lib/types';
 
 
 export function Dashboard({ user }: { user: User }) {
@@ -91,7 +57,7 @@ export function Dashboard({ user }: { user: User }) {
     return (stems || []).map(stem => ({
       ...stem,
       leaves: leavesByStem[stem.id] || [],
-    })).sort((a, b) => (a.createdAt > b.createdAt ? -1 : 1));
+    })).sort((a, b) => (new Date(a.createdAt) > new Date(b.createdAt) ? -1 : 1));
   }, [stems, leavesByStem]);
 
   const progress = useMemo(() => {
@@ -122,7 +88,7 @@ export function Dashboard({ user }: { user: User }) {
         });
 
         if (stem.name.toLowerCase().includes(lowerCaseQuery)) {
-             return { ...stem, leaves: matchingLeaves };
+             return { ...stem, leaves: stem.leaves };
         }
 
         if (matchingLeaves.length > 0) {
@@ -130,7 +96,7 @@ export function Dashboard({ user }: { user: User }) {
         }
         
         return null;
-    }).filter((stem): stem is StemType => stem !== null);
+    }).filter((stem): stem is StemTypeWithLeaves => stem !== null);
   }, [gardenWithLeaves, searchQuery]);
 
   // Virtualization logic
@@ -138,7 +104,7 @@ export function Dashboard({ user }: { user: User }) {
   const rowVirtualizer = useVirtualizer({
     count: filteredGarden.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 250, // Estimate height for a stem component
+    estimateSize: () => 280, // Estimate height for a stem component
     overscan: 5,
   });
 
@@ -163,7 +129,7 @@ export function Dashboard({ user }: { user: User }) {
 
   const handleAddStem = (name: string) => {
     const stemId = uuidv4();
-    const newStem = {
+    const newStem: Omit<StemType, 'leaves'> = {
       name,
       userId: user.uid,
       id: stemId,
@@ -191,7 +157,7 @@ export function Dashboard({ user }: { user: User }) {
   
   const handleAddSkillBundle = (stemName: string, leafNames: string[]) => {
     const stemId = uuidv4();
-    const newStem = {
+    const newStem: Omit<StemType, 'leaves'> = {
       name: stemName,
       userId: user.uid,
       id: stemId,
@@ -245,61 +211,56 @@ export function Dashboard({ user }: { user: User }) {
         </div>
         <div className="mt-6 space-y-2">
             <div className="flex justify-between text-sm text-muted-foreground">
-                <span>Overall Mastery</span>
+                <span>Overall Garden Mastery</span>
                 <span>{Math.round(progress)}% Complete</span>
             </div>
             <Progress value={progress} />
         </div>
       </header>
       
-      <main className="flex flex-grow overflow-hidden">
-        <div className="hidden md:block">
-            <GardenTrunk progress={progress} />
-        </div>
-        <div ref={parentRef} className="flex-grow space-y-8 overflow-y-auto pr-4">
-            <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
-            {rowVirtualizer.getVirtualItems().map((virtualItem) => {
-              const stem = filteredGarden[virtualItem.index];
-              if (!stem) return null;
-              return (
-                 <div
-                    key={virtualItem.key}
-                    style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        transform: `translateY(${virtualItem.start}px)`,
-                    }}
-                 >
-                    <Stem 
-                        stem={stem} 
-                        leaves={stem.leaves}
-                        onSelectLeaf={handleSelectLeaf}
-                        onAddLeaf={handleOpenAddLeaf}
-                        searchQuery={searchQuery}
-                    />
-                </div>
-              )
-            })}
+      <main ref={parentRef} className="flex-grow space-y-8 overflow-y-auto pr-4">
+        <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
+        {rowVirtualizer.getVirtualItems().map((virtualItem) => {
+          const stem = filteredGarden[virtualItem.index];
+          if (!stem) return null;
+          return (
+             <div
+                key={virtualItem.key}
+                style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    transform: `translateY(${virtualItem.start}px)`,
+                }}
+             >
+                <Stem 
+                    stem={stem} 
+                    leaves={stem.leaves}
+                    onSelectLeaf={handleSelectLeaf}
+                    onAddLeaf={handleOpenAddLeaf}
+                    searchQuery={searchQuery}
+                />
             </div>
-            {!rowVirtualizer.getVirtualItems().length && (
-               <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-24 text-center">
-                <h3 className="font-headline text-2xl">
-                  {searchQuery ? "No skills found" : "Your garden is empty"}
-                </h3>
-                <p className="text-muted-foreground">
-                  {searchQuery ? "Try a different search term." : "Start by planting a new stem for your skills."}
-                </p>
-                 {!searchQuery && (
-                  <Button onClick={() => setIsAddStemOpen(true)} className="mt-4">
-                    <Sprout className="mr-2" />
-                    Plant Your First Stem
-                  </Button>
-                )}
-              </div>
-            )}
+          )
+        })}
         </div>
+        {!rowVirtualizer.getVirtualItems().length && (
+           <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-24 text-center">
+            <h3 className="font-headline text-2xl">
+              {searchQuery ? "No skills found" : "Your garden is empty"}
+            </h3>
+            <p className="text-muted-foreground">
+              {searchQuery ? "Try a different search term." : "Start by planting a new stem for your skills."}
+            </p>
+             {!searchQuery && (
+              <Button onClick={() => setIsAddStemOpen(true)} className="mt-4">
+                <Sprout className="mr-2" />
+                Plant Your First Stem
+              </Button>
+            )}
+          </div>
+        )}
       </main>
 
       <LeafDetailsSheet
