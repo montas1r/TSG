@@ -16,10 +16,9 @@ interface StemProps {
   onAddLeaf: (stemId: string) => void;
   searchQuery?: string;
   user: User;
-  onLeavesUpdate: (leaves: LeafType[]) => void;
 }
 
-export function Stem({ stem, onSelectLeaf, onAddLeaf, searchQuery = '', user, onLeavesUpdate }: StemProps) {
+export function Stem({ stem, onSelectLeaf, onAddLeaf, searchQuery = '' }: StemProps) {
   const firestore = useFirestore();
   const leavesRef = useMemoFirebase(
     () => collection(firestore, 'users', user.uid, 'stems', stem.id, 'leaves'),
@@ -29,13 +28,6 @@ export function Stem({ stem, onSelectLeaf, onAddLeaf, searchQuery = '', user, on
 
   const leafList = leaves || [];
   const useCarousel = leafList.length > 1;
-
-  useEffect(() => {
-    if (leaves) {
-      onLeavesUpdate(leaves);
-    }
-  }, [leaves, onLeavesUpdate]);
-
 
   return (
     <div className="space-y-4 rounded-lg border border-dashed bg-card/50 p-6">

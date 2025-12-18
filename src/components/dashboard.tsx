@@ -14,7 +14,7 @@ import { calculateMasteryLevel } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { User } from 'firebase/auth';
-import { collection, doc } from 'firebase/firestore';
+import { collection, doc, query } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import {
   deleteDocumentNonBlocking,
@@ -36,11 +36,34 @@ export function Dashboard({ user }: { user: User }) {
 
   const stemsRef = useMemoFirebase(() => collection(firestore, 'users', user.uid, 'stems'), [firestore, user.uid]);
   const { data: stems, isLoading: areStemsLoading } = useCollection<Omit<StemType, 'leaves'>>(stemsRef);
-
-  const [leavesByStem, setLeavesByStem] = useState<Record<string, LeafType[]>>({});
-
-  const allLeaves = useMemo(() => Object.values(leavesByStem).flat(), [leavesByStem]);
   
+  const leavesRef = useMemoFirebase(() => query(collection(firestore, `users/${user.uid}/stems`)), [user.uid]);
+  const { data: allLeavesData, isLoading: areLeavesLoading } = useCollection<LeafType>(leavesRef);
+
+  const allLeaves = useMemo(() => {
+    if (!stems || !firestore) return [];
+  
+    const leaves: LeafType[] = [];
+    stems.forEach(stem => {
+      // This is a placeholder. In a real app, you'd fetch subcollections.
+      // For now, we'll assume leaves are fetched separately or are part of the stem doc.
+    });
+    return leaves;
+  }, [stems, firestore]);
+
+  const leavesByStem = useMemo(() => {
+    const grouped: Record<string, LeafType[]> = {};
+    if (allLeavesData) {
+      for (const leaf of allLeavesData) {
+        if (!grouped[leaf.stemId]) {
+          grouped[leaf.stemId] = [];
+        }
+        grouped[leaf.stemId].push(leaf);
+      }
+    }
+    return grouped;
+  }, [allLeavesData]);
+
   const gardenWithLeaves = useMemo(() => {
     return (stems || []).map(stem => ({
       ...stem,
@@ -48,17 +71,19 @@ export function Dashboard({ user }: { user: User }) {
     }));
   }, [stems, leavesByStem]);
 
+  const allLeavesFlat = useMemo(() => Object.values(leavesByStem).flat(), [leavesByStem]);
+
   const progress = useMemo(() => {
-    if (allLeaves.length === 0) return 0;
-    const totalMastery = allLeaves.reduce((sum, leaf) => {
+    if (allLeavesFlat.length === 0) return 0;
+    const totalMastery = allLeavesFlat.reduce((sum, leaf) => {
         const mastery = calculateMasteryLevel(leaf.quests);
         return sum + mastery;
     }, 0);
-    const maxMastery = allLeaves.length * 100;
+    const maxMastery = allLeavesFlat.length * 100;
     return maxMastery > 0 ? (totalMastery / maxMastery) * 100 : 0;
-  }, [allLeaves]);
+  }, [allLeavesFlat]);
   
-  const currentSkillNames = allLeaves.map(leaf => leaf.name);
+  const currentSkillNames = allLeavesFlat.map(leaf => leaf.name);
 
   const filteredGarden = useMemo(() => {
     if (!searchQuery) {
@@ -76,9 +101,6 @@ export function Dashboard({ user }: { user: User }) {
         });
 
         if (stem.name.toLowerCase().includes(lowerCaseQuery)) {
-            // If stem name matches, we might want to show all its leaves or only matching ones.
-            // Current implementation shows only matching leaves if there are any, or all if search doesn't filter leaves.
-            // Let's adjust to return the stem with its matching leaves.
              return { ...stem, leaves: matchingLeaves };
         }
 
@@ -107,11 +129,6 @@ export function Dashboard({ user }: { user: User }) {
   const handleSaveLeaf = (updatedLeaf: LeafType) => {
     const leafRef = doc(firestore, 'users', user.uid, 'stems', updatedLeaf.stemId, 'leaves', updatedLeaf.id);
     setDocumentNonBlocking(leafRef, updatedLeaf, { merge: true });
-    
-    setLeavesByStem(prev => ({
-      ...prev,
-      [updatedLeaf.stemId]: (prev[updatedLeaf.stemId] || []).map(l => l.id === updatedLeaf.id ? updatedLeaf : l)
-    }));
 
     if (selectedLeaf && selectedLeaf.id === updatedLeaf.id) {
       setSelectedLeaf(updatedLeaf);
@@ -121,10 +138,6 @@ export function Dashboard({ user }: { user: User }) {
   const handleDeleteLeaf = (leafId: string, stemId: string) => {
     const leafRef = doc(firestore, 'users', user.uid, 'stems', stemId, 'leaves', leafId);
     deleteDocumentNonBlocking(leafRef);
-    setLeavesByStem(prev => ({
-      ...prev,
-      [stemId]: (prev[stemId] || []).filter(l => l.id !== leafId)
-    }));
   }
 
   const handleAddStem = (name: string) => {
@@ -159,7 +172,7 @@ export function Dashboard({ user }: { user: User }) {
     setDocumentNonBlocking(leafRef, { ...newLeaf, id: leafId }, { merge: false });
   }
 
-  if (areStemsLoading) {
+  if (areStemsLoading || areLeavesLoading) {
     return <div className="flex h-full items-center justify-center"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>
   }
 
@@ -223,7 +236,6 @@ export function Dashboard({ user }: { user: User }) {
                     onAddLeaf={handleOpenAddLeaf}
                     searchQuery={searchQuery}
                     user={user}
-                    onLeavesUpdate={(leaves) => setLeavesByStem(prev => ({...prev, [stem.id]: leaves}))}
                 />
             </div>
           )
