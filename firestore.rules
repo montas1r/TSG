@@ -86,11 +86,11 @@ service cloud.firestore {
     }
 
     /**
-     * Validates that the Leaf being created has a `stemId` field that
-     * correctly matches the stem's ID from the path.
+     * Validates that the Leaf being created belongs to the correct user.
+     * This rule allows a leaf to be created in the same transaction as its parent stem.
      */
     function isValidLeafCreate(userId) {
-       return request.resource.data.userId == userId && exists(/databases/$(database)/documents/users/$(userId)/stems/$(request.resource.data.stemId));
+       return request.resource.data.userId == userId;
     }
 
     /**
