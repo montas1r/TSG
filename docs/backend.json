@@ -53,12 +53,18 @@
         "description": {
           "type": "string",
           "description": "A brief description of the stem."
+        },
+        "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp when the stem was created."
         }
       },
       "required": [
         "id",
         "userId",
-        "name"
+        "name",
+        "createdAt"
       ]
     },
     "Leaf": {

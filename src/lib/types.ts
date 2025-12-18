@@ -20,6 +20,7 @@ export interface Stem {
   id: string;
   name: string;
   leaves: Leaf[];
+  createdAt: string;
 }
 
 export type Garden = Stem[];

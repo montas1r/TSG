@@ -23,6 +23,38 @@ import {
 } from '@/firebase/non-blocking-updates';
 import { v4 as uuidv4 } from 'uuid';
 
+const GardenTrunk = () => (
+    <div className="h-full w-24 flex-shrink-0" aria-hidden="true">
+        <svg width="100%" height="100%" viewBox="0 0 100 800" preserveAspectRatio="none">
+            <path 
+                d="M 50,800 L 50,0"
+                stroke="hsl(var(--border))"
+                strokeWidth="2"
+                fill="none"
+            />
+            <path 
+                d="M 50,600 Q 20,550 50,500"
+                stroke="hsl(var(--border))"
+                strokeWidth="2"
+                fill="none"
+            />
+            <path 
+                d="M 50,400 Q 80,350 50,300"
+                stroke="hsl(var(--border))"
+                strokeWidth_2="2"
+                fill="none"
+            />
+             <path 
+                d="M 50,200 Q 20,150 50,100"
+                stroke="hsl(var(--border))"
+                strokeWidth="2"
+                fill="none"
+            />
+        </svg>
+    </div>
+);
+
+
 export function Dashboard({ user }: { user: User }) {
   const [selectedLeaf, setSelectedLeaf] = useState<LeafType | null>(null);
   const [isLeafSheetOpen, setIsLeafSheetOpen] = useState(false);
@@ -56,7 +88,7 @@ export function Dashboard({ user }: { user: User }) {
     return (stems || []).map(stem => ({
       ...stem,
       leaves: leavesByStem[stem.id] || [],
-    }));
+    })).sort((a, b) => (a.createdAt > b.createdAt ? -1 : 1));
   }, [stems, leavesByStem]);
 
   const progress = useMemo(() => {
@@ -131,7 +163,8 @@ export function Dashboard({ user }: { user: User }) {
     const newStem = {
       name,
       userId: user.uid,
-      id: stemId
+      id: stemId,
+      createdAt: new Date().toISOString()
     };
     const stemRef = doc(firestore, 'users', user.uid, 'stems', stemId);
     setDocumentNonBlocking(stemRef, newStem, { merge: false });
@@ -157,7 +190,8 @@ export function Dashboard({ user }: { user: User }) {
     const newStem = {
       name: stemName,
       userId: user.uid,
-      id: stemId
+      id: stemId,
+      createdAt: new Date().toISOString()
     };
     const stemRef = doc(firestore, 'users', user.uid, 'stems', stemId);
     setDocumentNonBlocking(stemRef, newStem, { merge: false });
@@ -214,49 +248,54 @@ export function Dashboard({ user }: { user: User }) {
         </div>
       </header>
       
-      <main ref={parentRef} className="flex-grow space-y-8 overflow-y-auto">
-        <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
-        {rowVirtualizer.getVirtualItems().map((virtualItem) => {
-          const stem = filteredGarden[virtualItem.index];
-          if (!stem) return null;
-          return (
-             <div
-                key={virtualItem.key}
-                style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    transform: `translateY(${virtualItem.start}px)`,
-                }}
-             >
-                <Stem 
-                    stem={stem} 
-                    leaves={stem.leaves}
-                    onSelectLeaf={handleSelectLeaf}
-                    onAddLeaf={handleOpenAddLeaf}
-                    searchQuery={searchQuery}
-                />
-            </div>
-          )
-        })}
+      <main className="flex flex-grow overflow-hidden">
+        <div className="hidden md:block">
+            <GardenTrunk />
         </div>
-        {!rowVirtualizer.getVirtualItems().length && (
-           <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-24 text-center">
-            <h3 className="font-headline text-2xl">
-              {searchQuery ? "No skills found" : "Your garden is empty"}
-            </h3>
-            <p className="text-muted-foreground">
-              {searchQuery ? "Try a different search term." : "Start by planting a new stem for your skills."}
-            </p>
-             {!searchQuery && (
-              <Button onClick={() => setIsAddStemOpen(true)} className="mt-4">
-                <Sprout className="mr-2" />
-                Plant Your First Stem
-              </Button>
+        <div ref={parentRef} className="flex-grow space-y-8 overflow-y-auto pr-4">
+            <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
+            {rowVirtualizer.getVirtualItems().map((virtualItem) => {
+              const stem = filteredGarden[virtualItem.index];
+              if (!stem) return null;
+              return (
+                 <div
+                    key={virtualItem.key}
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        transform: `translateY(${virtualItem.start}px)`,
+                    }}
+                 >
+                    <Stem 
+                        stem={stem} 
+                        leaves={stem.leaves}
+                        onSelectLeaf={handleSelectLeaf}
+                        onAddLeaf={handleOpenAddLeaf}
+                        searchQuery={searchQuery}
+                    />
+                </div>
+              )
+            })}
+            </div>
+            {!rowVirtualizer.getVirtualItems().length && (
+               <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-24 text-center">
+                <h3 className="font-headline text-2xl">
+                  {searchQuery ? "No skills found" : "Your garden is empty"}
+                </h3>
+                <p className="text-muted-foreground">
+                  {searchQuery ? "Try a different search term." : "Start by planting a new stem for your skills."}
+                </p>
+                 {!searchQuery && (
+                  <Button onClick={() => setIsAddStemOpen(true)} className="mt-4">
+                    <Sprout className="mr-2" />
+                    Plant Your First Stem
+                  </Button>
+                )}
+              </div>
             )}
-          </div>
-        )}
+        </div>
       </main>
 
       <LeafDetailsSheet
