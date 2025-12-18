@@ -6,8 +6,8 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function calculateMasteryLevel(quests: Quest[]): number {
-  if (quests.length === 0) {
+export function calculateMasteryLevel(quests?: Quest[]): number {
+  if (!quests || quests.length === 0) {
     return 0;
   }
   const completedQuests = quests.filter((q) => q.completed).length;
