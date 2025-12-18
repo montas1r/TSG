@@ -27,7 +27,7 @@ interface LeafDetailsSheetProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onSave: (updatedLeaf: Leaf) => void;
-  onDelete: (leafId: string, stemId: string) => void;
+  onDelete: () => void;
   searchQuery?: string;
 }
 
@@ -75,7 +75,7 @@ export function LeafDetailsSheet({
             text: '',
             completed: false,
         };
-        const updatedQuests = [...formData.quests, newQuest];
+        const updatedQuests = [...(formData.quests || []), newQuest];
         const newMasteryLevel = calculateMasteryLevel(updatedQuests);
         updateFormData({ quests: updatedQuests, masteryLevel: newMasteryLevel });
     }
@@ -91,7 +91,7 @@ export function LeafDetailsSheet({
 
   const handleDelete = () => {
     if (formData) {
-      onDelete(formData.id, formData.stemId);
+      onDelete();
       onOpenChange(false);
     }
   };
@@ -124,7 +124,7 @@ export function LeafDetailsSheet({
           <div className="space-y-4 rounded-lg border p-4">
             <h3 className="font-headline text-lg">Quests</h3>
             <div className="space-y-3">
-                {formData.quests.map((quest) => (
+                {(formData.quests || []).map((quest) => (
                     <div key={quest.id} className="flex items-center gap-2">
                         <Checkbox 
                             id={`quest-check-${quest.id}`}

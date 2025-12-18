@@ -5,26 +5,16 @@ import { Leaf } from './leaf';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Highlight } from '../ui/highlight';
 import { HybridCarousel } from './hybrid-carousel';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
-import type { User } from 'firebase/auth';
 
 interface StemProps {
-  stem: StemType;
+  stem: Omit<StemType, 'leaves'>;
+  leaves: LeafType[];
   onSelectLeaf: (leaf: LeafType) => void;
   onAddLeaf: (stemId: string) => void;
   searchQuery?: string;
-  user: User;
 }
 
-export function Stem({ stem, onSelectLeaf, onAddLeaf, searchQuery = '', user }: StemProps) {
-  const firestore = useFirestore();
-  const leavesRef = useMemoFirebase(
-    () => collection(firestore, 'users', user.uid, 'stems', stem.id, 'leaves'),
-    [firestore, user.uid, stem.id]
-  );
-  const { data: leaves } = useCollection<LeafType>(leavesRef);
-
+export function Stem({ stem, leaves, onSelectLeaf, onAddLeaf, searchQuery = '' }: StemProps) {
   const leafList = leaves || [];
   const useCarousel = leafList.length > 1;
 
@@ -60,5 +50,3 @@ export function Stem({ stem, onSelectLeaf, onAddLeaf, searchQuery = '', user }: 
     </div>
   );
 }
-
-    

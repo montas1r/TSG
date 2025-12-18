@@ -89,15 +89,15 @@ service cloud.firestore {
      * Validates that the Leaf being created has a `stemId` field that
      * correctly matches the stem's ID from the path.
      */
-    function isValidLeafCreate(stemId) {
-      return request.resource.data.stemId == stemId;
+    function isValidLeafCreate(userId) {
+       return request.resource.data.userId == userId && exists(/databases/$(database)/documents/users/$(userId)/stems/$(request.resource.data.stemId));
     }
 
     /**
-     * Validates that the Leaf's `stemId` field is immutable on update.
+     * Validates that the Leaf's `stemId` and 'userId' fields are immutable on update.
      */
     function isImmutableLeaf() {
-      return request.resource.data.stemId == resource.data.stemId;
+      return request.resource.data.stemId == resource.data.stemId && request.resource.data.userId == resource.data.userId;
     }
 
 
@@ -130,13 +130,13 @@ service cloud.firestore {
     }
 
     /**
-     * @description Secures Leaves (skills) within a Stem.
-     * @path /users/{userId}/stems/{stemId}/leaves/{leafId}
+     * @description Secures Leaves (skills).
+     * @path /users/{userId}/leaves/{leafId}
      */
-    match /users/{userId}/stems/{stemId}/leaves/{leafId} {
+    match /users/{userId}/leaves/{leafId} {
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && isValidLeafCreate(stemId);
+      allow create: if isOwner(userId) && isValidLeafCreate(userId);
       allow update: if isExistingOwner(userId) && isImmutableLeaf();
       allow delete: if isExistingOwner(userId);
     }

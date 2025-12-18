@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import type { Leaf as LeafType, Stem as StemType } from '@/lib/types';
 import { Stem } from '@/components/garden/stem';
 import { LeafDetailsSheet } from '@/components/garden/leaf-details-sheet';
@@ -18,7 +18,8 @@ import { collection, doc, query } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import {
   deleteDocumentNonBlocking,
-  setDocumentNonBlocking
+  setDocumentNonBlocking,
+  addDocumentNonBlocking
 } from '@/firebase/non-blocking-updates';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -37,11 +38,19 @@ export function Dashboard({ user }: { user: User }) {
   const stemsRef = useMemoFirebase(() => collection(firestore, 'users', user.uid, 'stems'), [firestore, user.uid]);
   const { data: stems, isLoading: areStemsLoading } = useCollection<Omit<StemType, 'leaves'>>(stemsRef);
   
+  const allLeavesQuery = useMemoFirebase(() => query(collection(firestore, `users/${user.uid}/leaves`)), [firestore, user.uid]);
+  const { data: allLeavesFlat, isLoading: areLeavesLoading } = useCollection<LeafType>(allLeavesQuery);
+  
   const leavesByStem = useMemo(() => {
-    // This will be populated by the Stem components.
-    // For now, it's an empty object.
-    return {};
-  }, []);
+    if (!allLeavesFlat) return {};
+    return allLeavesFlat.reduce((acc, leaf) => {
+        if (!acc[leaf.stemId]) {
+            acc[leaf.stemId] = [];
+        }
+        acc[leaf.stemId].push(leaf);
+        return acc;
+    }, {} as Record<string, LeafType[]>);
+  }, [allLeavesFlat]);
 
   const gardenWithLeaves = useMemo(() => {
     return (stems || []).map(stem => ({
@@ -50,10 +59,8 @@ export function Dashboard({ user }: { user: User }) {
     }));
   }, [stems, leavesByStem]);
 
-  const allLeavesFlat = useMemo(() => Object.values(leavesByStem).flat(), [leavesByStem]);
-
   const progress = useMemo(() => {
-    if (allLeavesFlat.length === 0) return 0;
+    if (!allLeavesFlat || allLeavesFlat.length === 0) return 0;
     const totalMastery = allLeavesFlat.reduce((sum, leaf) => {
         const mastery = calculateMasteryLevel(leaf.quests);
         return sum + mastery;
@@ -62,7 +69,7 @@ export function Dashboard({ user }: { user: User }) {
     return maxMastery > 0 ? (totalMastery / maxMastery) * 100 : 0;
   }, [allLeavesFlat]);
   
-  const currentSkillNames = allLeavesFlat.map(leaf => leaf.name);
+  const currentSkillNames = useMemo(() => (allLeavesFlat || []).map(leaf => leaf.name), [allLeavesFlat]);
 
   const filteredGarden = useMemo(() => {
     if (!searchQuery) {
@@ -106,7 +113,7 @@ export function Dashboard({ user }: { user: User }) {
   };
 
   const handleSaveLeaf = (updatedLeaf: LeafType) => {
-    const leafRef = doc(firestore, 'users', user.uid, 'stems', updatedLeaf.stemId, 'leaves', updatedLeaf.id);
+    const leafRef = doc(firestore, 'users', user.uid, 'leaves', updatedLeaf.id);
     setDocumentNonBlocking(leafRef, updatedLeaf, { merge: true });
 
     if (selectedLeaf && selectedLeaf.id === updatedLeaf.id) {
@@ -114,8 +121,8 @@ export function Dashboard({ user }: { user: User }) {
     }
   };
   
-  const handleDeleteLeaf = (leafId: string, stemId: string) => {
-    const leafRef = doc(firestore, 'users', user.uid, 'stems', stemId, 'leaves', leafId);
+  const handleDeleteLeaf = (leafId: string) => {
+    const leafRef = doc(firestore, 'users', user.uid, 'leaves', leafId);
     deleteDocumentNonBlocking(leafRef);
   }
 
@@ -129,29 +136,42 @@ export function Dashboard({ user }: { user: User }) {
     const stemRef = doc(firestore, 'users', user.uid, 'stems', stemId);
     setDocumentNonBlocking(stemRef, newStem, { merge: false });
   };
+  
+  const handleAddLeaf = (name: string, stemId: string) => {
+    const leafId = uuidv4();
+    const newLeaf: Omit<Leaf, 'id'> = {
+        name,
+        stemId,
+        masteryLevel: 0,
+        notes: '',
+        link: '',
+        quests: [{ id: uuidv4(), text: 'Explore the basics', completed: false }]
+    };
+    const leafRef = doc(firestore, 'users', user.uid, 'leaves', leafId);
+    setDocumentNonBlocking(leafRef, { ...newLeaf, id: leafId }, { merge: false });
+  };
+  
+  const handleAddSkillBundle = (stemName: string, leafNames: string[]) => {
+    const stemId = uuidv4();
+    const newStem = {
+      name: stemName,
+      userId: user.uid,
+      id: stemId
+    };
+    const stemRef = doc(firestore, 'users', user.uid, 'stems', stemId);
+    setDocumentNonBlocking(stemRef, newStem, { merge: false });
+
+    leafNames.forEach(leafName => {
+        handleAddLeaf(leafName, stemId);
+    })
+  }
 
   const handleOpenAddLeaf = (stemId: string) => {
     setStemToAddLeafTo(stemId);
     setIsAddLeafOpen(true);
   }
 
-  const handleAddLeaf = (name: string, stemId: string) => {
-    const leafId = uuidv4();
-    const newLeaf: Omit<LeafType, 'id'> = {
-        name,
-        stemId,
-        masteryLevel: 0, 
-        notes: '',
-        link: '',
-        quests: [
-            { id: uuidv4(), text: 'Read the official documentation', completed: false }
-        ]
-    };
-    const leafRef = doc(firestore, 'users', user.uid, 'stems', stemId, 'leaves', leafId);
-    setDocumentNonBlocking(leafRef, { ...newLeaf, id: leafId }, { merge: false });
-  }
-
-  if (areStemsLoading) {
+  if (areStemsLoading || areLeavesLoading) {
     return <div className="flex h-full items-center justify-center"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>
   }
 
@@ -211,7 +231,7 @@ export function Dashboard({ user }: { user: User }) {
              >
                 <Stem 
                     stem={stem} 
-                    user={user}
+                    leaves={stem.leaves}
                     onSelectLeaf={handleSelectLeaf}
                     onAddLeaf={handleOpenAddLeaf}
                     searchQuery={searchQuery}
@@ -246,7 +266,7 @@ export function Dashboard({ user }: { user: User }) {
             setIsLeafSheetOpen(open);
         }}
         onSave={handleSaveLeaf}
-        onDelete={handleDeleteLeaf}
+        onDelete={() => selectedLeaf && handleDeleteLeaf(selectedLeaf.id)}
         searchQuery={searchQuery}
       />
       
@@ -267,9 +287,8 @@ export function Dashboard({ user }: { user: User }) {
           isOpen={isSuggestionOpen}
           onOpenChange={setIsSuggestionOpen}
           currentSkills={currentSkillNames}
+          onAddSkillBundle={handleAddSkillBundle}
       />
     </div>
   );
 }
-
-    
