@@ -6,7 +6,6 @@ import { useEmblaCarousel } from '@/hooks/use-embla-carousel';
 import Autoplay from 'embla-carousel-autoplay';
 import type { Leaf as LeafType } from '@/lib/types';
 import { Leaf } from '@/components/garden/leaf';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 
@@ -53,7 +52,7 @@ export function HybridCarousel({
       return diffToTarget;
     });
     setTweenValues(styles);
-  }, [emblaApi, setTweenValues]);
+  }, [emblaApi]);
 
   const scrollPrev = useCallback(() => {
     emblaApi?.scrollPrev();
@@ -71,7 +70,7 @@ export function HybridCarousel({
   }, [emblaApi, onScroll]);
 
   return (
-    <div className="relative group">
+    <div className="group relative">
        <Button variant="outline" size="icon" className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" onClick={scrollPrev}>
             <ArrowLeft />
        </Button>
