@@ -19,40 +19,43 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import {
   deleteDocumentNonBlocking,
   setDocumentNonBlocking,
-  addDocumentNonBlocking
 } from '@/firebase/non-blocking-updates';
 import { v4 as uuidv4 } from 'uuid';
 
-const GardenTrunk = () => (
-    <div className="h-full w-24 flex-shrink-0" aria-hidden="true">
+const GardenTrunk = ({ progress }: { progress: number }) => {
+    const height = 800;
+    const animatedHeight = height * (progress / 100);
+  
+    // Interpolate color from brown (hsl(40, 10%, 80%)) to green (hsl(125, 28%, 25%))
+    const percentage = progress / 100;
+    const h = 40 + (125 - 40) * percentage;
+    const s = 10 + (28 - 10) * percentage;
+    const l = 80 + (25 - 80) * percentage;
+    const animatedColor = `hsl(${h}, ${s}%, ${l}%)`;
+  
+    return (
+      <div className="h-full w-24 flex-shrink-0" aria-hidden="true">
         <svg width="100%" height="100%" viewBox="0 0 100 800" preserveAspectRatio="none">
-            <path 
-                d="M 50,800 L 50,0"
-                stroke="hsl(var(--border))"
-                strokeWidth="2"
-                fill="none"
-            />
-            <path 
-                d="M 50,600 Q 20,550 50,500"
-                stroke="hsl(var(--border))"
-                strokeWidth="2"
-                fill="none"
-            />
-            <path 
-                d="M 50,400 Q 80,350 50,300"
-                stroke="hsl(var(--border))"
-                strokeWidth="2"
-                fill="none"
-            />
-             <path 
-                d="M 50,200 Q 20,150 50,100"
-                stroke="hsl(var(--border))"
-                strokeWidth="2"
-                fill="none"
-            />
+          {/* Background Trunk */}
+          <path d="M 50,800 L 50,0" stroke="hsl(var(--border))" strokeWidth="2" fill="none" />
+  
+          {/* Animated Growth */}
+          <path
+            d={`M 50,800 L 50,${height - animatedHeight}`}
+            stroke={animatedColor}
+            strokeWidth="4"
+            fill="none"
+            style={{ transition: 'all 1s ease-in-out' }}
+          />
+  
+          {/* Static Branches */}
+          <path d="M 50,600 Q 20,550 50,500" stroke="hsl(var(--border))" strokeWidth="2" fill="none" />
+          <path d="M 50,400 Q 80,350 50,300" stroke="hsl(var(--border))" strokeWidth="2" fill="none" />
+          <path d="M 50,200 Q 20,150 50,100" stroke="hsl(var(--border))" strokeWidth="2" fill="none" />
         </svg>
-    </div>
-);
+      </div>
+    );
+};
 
 
 export function Dashboard({ user }: { user: User }) {
@@ -250,7 +253,7 @@ export function Dashboard({ user }: { user: User }) {
       
       <main className="flex flex-grow overflow-hidden">
         <div className="hidden md:block">
-            <GardenTrunk />
+            <GardenTrunk progress={progress} />
         </div>
         <div ref={parentRef} className="flex-grow space-y-8 overflow-y-auto pr-4">
             <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
