@@ -175,7 +175,8 @@ export function Dashboard({ user }: { user: User }) {
   
   const handleAddLeaf = (name: string, stemId: string) => {
     const leafId = uuidv4();
-    const newLeaf: Omit<Leaf, 'id'> = {
+    const newLeaf: LeafType = {
+        id: leafId,
         name,
         stemId,
         userId: user.uid,
@@ -185,7 +186,7 @@ export function Dashboard({ user }: { user: User }) {
         quests: [{ id: uuidv4(), text: 'Explore the basics', completed: false }]
     };
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', leafId);
-    setDocumentNonBlocking(leafRef, { ...newLeaf, id: leafId }, { merge: false });
+    setDocumentNonBlocking(leafRef, newLeaf, { merge: false });
   };
   
   const handleAddSkillBundle = (stemName: string, leafNames: string[]) => {

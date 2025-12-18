@@ -24,19 +24,11 @@ export function Leaf({ leaf, onClick, searchQuery = '' }: LeafProps) {
 
   const getMasteryColor = () => {
     const level = masteryLevel;
-    // Sage Green (secondary) -> Forest Green (primary)
-    // HSL for Sage: 110 20% 88%
-    // HSL for Forest: 125 28% 25%
-
-    if (level <= 20) {
-      return `hsl(var(--secondary))`; // Sage Green
-    }
-    if (level > 80) {
-      return `hsl(var(--primary))`; // Forest Green
-    }
+    // Interpolate between secondary and primary colors based on mastery
+    // HSL for Sage (secondary): 110 20% 88%
+    // HSL for Forest (primary): 125 28% 25%
     
-    // Interpolate between Sage and Forest
-    const percentage = (level - 20) / 60;
+    const percentage = level / 100;
     const h = 110 + (125 - 110) * percentage;
     const s = 20 + (28 - 20) * percentage;
     const l = 88 + (25 - 88) * percentage;
