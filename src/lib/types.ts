@@ -9,6 +9,7 @@ export interface Leaf {
   id: string;
   name: string;
   stemId: string;
+  userId: string;
   masteryLevel: number; // This will now be calculated
   notes: string;
   link: string;

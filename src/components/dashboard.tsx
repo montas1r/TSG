@@ -142,6 +142,7 @@ export function Dashboard({ user }: { user: User }) {
     const newLeaf: Omit<Leaf, 'id'> = {
         name,
         stemId,
+        userId: user.uid,
         masteryLevel: 0,
         notes: '',
         link: '',
