@@ -19,7 +19,6 @@ import { Flower2, Link as LinkIcon, Trash2, PlusCircle } from 'lucide-react';
 import { calculateMasteryLevel } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Highlight } from '@/components/ui/highlight';
-import { useDebounce } from '@/hooks/use-debounce';
 import { v4 as uuidv4 } from 'uuid';
 
 
@@ -41,22 +40,23 @@ export function LeafDetailsSheet({
   searchQuery = '',
 }: LeafDetailsSheetProps) {
   const [formData, setFormData] = useState<Leaf | null>(leaf);
-  const debouncedFormData = useDebounce(formData, 1000);
 
   useEffect(() => {
     setFormData(leaf);
   }, [leaf]);
   
-  useEffect(() => {
-    if (debouncedFormData && JSON.stringify(debouncedFormData) !== JSON.stringify(leaf)) {
-      onSave(debouncedFormData);
-    }
-  }, [debouncedFormData, onSave, leaf]);
-
   const masteryLevel = useMemo(() => {
     if (!formData) return 0;
     return calculateMasteryLevel(formData.quests);
   }, [formData]);
+
+  const updateFormData = (updatedData: Partial<Leaf>) => {
+    if (formData) {
+        const newFormData = { ...formData, ...updatedData };
+        setFormData(newFormData);
+        onSave(newFormData);
+    }
+  }
 
   const handleQuestChange = (questId: string, field: 'completed' | 'text', value: string | boolean) => {
     if (formData) {
@@ -64,11 +64,7 @@ export function LeafDetailsSheet({
             q.id === questId ? { ...q, [field]: value } : q
         );
         const newMasteryLevel = calculateMasteryLevel(updatedQuests);
-        setFormData({
-            ...formData,
-            quests: updatedQuests,
-            masteryLevel: newMasteryLevel,
-        });
+        updateFormData({ quests: updatedQuests, masteryLevel: newMasteryLevel });
     }
   };
 
@@ -81,11 +77,7 @@ export function LeafDetailsSheet({
         };
         const updatedQuests = [...formData.quests, newQuest];
         const newMasteryLevel = calculateMasteryLevel(updatedQuests);
-        setFormData({
-            ...formData,
-            quests: updatedQuests,
-            masteryLevel: newMasteryLevel,
-        });
+        updateFormData({ quests: updatedQuests, masteryLevel: newMasteryLevel });
     }
   }
 
@@ -93,11 +85,7 @@ export function LeafDetailsSheet({
     if(formData) {
         const updatedQuests = formData.quests.filter(q => q.id !== questId);
         const newMasteryLevel = calculateMasteryLevel(updatedQuests);
-        setFormData({
-            ...formData,
-            quests: updatedQuests,
-            masteryLevel: newMasteryLevel,
-        });
+        updateFormData({ quests: updatedQuests, masteryLevel: newMasteryLevel });
     }
   }
 
@@ -166,7 +154,7 @@ export function LeafDetailsSheet({
             <Textarea
               id="notes"
               value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              onChange={(e) => updateFormData({ notes: e.target.value })}
               placeholder="What have you learned? What are your thoughts?"
               className="min-h-[150px] text-base"
             />
@@ -180,7 +168,7 @@ export function LeafDetailsSheet({
               id="link"
               type="url"
               value={formData.link}
-              onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+              onChange={(e) => updateFormData({ link: e.target.value })}
               placeholder="https://example.com"
               className="text-base"
             />
