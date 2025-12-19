@@ -5,7 +5,6 @@ import { useMemo } from 'react';
 import type { Leaf as LeafType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, MoreVertical } from 'lucide-react';
-import { Highlight } from '../ui/highlight';
 import { calculateMasteryLevel } from '@/lib/utils';
 import { Progress } from '../ui/progress';
 import { SkillMarquee } from './skill-marquee';
@@ -18,6 +17,8 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { AnimatePresence, motion } from 'framer-motion';
+import { Highlight } from '../ui/highlight';
+
 
 interface StemProps {
   stem: StemTypeWithLeaves;
@@ -28,7 +29,6 @@ interface StemProps {
   onAddLeaf: (stemId: string) => void;
   onEditStem: (stem: StemTypeWithLeaves) => void;
   onDeleteStem: (stemId: string) => void;
-  searchQuery?: string;
 }
 
 export function Stem({ 
@@ -40,7 +40,6 @@ export function Stem({
     onAddLeaf, 
     onEditStem, 
     onDeleteStem, 
-    searchQuery = '' 
 }: StemProps) {
   const leafList = stem.leaves || [];
   
@@ -57,7 +56,7 @@ export function Stem({
       <header className="relative z-10 flex items-center justify-between pb-4 border-b">
         <div className="flex-grow">
             <h2 className="font-headline text-3xl text-foreground/80 truncate">
-                <Highlight text={stem.name} query={searchQuery} />
+                {stem.name}
             </h2>
             <p className="text-sm text-muted-foreground mt-1 truncate">
               {stem.description || `${leafList.length} ${leafList.length === 1 ? 'Skill' : 'Skills'}`}
@@ -93,7 +92,6 @@ export function Stem({
             <SkillMarquee 
               leaves={leafList}
               onSelectLeaf={onSelectLeaf}
-              searchQuery={searchQuery}
             />
         ) : (
             <div className="flex-grow flex flex-col items-center justify-center text-center text-muted-foreground p-8">
@@ -120,7 +118,6 @@ export function Stem({
                         leaf={selectedLeaf}
                         onSave={onSaveLeaf}
                         onDelete={() => onDeleteLeaf(selectedLeaf.id)}
-                        searchQuery={searchQuery}
                     />
                 </motion.div>
             )}

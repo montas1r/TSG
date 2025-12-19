@@ -1,4 +1,6 @@
 
+import type { FuseResult } from "fuse.js";
+
 export interface Quest {
   id: string;
   text: string;
@@ -29,3 +31,25 @@ export interface Stem {
 }
 
 export type Garden = Stem[];
+
+
+// --- Searchable Types ---
+
+export type SearchableStem = Omit<Stem, 'leaves'> & {
+    type: 'stem';
+}
+
+export type SearchableLeaf = Leaf & {
+    type: 'leaf';
+    stemName: string; // denormalized for search display
+}
+
+export type SearchableQuest = Quest & {
+    type: 'quest';
+    leafName: string; // denormalized
+    stemId: string; // denormalized
+}
+
+export type SearchableItem = SearchableStem | SearchableLeaf | SearchableQuest;
+
+export type SearchResult = FuseResult<SearchableItem>;

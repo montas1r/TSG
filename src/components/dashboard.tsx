@@ -2,14 +2,13 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import type { Leaf as LeafType, Stem as StemType } from '@/lib/types';
+import type { Leaf as LeafType, Stem as StemType, SearchableItem } from '@/lib/types';
 import { Stem } from '@/components/garden/stem';
 import { AddStemDialog } from '@/components/garden/add-stem-dialog';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { AddLeafDialog } from '@/components/garden/add-leaf-dialog';
 import { SuggestionDialog } from '@/components/garden/suggestion-dialog';
-import { calculateMasteryLevel, cn } from '@/lib/utils';
 import type { User } from 'firebase/auth';
 import { collection, doc, query, deleteDoc, orderBy } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
@@ -20,6 +19,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { StemSelector } from '@/components/garden/stem-selector';
 import { EditStemDialog } from '@/components/garden/edit-stem-dialog';
+import Fuse from 'fuse.js';
 
 export function Dashboard({ user }: { user: User }) {
   const [selectedLeaf, setSelectedLeaf] = useState<LeafType | null>(null);
@@ -41,7 +41,6 @@ export function Dashboard({ user }: { user: User }) {
   const allLeavesQuery = useMemoFirebase(() => query(collection(firestore, `users/${user.uid}/leaves`)), [firestore, user.uid]);
   const { data: allLeavesFlat, isLoading: areLeavesLoading } = useCollection<LeafType>(allLeavesQuery);
   
-  // Select the first stem by default if none is selected
   useEffect(() => {
     if (!selectedStemId && stems && stems.length > 0) {
       setSelectedStemId(stems[0].id);
@@ -68,17 +67,77 @@ export function Dashboard({ user }: { user: User }) {
 
   const currentSkillNames = useMemo(() => (allLeavesFlat || []).map(leaf => leaf.name), [allLeavesFlat]);
 
+  // --- Search Logic ---
+  const searchableData = useMemo<SearchableItem[]>(() => {
+    const data: SearchableItem[] = [];
+    if (stems) {
+      data.push(...stems.map(s => ({ ...s, type: 'stem' } as const)));
+    }
+    if (allLeavesFlat) {
+      const leavesWithStemName = allLeavesFlat.map(l => {
+        const stemName = stems?.find(s => s.id === l.stemId)?.name || 'Unknown Stem';
+        return { ...l, stemName, type: 'leaf' } as const;
+      });
+      data.push(...leavesWithStemName);
+
+      // Add quests
+      for (const leaf of leavesWithStemName) {
+        if (leaf.quests) {
+          data.push(...leaf.quests.map(q => ({ ...q, type: 'quest', leafName: leaf.name, stemId: leaf.stemId } as const)))
+        }
+      }
+    }
+    return data;
+  }, [stems, allLeavesFlat]);
+
+  const fuse = useMemo(() => new Fuse(searchableData, {
+      keys: [
+          { name: 'name', weight: 3 }, // For Stems and Leaves
+          { name: 'text', weight: 2 }, // For Quests
+          { name: 'description', weight: 1 },
+      ],
+      includeMatches: true,
+      threshold: 0.4,
+      ignoreLocation: true,
+  }), [searchableData]);
+
+  const searchResults = useMemo(() => {
+      if (!searchQuery) return [];
+      return fuse.search(searchQuery);
+  }, [searchQuery, fuse]);
+  // --- End Search Logic ---
+
+  const handleSearchResultClick = (item: SearchableItem) => {
+    setSearchQuery(''); // Clear search
+    if (item.type === 'stem') {
+      setSelectedStemId(item.id);
+      setSelectedLeaf(null);
+    } else if (item.type === 'leaf') {
+      setSelectedStemId(item.stemId);
+      // find the full leaf object to select it
+      const leafToSelect = allLeavesFlat?.find(l => l.id === item.id);
+      if (leafToSelect) {
+        setSelectedLeaf(leafToSelect);
+      }
+    } else if (item.type === 'quest') {
+      setSelectedStemId(item.stemId);
+      const leafToSelect = allLeavesFlat?.find(l => l.stemId === item.stemId && l.name === item.leafName);
+      if (leafToSelect) {
+        setSelectedLeaf(leafToSelect);
+      }
+    }
+  };
+
   const selectedStem = useMemo(() => {
     return gardenWithLeaves.find(stem => stem.id === selectedStemId) || null;
   }, [gardenWithLeaves, selectedStemId]);
 
-  // When the selected stem changes, reset the selected leaf
   useEffect(() => {
     setSelectedLeaf(null);
   }, [selectedStemId]);
 
   const handleSelectLeaf = (leaf: LeafType) => {
-    setSelectedLeaf(prev => prev?.id === leaf.id ? null : leaf); // Toggle selection
+    setSelectedLeaf(prev => prev?.id === leaf.id ? null : leaf);
   };
 
   const handleSaveLeaf = (updatedLeaf: LeafType) => {
@@ -93,7 +152,7 @@ export function Dashboard({ user }: { user: User }) {
   const handleDeleteLeaf = (leafId: string) => {
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', leafId);
     deleteDocumentNonBlocking(leafRef);
-    setSelectedLeaf(null); // Deselect after deleting
+    setSelectedLeaf(null);
   };
 
   const handleAddStem = (name: string, description: string, icon: string, color: string) => {
@@ -109,7 +168,7 @@ export function Dashboard({ user }: { user: User }) {
     };
     const stemRef = doc(firestore, 'users', user.uid, 'stems', stemId);
     setDocumentNonBlocking(stemRef, newStem, { merge: false });
-    setSelectedStemId(stemId); // Select the new stem
+    setSelectedStemId(stemId);
   };
 
   const handleEditStemSubmit = (updatedStem: Omit<StemType, 'leaves'>) => {
@@ -125,16 +184,13 @@ export function Dashboard({ user }: { user: User }) {
   const handleDeleteStem = async (stemId: string) => {
     if (!window.confirm("Are you sure you want to delete this stem and all its leaves? This action cannot be undone.")) return;
 
-    // Delete all leaves associated with the stem first
     const leavesToDelete = leavesByStem[stemId] || [];
     const deletePromises = leavesToDelete.map(leaf => deleteDoc(doc(firestore, 'users', user.uid, 'leaves', leaf.id)));
     await Promise.all(deletePromises);
 
-    // Then delete the stem
     const stemRef = doc(firestore, 'users', user.uid, 'stems', stemId);
     deleteDocumentNonBlocking(stemRef);
 
-    // If the deleted stem was selected, select another one
     if(selectedStemId === stemId) {
       const remainingStems = stems?.filter(s => s.id !== stemId);
       setSelectedStemId(remainingStems && remainingStems.length > 0 ? remainingStems[0].id : null);
@@ -186,7 +242,7 @@ export function Dashboard({ user }: { user: User }) {
   }
 
   return (
-    <div className={cn("h-screen w-full flex", "bg-background font-body")}>
+    <div className={"h-screen w-full flex bg-background font-body"}>
       <StemSelector 
         stems={gardenWithLeaves}
         selectedStemId={selectedStemId}
@@ -196,6 +252,8 @@ export function Dashboard({ user }: { user: User }) {
         onSearch={setSearchQuery}
         searchQuery={searchQuery}
         user={user}
+        searchResults={searchResults}
+        onSearchResultClick={handleSearchResultClick}
       />
       
       <main className="flex-grow h-screen overflow-y-auto">
@@ -209,7 +267,6 @@ export function Dashboard({ user }: { user: User }) {
             onAddLeaf={handleOpenAddLeaf}
             onEditStem={handleOpenEditStem}
             onDeleteStem={handleDeleteStem}
-            searchQuery={searchQuery}
           />
         ) : (
           <div className="flex h-full flex-col items-center justify-center text-center p-8">
