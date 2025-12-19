@@ -1,15 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import type { Stem as StemType, Leaf as LeafType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, ChevronDown } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
 import { Leaf } from './leaf';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Highlight } from '../ui/highlight';
-import { HybridCarousel } from './hybrid-carousel';
 import { calculateMasteryLevel } from '@/lib/utils';
 import { Progress } from '../ui/progress';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { cn } from '@/lib/utils';
 
 interface StemProps {
   stem: Omit<StemType, 'leaves'>;
@@ -19,61 +15,10 @@ interface StemProps {
   searchQuery?: string;
 }
 
-const StemTrunk = ({ progress, ...props }: { progress: number } & React.HTMLAttributes<HTMLDivElement>) => {
-    const height = 150; 
-    const animatedHeight = (height + 16) * (progress / 100);
-  
-    const percentage = progress / 100;
-    const h = 40 + (125 - 40) * percentage;
-    const s = 10 + (28 - 10) * percentage;
-    const l = 80 + (25 - 80) * percentage;
-    const animatedColor = `hsl(${h}, ${s}%, ${l}%)`;
-    const animatedColorHover = `hsl(${h}, ${s + 10}%, ${l - 10}%)`;
-
-    const pathD = `M 16,${height + 16} C 16,${height} 0,${height/1.5} 16,${height/2} C 32,${height/3} 16,${height/4} 16,0`;
-    const pathLength = 250; 
-  
-    return (
-      <div className="absolute left-0 -top-4 bottom-0 w-8 cursor-pointer group" aria-hidden="true" {...props}>
-        <svg width="100%" height="100%" viewBox={`0 0 32 ${height + 16}`} preserveAspectRatio="xMidYMax meet">
-          {/* Base path */}
-          <path d={pathD} stroke="hsl(var(--border))" strokeWidth="2" fill="none" />
-  
-          {/* Glow effect on hover */}
-          <path
-            d={pathD}
-            stroke={animatedColorHover}
-            strokeWidth="8"
-            fill="none"
-            strokeDasharray={pathLength}
-            strokeDashoffset={pathLength - (animatedHeight / (height+16) * pathLength)}
-            className="opacity-0 group-hover:opacity-30 transition-opacity duration-300"
-          />
-
-          {/* Main animated path */}
-          <path
-            d={pathD}
-            stroke={animatedColor}
-            strokeWidth="4"
-            fill="none"
-            strokeDasharray={pathLength}
-            strokeDashoffset={pathLength - (animatedHeight / (height+16) * pathLength)}
-            className="transition-all duration-1000 ease-in-out group-hover:stroke-[6px]"
-            style={{
-                stroke: animatedColor,
-                transition: 'stroke 0.3s ease-in-out, stroke-dashoffset 1s ease-out, stroke-width 0.3s ease-in-out'
-            }}
-          />
-        </svg>
-      </div>
-    );
-};
 
 export function Stem({ stem, leaves, onSelectLeaf, onAddLeaf, searchQuery = '' }: StemProps) {
   const leafList = leaves || [];
-  const useCarousel = leafList.length > 4;
-  const [isOpen, setIsOpen] = useState(true);
-
+  
   const stemMastery = useMemo(() => {
     if (!leafList || leafList.length === 0) return 0;
     const totalMastery = leafList.reduce((sum, leaf) => sum + calculateMasteryLevel(leaf.quests), 0);
@@ -81,57 +26,52 @@ export function Stem({ stem, leaves, onSelectLeaf, onAddLeaf, searchQuery = '' }
   }, [leafList]);
 
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="relative pl-8">
-      <CollapsibleTrigger asChild>
-        <StemTrunk progress={stemMastery} />
-      </CollapsibleTrigger>
-      <div className="space-y-4 rounded-lg border bg-card p-6 ml-8">
-        <div className="flex items-start justify-between gap-4">
-            <div className='flex-grow'>
-                <div className="flex items-center gap-2">
-                    <CollapsibleTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                         <ChevronDown className={cn("size-5 text-muted-foreground/80 transition-transform", isOpen && "rotate-180")} />
-                      </Button>
-                    </CollapsibleTrigger>
-                    <h2 className="font-headline text-3xl text-foreground/80">
-                        <Highlight text={stem.name} query={searchQuery} />
-                    </h2>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => onAddLeaf(stem.id)} aria-label={`Add new skill to ${stem.name}`}>
-                      <PlusCircle className="size-6 text-muted-foreground/50 transition-colors group-hover:text-primary" />
-                    </Button>
-                </div>
-                <div className='mt-2 pr-12 pl-12'>
-                    <Progress value={stemMastery} />
-                </div>
+    <div className="relative py-12">
+        {/* Central Stem Line */}
+        <div className="absolute top-0 bottom-0 left-1/2 w-1 -translate-x-1/2 bg-neutral-300 dark:bg-neutral-700" />
+
+        {/* Stem Header (Root of the Stem) */}
+        <div className="relative z-10 mx-auto mb-12 flex w-full max-w-sm flex-col items-center">
+            <div className="flex items-center gap-2">
+                <h2 className="text-center font-headline text-3xl text-foreground/80">
+                    <Highlight text={stem.name} query={searchQuery} />
+                </h2>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => onAddLeaf(stem.id)} aria-label={`Add new skill to ${stem.name}`}>
+                    <PlusCircle className="size-6 text-muted-foreground/50 transition-colors group-hover:text-primary" />
+                </Button>
             </div>
-          <div className="text-right text-sm text-muted-foreground flex-shrink-0">
-            <div className="font-bold">{leafList.length}</div>
-            <div>{leafList.length === 1 ? 'Skill' : 'Skills'}</div>
-          </div>
+            <div className='mt-2 w-full px-4'>
+                <Progress value={stemMastery} />
+            </div>
+            <div className="mt-2 text-sm text-muted-foreground">
+                {leafList.length} {leafList.length === 1 ? 'Skill' : 'Skills'}
+            </div>
         </div>
-        
-        <CollapsibleContent>
-            {useCarousel ? (
-                <HybridCarousel 
-                  leaves={leafList} 
-                  onSelectLeaf={onSelectLeaf} 
-                  searchQuery={searchQuery} 
-                />
-            ) : (
-              <div className="relative -ml-2">
-                  <ScrollArea>
-                    <div className="flex gap-0 pb-4">
-                      {leafList.map((leaf) => (
-                        <Leaf key={leaf.id} leaf={leaf} onClick={() => onSelectLeaf(leaf)} searchQuery={searchQuery} />
-                      ))}
+
+        {/* Leaves Branching Out */}
+        <div className="relative flex flex-col items-center gap-y-8">
+            {leafList.map((leaf, index) => {
+                const isRightSide = index % 2 !== 0;
+                return (
+                    <div 
+                        key={leaf.id} 
+                        className="relative flex w-full justify-center"
+                        style={{ paddingLeft: isRightSide ? '5rem' : '0', paddingRight: !isRightSide ? '5rem' : '0'}}
+                    >
+                        <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-neutral-300 dark:bg-neutral-700" />
+                        <div className={`flex w-full ${isRightSide ? 'justify-start' : 'justify-end'}`}>
+                            <div className="relative z-10 bg-background px-2">
+                                <Leaf 
+                                    leaf={leaf}
+                                    onClick={() => onSelectLeaf(leaf)}
+                                    searchQuery={searchQuery}
+                                />
+                            </div>
+                        </div>
                     </div>
-                    <ScrollBar orientation="horizontal" />
-                  </ScrollArea>
-              </div>
-            )}
-        </CollapsibleContent>
-      </div>
-    </Collapsible>
+                )
+            })}
+        </div>
+    </div>
   );
 }
