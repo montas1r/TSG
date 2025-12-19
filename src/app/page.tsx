@@ -26,7 +26,7 @@ export default function Home() {
 
   if (isUserLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center">
+      <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     );
@@ -36,7 +36,7 @@ export default function Home() {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
         <div className="text-center">
-          <h1 className="font-headline text-5xl text-primary">Welcome to the Skill Garden</h1>
+          <h1 className="font-heading text-5xl text-primary">Welcome to the Skill Garden</h1>
           <p className="mt-4 text-lg text-muted-foreground">Please sign in to continue</p>
           <Button onClick={handleSignIn} className="mt-8" size="lg">
             Sign In Anonymously
@@ -48,4 +48,3 @@ export default function Home() {
 
   return <Dashboard user={user} />;
 }
-

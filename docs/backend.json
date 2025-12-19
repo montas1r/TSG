@@ -73,7 +73,10 @@
         "id",
         "userId",
         "name",
-        "createdAt"
+        "createdAt",
+        "icon",
+        "color",
+        "description"
       ]
     },
     "Leaf": {

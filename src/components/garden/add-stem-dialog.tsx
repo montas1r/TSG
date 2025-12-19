@@ -48,7 +48,7 @@ export function AddStemDialog({ isOpen, onOpenChange, onAddStem }: AddStemDialog
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="font-headline">Plant a New Stem</DialogTitle>
+          <DialogTitle className="font-heading">Plant a New Stem</DialogTitle>
           <DialogDescription>
             A stem is a category for your skills. Give it a name and choose an icon and color to represent it.
           </DialogDescription>

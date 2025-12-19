@@ -221,7 +221,7 @@ export function Dashboard({ user }: { user: User }) {
       id: stemId,
       createdAt: new Date().toISOString(),
       icon: 'Sprout',
-      color: '#8bc34a',
+      color: '#8b5cf6',
       description: 'AI-suggested skills'
     };
     const stemRef = doc(firestore, 'users', user.uid, 'stems', stemId);
@@ -270,7 +270,7 @@ export function Dashboard({ user }: { user: User }) {
           />
         ) : (
           <div className="flex h-full flex-col items-center justify-center text-center p-8">
-            <h3 className="font-headline text-4xl text-primary">Welcome to your Skill Garden!</h3>
+            <h3 className="font-heading text-4xl text-primary">Welcome to your Skill Garden!</h3>
             <p className="mt-4 max-w-md text-lg text-muted-foreground">
               Your garden is a place to cultivate new talents. Start by planting a "Stem" — a category for the skills you want to grow.
             </p>

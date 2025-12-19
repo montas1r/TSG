@@ -30,11 +30,13 @@ export function Leaf({ leaf, onClick, searchQuery = '' }: LeafProps) {
     // HSL for Forest (primary): 125 28% 25%
     
     const percentage = level / 100;
-    const h = 110 + (125 - 110) * percentage;
-    const s = 20 + (28 - 20) * percentage;
-    const l = 88 + (25 - 88) * percentage;
-    
-    return `hsl(${h}, ${s}%, ${l}%)`;
+
+    // Using the new theme's mastery colors from globals.css
+    if (level <= 1) return 'hsl(var(--mastery-0))';
+    if (level <= 25) return 'hsl(var(--mastery-1))';
+    if (level <= 50) return 'hsl(var(--mastery-2))';
+    if (level <= 75) return 'hsl(var(--mastery-3))';
+    return 'hsl(var(--mastery-4))';
   };
 
   const isMastered = masteryLevel > 80;
@@ -43,7 +45,7 @@ export function Leaf({ leaf, onClick, searchQuery = '' }: LeafProps) {
     <button
       onClick={onClick}
       className={cn(
-        'group relative flex w-36 cursor-pointer flex-col items-center gap-1 rounded-lg p-2 transition-all hover:bg-accent/50',
+        'group relative flex w-36 cursor-pointer flex-col items-center gap-1 rounded-lg p-2 transition-all hover:bg-accent/10',
         isMastered && 'animate-sway'
       )}
       style={{ animationDelay }}
@@ -56,7 +58,7 @@ export function Leaf({ leaf, onClick, searchQuery = '' }: LeafProps) {
           )}
           style={{
             fill: getMasteryColor(),
-            stroke: isMastered ? 'hsl(var(--primary))' : 'hsl(var(--muted))'
+            stroke: isMastered ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))'
           }}
         />
       </div>
@@ -66,4 +68,3 @@ export function Leaf({ leaf, onClick, searchQuery = '' }: LeafProps) {
     </button>
   );
 }
-

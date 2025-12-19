@@ -41,7 +41,7 @@ export function AddLeafDialog({ isOpen, onOpenChange, onAddLeaf, stemId }: AddLe
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="font-headline">Plant a New Skill</DialogTitle>
+          <DialogTitle className="font-heading">Plant a New Skill</DialogTitle>
           <DialogDescription>
             Add a new skill leaf to your garden stem. What do you want to learn?
           </DialogDescription>

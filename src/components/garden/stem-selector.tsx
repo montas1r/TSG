@@ -9,7 +9,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { StemItem } from './stem-item';
 import type { User } from 'firebase/auth';
 import type { FuseResult } from 'fuse.js';
-import { Badge } from '../ui/badge';
 import { Highlight } from '../ui/highlight';
 import { cn } from '@/lib/utils';
 import { useMemo } from 'react';
@@ -67,7 +66,7 @@ export function StemSelector({
         <div className="flex items-center justify-between">
            <div className="flex items-center gap-3">
              <Sprout className="size-8 text-primary" />
-             <h1 className="font-headline text-2xl tracking-tight text-primary">Skill Garden</h1>
+             <h1 className="font-heading text-2xl tracking-tight text-primary">Skill Garden</h1>
            </div>
         </div>
         <div className="relative mt-4">

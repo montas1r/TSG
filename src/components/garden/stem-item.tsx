@@ -23,7 +23,7 @@ export function StemItem({ stem, isSelected, onClick }: StemItemProps) {
     <button
       onClick={onClick}
       className={cn(
-        'w-full text-left p-2 rounded-lg transition-colors flex items-center gap-3 group',
+        'w-full text-left p-2 rounded-md transition-colors flex items-center gap-3 group',
         isSelected ? 'bg-primary/10' : 'hover:bg-accent/50'
       )}
       style={isSelected ? { '--stem-color': stem.color } as React.CSSProperties : {}}
@@ -49,4 +49,3 @@ export function StemItem({ stem, isSelected, onClick }: StemItemProps) {
     </button>
   );
 }
-

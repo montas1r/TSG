@@ -17,8 +17,6 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { AnimatePresence, motion } from 'framer-motion';
-import { Highlight } from '../ui/highlight';
-
 
 interface StemProps {
   stem: StemTypeWithLeaves;
@@ -55,7 +53,7 @@ export function Stem({
       {/* Stem Header */}
       <header className="relative z-10 flex items-center justify-between pb-4 border-b">
         <div className="flex-grow">
-            <h2 className="font-headline text-3xl text-foreground/80 truncate">
+            <h2 className="font-heading text-3xl text-foreground/80 truncate">
                 {stem.name}
             </h2>
             <p className="text-sm text-muted-foreground mt-1 truncate">
@@ -95,7 +93,7 @@ export function Stem({
             />
         ) : (
             <div className="flex-grow flex flex-col items-center justify-center text-center text-muted-foreground p-8">
-              <p className="font-headline text-xl">This stem is empty.</p>
+              <p className="font-heading text-xl">This stem is empty.</p>
               <p className="mb-4">Plant your first skill to get started.</p>
               <Button onClick={() => onAddLeaf(stem.id)}>
                 <PlusCircle className="mr-2" /> Plant a Skill

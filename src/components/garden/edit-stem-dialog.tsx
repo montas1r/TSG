@@ -28,14 +28,14 @@ export function EditStemDialog({ isOpen, onOpenChange, stem, onEditStem }: EditS
   const [name, setName] = useState(stem.name);
   const [description, setDescription] = useState(stem.description || '');
   const [icon, setIcon] = useState(stem.icon || 'Sprout');
-  const [color, setColor] = useState(stem.color || '#8bc34a');
+  const [color, setColor] = useState(stem.color || '#8b5cf6');
 
   useEffect(() => {
     if (isOpen) {
       setName(stem.name);
       setDescription(stem.description || '');
       setIcon(stem.icon || 'Sprout');
-      setColor(stem.color || '#8bc34a');
+      setColor(stem.color || '#8b5cf6');
     }
   }, [isOpen, stem]);
 
@@ -56,7 +56,7 @@ export function EditStemDialog({ isOpen, onOpenChange, stem, onEditStem }: EditS
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="font-headline">Edit Stem</DialogTitle>
+          <DialogTitle className="font-heading">Edit Stem</DialogTitle>
           <DialogDescription>
             Update the details for your skill category.
           </DialogDescription>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -66,7 +67,7 @@ export function SuggestionDialog({ isOpen, onOpenChange, currentSkills, onAddSki
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-headline flex items-center gap-2">
+          <DialogTitle className="font-heading flex items-center gap-2">
             <Sparkles className="text-primary" />
             Discover New Skills
           </DialogTitle>
@@ -85,7 +86,7 @@ export function SuggestionDialog({ isOpen, onOpenChange, currentSkills, onAddSki
              <Accordion type="single" collapsible className="w-full">
                 {suggestions.map((bundle, index) => (
                     <AccordionItem value={`item-${index}`} key={index}>
-                        <AccordionTrigger className="font-headline text-lg">{bundle.stem}</AccordionTrigger>
+                        <AccordionTrigger className="font-heading text-lg">{bundle.stem}</AccordionTrigger>
                         <AccordionContent>
                            <div className="flex flex-col items-start gap-4">
                                 <div className="flex flex-wrap gap-2">

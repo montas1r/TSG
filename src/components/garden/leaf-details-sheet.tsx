@@ -93,7 +93,7 @@ export function LeafDetails({
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle className="font-headline text-2xl">
+        <CardTitle className="font-heading text-2xl">
           <Highlight text={formData.name} query={searchQuery} />
         </CardTitle>
         <CardDescription>Nurture your skill. Add quests, notes, and track your progress. Changes save automatically.</CardDescription>
@@ -101,7 +101,7 @@ export function LeafDetails({
       <CardContent className="grid md:grid-cols-2 gap-6">
         <div className="space-y-6">
           <div className="space-y-4 rounded-lg border p-4">
-              <h3 className="font-headline text-lg">Quests</h3>
+              <h3 className="font-heading text-lg">Quests</h3>
               <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
                   {(formData.quests || []).map((quest) => (
                       <div key={quest.id} className="flex items-center gap-2">
@@ -164,7 +164,7 @@ export function LeafDetails({
         </div>
       </CardContent>
       <CardFooter>
-        <Button variant="outline" onClick={onDelete}>
+        <Button variant="destructive" onClick={onDelete}>
             <Trash2 className="mr-2 size-4" /> Remove Skill
         </Button>
       </CardFooter>

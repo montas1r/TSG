@@ -4,80 +4,78 @@
 
 @layer base {
   :root {
-    --background: 40 40% 98%; /* Warm Parchment White */
-    --foreground: 30 10% 25%; /* Dark Earthy Brown Text */
+    /* Primary Colors - Energetic Green Growth */
+    --primary: 142 76% 36%;           /* #16a34a - Vibrant Green */
+    --primary-foreground: 0 0% 100%;  /* White */
 
-    --card: 40 40% 99%;
-    --card-foreground: 30 10% 25%;
+    /* Secondary Colors - Earthy Support */
+    --secondary: 24 70% 50%;          /* #e67e22 - Warm Orange */
+    --secondary-foreground: 0 0% 100%;
 
-    --popover: 40 40% 99%;
-    --popover-foreground: 30 10% 25%;
+    /* Accent Colors - Motivational Purple */
+    --accent: 262 83% 58%;            /* #8b5cf6 - Electric Purple */
+    --accent-foreground: 0 0% 100%;
 
-    --primary: 140 35% 45%; /* Deep Moss Green */
-    --primary-foreground: 140 20% 98%; /* Light Greenish White */
+    /* Background System */
+    --background: 0 0% 98%;           /* #fafafa - Soft White */
+    --foreground: 222 47% 11%;        /* #0f172a - Deep Navy */
 
-    --secondary: 90 25% 90%; /* Light Fern */
-    --secondary-foreground: 140 35% 30%;
+    --card: 0 0% 100%;                /* White Cards */
+    --card-foreground: 222 47% 11%;
 
-    --muted: 90 25% 92%;
-    --muted-foreground: 40 8% 45%;
+    --muted: 210 40% 96%;             /* #f1f5f9 - Light Gray Blue */
+    --muted-foreground: 215 16% 47%;  /* #64748b - Medium Gray */
 
-    --accent: 90 30% 85%; /* Soft Sage */
-    --accent-foreground: 140 35% 25%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
 
-    --destructive: 0 70% 55%;
+    /* Semantic Colors */
+    --destructive: 0 84% 60%;         /* #ef4444 - Red */
     --destructive-foreground: 0 0% 100%;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
 
-    --border: 40 20% 88%; /* Light Soil Brown Border */
-    --input: 40 20% 88%;
-    --ring: 140 35% 45%;
+    /* Interactive States */
+    --border: 214 32% 91%;            /* #e2e8f0 - Light Border */
+    --input: 214 32% 91%;
+    --ring: 142 76% 36%;              /* Primary Green Focus Ring */
 
-    --radius: 0.75rem; /* Slightly more rounded */
+    /* Border Radius */
+    --radius: 0.75rem;
   }
 
   .dark {
-    --background: 220 25% 10%; /* Deep Slate Blue */
-    --foreground: 220 15% 90%;
+    --primary: 142 70% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 24 65% 55%;
+    --secondary-foreground: 0 0% 100%;
     
-    --card: 220 25% 12%;
-    --card-foreground: 220 15% 90%;
-    
-    --popover: 220 25% 10%;
-    --popover-foreground: 220 15% 90%;
-    
-    --primary: 130 50% 60%; /* Glowing Jade Green */
-    --primary-foreground: 130 30% 10%;
-    
-    --secondary: 220 20% 25%; /* Darker Slate */
-    --secondary-foreground: 220 10% 80%;
-    
-    --muted: 220 20% 20%;
-    --muted-foreground: 220 10% 65%;
-    
-    --accent: 130 40% 30%; /* Deep Glowing Accent */
-    --accent-foreground: 130 50% 70%;
-    
-    --destructive: 0 60% 50%;
-    --destructive-foreground: 0 0% 98%;
-    
-    --border: 220 20% 30%;
-    --input: 220 20% 20%;
-    --ring: 130 50% 60%;
-    
-    --chart-1: 130 50% 60%;
-    --chart-2: 190 60% 55%;
-    --chart-3: 80 50% 60%;
-    --chart-4: 340 70% 65%;
-    --chart-5: 40 70% 60%;
-    
-    --sidebar-background: 220 25% 10%;
-    --sidebar-foreground: 220 15% 90%;
-    --sidebar-primary: 130 50% 60%;
-    --sidebar-primary-foreground: 130 30% 10%;
-    --sidebar-accent: 130 40% 30%;
-    --sidebar-accent-foreground: 130 50% 70%;
-    --sidebar-border: 220 20% 30%;
-    --sidebar-ring: 130 50% 60%;
+    --accent: 262 90% 65%;
+    --accent-foreground: 0 0% 100%;
+
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+
+    --card: 224 71% 4%;
+    --card-foreground: 210 40% 98%;
+
+    --muted: 223 47% 18%;
+    --muted-foreground: 215 16% 65%;
+
+    --popover: 224 71% 4%;
+    --popover-foreground: 210 40% 98%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 20% 30%;
+    --input: 215 20% 30%;
+    --ring: 142 70% 45%;
   }
 }
 
@@ -87,11 +85,51 @@
   }
   body {
     @apply bg-background text-foreground;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
-@keyframes marquee {
-  0% { transform: translateX(0%); }
-  100% { transform: translateX(-100%); }
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(-25%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); }
+  50% { transform: translateY(0); animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
+}
+
+@keyframes grow {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes confetti {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(1000px) rotate(720deg); opacity: 0; }
 }
