@@ -36,5 +36,3 @@ export function SkillMarquee({ leaves, onSelectLeaf, searchQuery = '' }: SkillMa
     </div>
   );
 }
-
-    

@@ -101,23 +101,29 @@
           "type": "string",
           "description": "The name of the skill (leaf)."
         },
-        "description": {
-          "type": "string",
-          "description": "A brief description of the skill."
-        },
-        "bloomed": {
-          "type": "boolean",
-          "description": "Indicates whether the skill is 'bloomed' (mastered)."
-        },
         "notes": {
           "type": "string",
           "description": "Notes related to the skill."
         },
-        "links": {
+        "link": {
+          "type": "string",
+          "description": "A single resource link related to the skill."
+        },
+        "masteryLevel": {
+          "type": "number",
+          "description": "A calculated percentage (0-100) representing skill mastery."
+        },
+        "quests": {
           "type": "array",
-          "description": "Links to resources related to the skill.",
+          "description": "A list of tasks or goals to achieve for this skill.",
           "items": {
-            "type": "string"
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "text": { "type": "string" },
+              "completed": { "type": "boolean" }
+            },
+            "required": ["id", "text", "completed"]
           }
         }
       },
