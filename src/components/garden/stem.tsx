@@ -32,7 +32,7 @@ const StemTrunk = ({ progress }: { progress: number }) => {
     const pathLength = 250; // Approximate length of the curved path
   
     return (
-      <div className="absolute left-8 -top-4 bottom-0 w-8" aria-hidden="true">
+      <div className="absolute left-0 -top-4 bottom-0 w-8" aria-hidden="true">
         <svg width="100%" height="100%" viewBox={`0 0 32 ${height + 16}`} preserveAspectRatio="xMidYMax meet">
           {/* Background Trunk */}
           <path d={pathD} stroke="hsl(var(--border))" strokeWidth="2" fill="none" />
@@ -63,9 +63,9 @@ export function Stem({ stem, leaves, onSelectLeaf, onAddLeaf, searchQuery = '' }
   }, [leafList]);
 
   return (
-    <div className="relative pl-20">
+    <div className="relative pl-8">
        <StemTrunk progress={stemMastery} />
-      <div className="space-y-4 rounded-lg border bg-card p-6">
+      <div className="space-y-4 rounded-lg border bg-card p-6 ml-8">
         <div className="flex items-center justify-between gap-4">
             <div className='flex-grow'>
                 <div className="flex items-center gap-4">
