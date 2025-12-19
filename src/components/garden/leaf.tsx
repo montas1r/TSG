@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { Leaf as LeafType } from '@/lib/types';
@@ -65,3 +66,4 @@ export function Leaf({ leaf, onClick, searchQuery = '' }: LeafProps) {
     </button>
   );
 }
+
