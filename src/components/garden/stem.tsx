@@ -28,6 +28,7 @@ const StemTrunk = ({ progress, ...props }: { progress: number } & React.HTMLAttr
     const s = 10 + (28 - 10) * percentage;
     const l = 80 + (25 - 80) * percentage;
     const animatedColor = `hsl(${h}, ${s}%, ${l}%)`;
+    const animatedColorHover = `hsl(${h}, ${s + 10}%, ${l - 10}%)`;
 
     const pathD = `M 16,${height + 16} C 16,${height} 0,${height/1.5} 16,${height/2} C 32,${height/3} 16,${height/4} 16,0`;
     const pathLength = 250; 
@@ -35,8 +36,21 @@ const StemTrunk = ({ progress, ...props }: { progress: number } & React.HTMLAttr
     return (
       <div className="absolute left-0 -top-4 bottom-0 w-8 cursor-pointer group" aria-hidden="true" {...props}>
         <svg width="100%" height="100%" viewBox={`0 0 32 ${height + 16}`} preserveAspectRatio="xMidYMax meet">
+          {/* Base path */}
           <path d={pathD} stroke="hsl(var(--border))" strokeWidth="2" fill="none" />
   
+          {/* Glow effect on hover */}
+          <path
+            d={pathD}
+            stroke={animatedColorHover}
+            strokeWidth="8"
+            fill="none"
+            strokeDasharray={pathLength}
+            strokeDashoffset={pathLength - (animatedHeight / (height+16) * pathLength)}
+            className="opacity-0 group-hover:opacity-30 transition-opacity duration-300"
+          />
+
+          {/* Main animated path */}
           <path
             d={pathD}
             stroke={animatedColor}
@@ -45,6 +59,10 @@ const StemTrunk = ({ progress, ...props }: { progress: number } & React.HTMLAttr
             strokeDasharray={pathLength}
             strokeDashoffset={pathLength - (animatedHeight / (height+16) * pathLength)}
             className="transition-all duration-1000 ease-in-out group-hover:stroke-[6px]"
+            style={{
+                stroke: animatedColor,
+                transition: 'stroke 0.3s ease-in-out, stroke-dashoffset 1s ease-out, stroke-width 0.3s ease-in-out'
+            }}
           />
         </svg>
       </div>
