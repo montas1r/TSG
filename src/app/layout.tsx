@@ -1,12 +1,32 @@
 
-import type {Metadata} from 'next';
-import './globals.css';
-import { Toaster } from "@/components/ui/toaster"
+import type { Metadata } from "next";
+import { Inter, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import "./globals.css";
+import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from '@/firebase';
 
+const inter = Inter({ 
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const jakarta = Plus_Jakarta_Sans({ 
+  subsets: ["latin"],
+  weight: ['700', '800'],
+  variable: "--font-jakarta",
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({ 
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: 'The Skill Garden',
-  description: 'Nurture your skills and watch them grow.',
+  title: "The Skill Garden - Grow Your Skills",
+  description: "Nurture your skills and watch them grow.",
 };
 
 export default function RootLayout({
@@ -16,12 +36,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800&family=JetBrains+Mono&display=swap" rel="stylesheet" />
-      </head>
-      <body className="font-body antialiased overflow-hidden">
+       <body className={`${inter.variable} ${jakarta.variable} ${jetbrainsMono.variable} font-body antialiased overflow-hidden`}>
         <FirebaseClientProvider>
           {children}
         </FirebaseClientProvider>

@@ -4,78 +4,93 @@
 
 @layer base {
   :root {
-    /* Primary Colors - Energetic Green Growth */
-    --primary: 142 76% 36%;           /* #16a34a - Vibrant Green */
-    --primary-foreground: 0 0% 100%;  /* White */
+    /* Color System - Vibrant Growth Theme */
+    --background: 0 0% 98%;           /* #fafafa */
+    --foreground: 222 47% 11%;        /* #0f172a */
 
-    /* Secondary Colors - Earthy Support */
-    --secondary: 24 70% 50%;          /* #e67e22 - Warm Orange */
-    --secondary-foreground: 0 0% 100%;
-
-    /* Accent Colors - Motivational Purple */
-    --accent: 262 83% 58%;            /* #8b5cf6 - Electric Purple */
-    --accent-foreground: 0 0% 100%;
-
-    /* Background System */
-    --background: 0 0% 98%;           /* #fafafa - Soft White */
-    --foreground: 222 47% 11%;        /* #0f172a - Deep Navy */
-
-    --card: 0 0% 100%;                /* White Cards */
+    --card: 0 0% 100%;                /* #ffffff */
     --card-foreground: 222 47% 11%;
-
-    --muted: 210 40% 96%;             /* #f1f5f9 - Light Gray Blue */
-    --muted-foreground: 215 16% 47%;  /* #64748b - Medium Gray */
 
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    /* Semantic Colors */
-    --destructive: 0 84% 60%;         /* #ef4444 - Red */
+    --primary: 142 76% 36%;           /* #16a34a - Vibrant Green */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 24 70% 50%;          /* #e67e22 - Warm Orange */
+    --secondary-foreground: 0 0% 100%;
+
+    --accent: 262 83% 58%;            /* #8b5cf6 - Electric Purple */
+    --accent-foreground: 0 0% 100%;
+
+    --muted: 210 40% 96%;             /* #f1f5f9 */
+    --muted-foreground: 215 16% 47%;  /* #64748b */
+
+    --destructive: 0 84% 60%;         /* #ef4444 */
     --destructive-foreground: 0 0% 100%;
+
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
+
+    --warning: 38 92% 50%;            /* #f59e0b */
     --warning-foreground: 0 0% 100%;
-    --info: 199 89% 48%;
+
+    --info: 199 89% 48%;              /* #0ea5e9 */
     --info-foreground: 0 0% 100%;
 
-    /* Interactive States */
-    --border: 214 32% 91%;            /* #e2e8f0 - Light Border */
+    --border: 214 32% 91%;            /* #e2e8f0 */
     --input: 214 32% 91%;
-    --ring: 142 76% 36%;              /* Primary Green Focus Ring */
+    --ring: 142 76% 36%;
+
+    /* Mastery Level Colors - Garden Growth Progression */
+    --mastery-0: 0 0% 85%;            /* #d9d9d9 - Seed */
+    --mastery-1: 142 40% 70%;         /* #90d5a8 - Sprout */
+    --mastery-2: 142 50% 50%;         /* #40c463 - Growing */
+    --mastery-3: 142 70% 40%;         /* #22a044 - Blooming */
+    --mastery-4: 142 90% 30%;         /* #0d7a2e - Flourishing */
 
     /* Border Radius */
-    --radius: 0.75rem;
+    --radius-sm: 0.375rem;            /* 6px */
+    --radius: 0.5rem;                 /* 8px */
+    --radius-md: 0.75rem;             /* 12px */
+    --radius-lg: 1rem;                /* 16px */
+    --radius-xl: 1.5rem;              /* 24px */
+    --radius-2xl: 2rem;               /* 32px */
+
+    /* Animation Durations */
+    --duration-fast: 150ms;
+    --duration-normal: 250ms;
+    --duration-slow: 350ms;
   }
 
   .dark {
-    --primary: 142 70% 45%;
-    --primary-foreground: 0 0% 100%;
+    --background: 222 47% 11%;        /* #0f172a */
+    --foreground: 210 40% 98%;        /* #f8fafc */
 
-    --secondary: 24 65% 55%;
-    --secondary-foreground: 0 0% 100%;
-    
-    --accent: 262 90% 65%;
-    --accent-foreground: 0 0% 100%;
-
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-
-    --card: 224 71% 4%;
+    --card: 222 47% 15%;              /* #1e293b */
     --card-foreground: 210 40% 98%;
 
-    --muted: 223 47% 18%;
-    --muted-foreground: 215 16% 65%;
-
-    --popover: 224 71% 4%;
+    --popover: 222 47% 15%;
     --popover-foreground: 210 40% 98%;
+
+    --primary: 142 76% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 24 70% 60%;
+    --secondary-foreground: 0 0% 100%;
+
+    --accent: 262 83% 65%;
+    --accent-foreground: 0 0% 100%;
+
+    --muted: 217 33% 17%;             /* #1e293b */
+    --muted-foreground: 215 20% 65%;  /* #94a3b8 */
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 20% 30%;
-    --input: 215 20% 30%;
-    --ring: 142 70% 45%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 142 76% 45%;
   }
 }
 
@@ -83,53 +98,275 @@
   * {
     @apply border-border;
   }
+  
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+
+  /* Scrollbar Styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
+  }
+
+  /* Selection */
+  ::selection {
+    @apply bg-primary/20;
+  }
 }
 
+/* Custom Animations */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { transform: translateY(10px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 @keyframes slideDown {
-  from { transform: translateY(-10px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
 }
 
 @keyframes scaleIn {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 @keyframes shimmer {
-  0% { background-position: -1000px 0; }
-  100% { background-position: 1000px 0; }
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 @keyframes bounce {
-  0%, 100% { transform: translateY(-25%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); }
-  50% { transform: translateY(0); animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
+  0%, 100% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes grow {
-  from { transform: scale(0); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 @keyframes confetti {
-  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-  100% { transform: translateY(1000px) rotate(720deg); opacity: 0; }
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(1000px) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+/* Animation Utilities */
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn var(--duration-normal) ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp var(--duration-normal) ease-out;
+  }
+
+  .animate-slide-down {
+    animation: slideDown var(--duration-normal) ease-out;
+  }
+
+  .animate-slide-in-right {
+    animation: slideInRight var(--duration-normal) ease-out;
+  }
+
+  .animate-slide-out-right {
+    animation: slideOutRight var(--duration-normal) ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn var(--duration-normal) ease-out;
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s infinite;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    background-size: 1000px 100%;
+  }
+
+  .animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-bounce {
+    animation: bounce 1s infinite;
+  }
+
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+
+  .animate-grow {
+    animation: grow var(--duration-normal) ease-out;
+  }
+
+  .animate-confetti {
+    animation: confetti 3s ease-out forwards;
+  }
+}
+
+/* Gradient Utilities */
+@layer utilities {
+  .gradient-primary {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(142 76% 50%) 100%);
+  }
+
+  .gradient-secondary {
+    background: linear-gradient(135deg, hsl(var(--secondary)) 0%, hsl(24 70% 60%) 100%);
+  }
+
+  .gradient-accent {
+    background: linear-gradient(135deg, hsl(var(--accent)) 0%, hsl(262 83% 68%) 100%);
+  }
+
+  .gradient-success {
+    background: linear-gradient(135deg, hsl(142 76% 36%) 0%, hsl(142 76% 46%) 100%);
+  }
+
+  .gradient-hero {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+  }
+
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+  }
+}
+
+/* Focus Styles */
+@layer utilities {
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+}
+
+/* Transition Utilities */
+@layer utilities {
+  .transition-smooth {
+    transition: all var(--duration-normal) cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .transition-fast {
+    transition: all var(--duration-fast) cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .transition-slow {
+    transition: all var(--duration-slow) cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
 }
