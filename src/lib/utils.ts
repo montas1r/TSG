@@ -1,3 +1,4 @@
+
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 import type { Quest } from '@/lib/types';
@@ -13,3 +14,5 @@ export function calculateMasteryLevel(quests?: Quest[]): number {
   const completedQuests = quests.filter((q) => q.completed).length;
   return Math.round((completedQuests / quests.length) * 100);
 }
+
+    

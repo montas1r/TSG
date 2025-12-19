@@ -52,3 +52,5 @@ export type SearchableQuest = Quest & {
 export type SearchableItem = SearchableStem | SearchableLeaf | SearchableQuest;
 
 export type SearchResult = FuseResult<SearchableItem>;
+
+    

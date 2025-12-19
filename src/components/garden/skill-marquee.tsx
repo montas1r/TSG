@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { Leaf as LeafType } from '@/lib/types';
@@ -35,3 +36,5 @@ export function SkillMarquee({ leaves, onSelectLeaf, searchQuery = '' }: SkillMa
     </div>
   );
 }
+
+    

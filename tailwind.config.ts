@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 const config: Config = {
@@ -93,56 +94,6 @@ const config: Config = {
         "glow-accent": "0 0 20px rgba(139, 92, 246, 0.3)",
       },
       keyframes: {
-        "fade-in": {
-          from: { opacity: "0" },
-          to: { opacity: "1" },
-        },
-        "slide-up": {
-          from: { transform: "translateY(10px)", opacity: "0" },
-          to: { transform: "translateY(0)", opacity: "1" },
-        },
-        "slide-down": {
-          from: { transform: "translateY(-10px)", opacity: "0" },
-          to: { transform: "translateY(0)", opacity: "1" },
-        },
-        "slide-in-right": {
-          from: { transform: "translateX(100%)" },
-          to: { transform: "translateX(0)" },
-        },
-        "slide-out-right": {
-          from: { transform: "translateX(0)" },
-          to: { transform: "translateX(100%)" },
-        },
-        "scale-in": {
-          from: { transform: "scale(0.95)", opacity: "0" },
-          to: { transform: "scale(1)", opacity: "1" },
-        },
-        shimmer: {
-          "0%": { backgroundPosition: "-1000px 0" },
-          "100%": { backgroundPosition: "1000px 0" },
-        },
-        pulse: {
-          "0%, 100%": { opacity: "1" },
-          "50%": { opacity: "0.5" },
-        },
-        bounce: {
-          "0%, 100%": {
-            transform: "translateY(-25%)",
-            animationTimingFunction: "cubic-bezier(0.8, 0, 1, 1)",
-          },
-          "50%": {
-            transform: "translateY(0)",
-            animationTimingFunction: "cubic-bezier(0, 0, 0.2, 1)",
-          },
-        },
-        grow: {
-          from: { transform: "scale(0)", opacity: "0" },
-          to: { transform: "scale(1)", opacity: "1" },
-        },
-        confetti: {
-          "0%": { transform: "translateY(0) rotate(0deg)", opacity: "1" },
-          "100%": { transform: "translateY(1000px) rotate(720deg)", opacity: "0" },
-        },
         "accordion-down": {
           from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
@@ -151,21 +102,20 @@ const config: Config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "marquee": {
+            '0%': { transform: 'translateX(0%)' },
+            '100%': { transform: 'translateX(-100%)' },
+        },
+        "sway": {
+            '0%, 100%': { transform: 'rotate(-1deg)' },
+            '50%': { transform: 'rotate(1deg)' },
+        }
       },
       animation: {
-        "fade-in": "fade-in 0.25s ease-out",
-        "slide-up": "slide-up 0.25s ease-out",
-        "slide-down": "slide-down 0.25s ease-out",
-        "slide-in-right": "slide-in-right 0.25s ease-out",
-        "slide-out-right": "slide-out-right 0.25s ease-out",
-        "scale-in": "scale-in 0.25s ease-out",
-        shimmer: "shimmer 2s infinite",
-        pulse: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-        bounce: "bounce 1s infinite",
-        grow: "grow 0.25s ease-out",
-        confetti: "confetti 3s ease-out forwards",
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "marquee": 'marquee 30s linear infinite',
+        "sway": 'sway 3s ease-in-out infinite',
       },
     },
   },
@@ -173,3 +123,5 @@ const config: Config = {
 };
 
 export default config;
+
+    
