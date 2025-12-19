@@ -212,7 +212,7 @@ export function Dashboard({ user }: { user: User }) {
         masteryLevel: 0,
         notes: '',
         link: '',
-        quests: [{ id: uuidv4(), text: 'Explore the basics', completed: false }]
+        quests: []
     };
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', leafId);
     setDocumentNonBlocking(leafRef, newLeaf, { merge: false });

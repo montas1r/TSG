@@ -59,8 +59,8 @@ export function LeafDetails({
   const firestore = useFirestore();
 
   useEffect(() => {
-    // Ensure quests have an order property
-    const questsWithOrder = leaf.quests.map((q, index) => ({
+    // Ensure quests exist and have an order property
+    const questsWithOrder = (leaf.quests || []).map((q, index) => ({
       ...q,
       order: q.order ?? index,
     }));
