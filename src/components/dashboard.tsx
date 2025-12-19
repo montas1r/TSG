@@ -147,7 +147,17 @@ export function Dashboard({ user }: { user: User }) {
 
   const handleSaveLeaf = (updatedLeaf: LeafType) => {
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', updatedLeaf.id);
-    setDocumentNonBlocking(leafRef, updatedLeaf, { merge: true });
+    
+    // Sanitize the data before saving to prevent Firestore errors.
+    // Firestore does not allow `undefined` field values.
+    const sanitizedLeaf = {
+      ...updatedLeaf,
+      notes: updatedLeaf.notes ?? '',
+      link: updatedLeaf.link ?? '',
+      masteryLevel: updatedLeaf.masteryLevel ?? 0,
+    };
+
+    setDocumentNonBlocking(leafRef, sanitizedLeaf, { merge: true });
 
     if (selectedLeaf && selectedLeaf.id === updatedLeaf.id) {
       setSelectedLeaf(updatedLeaf);
