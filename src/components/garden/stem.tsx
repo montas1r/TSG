@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo } from 'react';
@@ -7,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, MoreVertical } from 'lucide-react';
 import { calculateMasteryLevel } from '@/lib/utils';
 import { Progress } from '../ui/progress';
-import { SkillMarquee } from './skill-marquee';
+import { LeafGrid } from './leaf-grid';
 import type { Stem as StemTypeWithLeaves } from '@/lib/types';
 import { LeafDetails } from './leaf-details-sheet';
 import {
@@ -85,9 +84,9 @@ export function Stem({
           <Progress value={stemMastery} indicatorColor={stem.color} />
       </div>
       
-      <div className="relative mt-4 bg-muted/20 border border-dashed rounded-lg p-2">
+      <div className="relative mt-4 bg-muted/20 border border-dashed rounded-lg p-4">
         {leafList.length > 0 ? (
-            <SkillMarquee 
+            <LeafGrid 
               leaves={leafList}
               onSelectLeaf={onSelectLeaf}
             />
