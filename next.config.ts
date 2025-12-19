@@ -23,20 +23,13 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
       {
-        protocol: 'https',
+        protocol: 'https' as const,
         hostname: 'picsum.photos',
         port: '',
         pathname: '/**',
       },
     ],
   },
-  experimental: {
-    // This allows the Next.js dev server to accept requests from the
-    // Firebase Studio preview URL.
-    allowedDevOrigins: [
-      "https://*.cluster-mwsteha33jfdowtvzffztbjcj6.cloudworkstations.dev",
-    ]
-  }
 };
 
 export default nextConfig;
