@@ -89,8 +89,8 @@ const config: Config = {
         lg: "var(--shadow-lg)",
         xl: "var(--shadow-xl)",
         "2xl": "var(--shadow-2xl)",
-        glow: "0 0 20px rgba(22, 163, 74, 0.3)",
-        "glow-accent": "0 0 20px rgba(139, 92, 246, 0.3)",
+        glow: "0 0 20px rgba(34, 197, 94, 0.4)",
+        "glow-accent": "0 0 20px rgba(139, 92, 246, 0.4)",
       },
       keyframes: {
         "accordion-down": {
