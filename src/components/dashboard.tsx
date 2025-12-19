@@ -11,7 +11,7 @@ import { AddLeafDialog } from '@/components/garden/add-leaf-dialog';
 import { SuggestionDialog } from '@/components/garden/suggestion-dialog';
 import type { User } from 'firebase/auth';
 import { collection, doc, query, deleteDoc, orderBy } from 'firebase/firestore';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import {
   deleteDocumentNonBlocking,
   setDocumentNonBlocking,
@@ -20,6 +20,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { StemSelector } from '@/components/garden/stem-selector';
 import { EditStemDialog } from '@/components/garden/edit-stem-dialog';
 import Fuse from 'fuse.js';
+import type { UserStats } from '@/lib/types';
 
 export function Dashboard({ user }: { user: User }) {
   const [selectedLeaf, setSelectedLeaf] = useState<LeafType | null>(null);
@@ -34,6 +35,10 @@ export function Dashboard({ user }: { user: User }) {
   const [selectedStemId, setSelectedStemId] = useState<string | null>(null);
 
   const firestore = useFirestore();
+
+  // Fetch Gamification Stats
+  const userStatsRef = useMemoFirebase(() => doc(firestore, 'users', user.uid, 'stats', user.uid), [firestore, user.uid]);
+  const { data: userStats, isLoading: isStatsLoading } = useDoc<UserStats>(userStatsRef);
 
   const stemsQuery = useMemoFirebase(() => query(collection(firestore, 'users', user.uid, 'stems'), orderBy('createdAt', 'desc')), [firestore, user.uid]);
   const { data: stems, isLoading: areStemsLoading } = useCollection<Omit<StemType, 'leaves'>>(stemsQuery);
@@ -237,7 +242,7 @@ export function Dashboard({ user }: { user: User }) {
     setIsAddLeafOpen(true);
   }
 
-  if (areStemsLoading || areLeavesLoading) {
+  if (areStemsLoading || areLeavesLoading || isStatsLoading) {
     return <div className="flex h-screen items-center justify-center"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>
   }
 
