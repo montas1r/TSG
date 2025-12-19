@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useRef } from 'react';
@@ -53,7 +54,7 @@ export function Dashboard({ user }: { user: User }) {
     }, {} as Record<string, LeafType[]>);
   }, [allLeavesFlat]);
 
-  const gardenWithLeaves = useMemo(() => {
+  const gardenWithLeaves: StemTypeWithLeaves[] = useMemo(() => {
     return (stems || []).map(stem => ({
       ...stem,
       leaves: leavesByStem[stem.id] || [],
@@ -235,8 +236,7 @@ export function Dashboard({ user }: { user: User }) {
                 }}
              >
                 <Stem 
-                    stem={stem} 
-                    leaves={stem.leaves}
+                    stem={stem}
                     onSelectLeaf={handleSelectLeaf}
                     onAddLeaf={handleOpenAddLeaf}
                     searchQuery={searchQuery}
