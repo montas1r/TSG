@@ -21,6 +21,7 @@ import { StemSelector } from '@/components/garden/stem-selector';
 import { EditStemDialog } from '@/components/garden/edit-stem-dialog';
 import Fuse from 'fuse.js';
 import type { UserStats } from '@/lib/types';
+import { sanitizeForFirestore } from '@/lib/utils';
 
 export function Dashboard({ user }: { user: User }) {
   const [selectedLeaf, setSelectedLeaf] = useState<LeafType | null>(null);
@@ -147,16 +148,7 @@ export function Dashboard({ user }: { user: User }) {
 
   const handleSaveLeaf = (updatedLeaf: LeafType) => {
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', updatedLeaf.id);
-    
-    // Sanitize the data before saving to prevent Firestore errors.
-    // Firestore does not allow `undefined` field values.
-    const sanitizedLeaf = {
-      ...updatedLeaf,
-      notes: updatedLeaf.notes ?? '',
-      link: updatedLeaf.link ?? '',
-      masteryLevel: updatedLeaf.masteryLevel ?? 0,
-    };
-
+    const sanitizedLeaf = sanitizeForFirestore(updatedLeaf);
     setDocumentNonBlocking(leafRef, sanitizedLeaf, { merge: true });
 
     if (selectedLeaf && selectedLeaf.id === updatedLeaf.id) {
@@ -182,13 +174,15 @@ export function Dashboard({ user }: { user: User }) {
       createdAt: new Date().toISOString()
     };
     const stemRef = doc(firestore, 'users', user.uid, 'stems', stemId);
-    setDocumentNonBlocking(stemRef, newStem, { merge: false });
+    const sanitizedStem = sanitizeForFirestore(newStem);
+    setDocumentNonBlocking(stemRef, sanitizedStem, { merge: false });
     setSelectedStemId(stemId);
   };
 
   const handleEditStemSubmit = (updatedStem: Omit<StemType, 'leaves'>) => {
     const stemRef = doc(firestore, 'users', user.uid, 'stems', updatedStem.id);
-    setDocumentNonBlocking(stemRef, updatedStem, { merge: true });
+    const sanitizedStem = sanitizeForFirestore(updatedStem);
+    setDocumentNonBlocking(stemRef, sanitizedStem, { merge: true });
   }
 
   const handleOpenEditStem = (stem: StemType) => {
@@ -225,7 +219,8 @@ export function Dashboard({ user }: { user: User }) {
         quests: []
     };
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', leafId);
-    setDocumentNonBlocking(leafRef, newLeaf, { merge: false });
+    const sanitizedLeaf = sanitizeForFirestore(newLeaf);
+    setDocumentNonBlocking(leafRef, sanitizedLeaf, { merge: false });
   };
   
   const handleAddSkillBundle = (stemName: string, leafNames: string[]) => {
@@ -240,7 +235,8 @@ export function Dashboard({ user }: { user: User }) {
       description: 'AI-suggested skills'
     };
     const stemRef = doc(firestore, 'users', user.uid, 'stems', stemId);
-    setDocumentNonBlocking(stemRef, newStem, { merge: false });
+    const sanitizedStem = sanitizeForFirestore(newStem);
+    setDocumentNonBlocking(stemRef, sanitizedStem, { merge: false });
 
     leafNames.forEach(leafName => {
         handleAddLeaf(leafName, stemId);
