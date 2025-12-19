@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import type { Leaf, Quest } from '@/lib/types';
 import { useState, useEffect, useMemo } from 'react';
 import { Flower2, Link as LinkIcon, Trash2, PlusCircle, GripVertical } from 'lucide-react';
-import { calculateMasteryLevel } from '@/lib/utils';
+import { calculateMasteryLevel, sanitizeForFirestore } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Highlight } from '@/components/ui/highlight';
 import { v4 as uuidv4 } from 'uuid';
@@ -59,12 +58,10 @@ export function LeafDetails({
   const firestore = useFirestore();
 
   useEffect(() => {
-    // Ensure quests exist and have an order property
     const questsWithOrder = (leaf.quests || []).map((q, index) => ({
       ...q,
       order: q.order ?? index,
     }));
-    // Sort quests by order
     questsWithOrder.sort((a, b) => a.order - b.order);
     setFormData({ ...leaf, quests: questsWithOrder });
   }, [leaf]);
@@ -74,13 +71,10 @@ export function LeafDetails({
     return calculateMasteryLevel(formData.quests);
   }, [formData]);
 
-  const updateFormData = (updatedData: Partial<Leaf>, save: boolean = true) => {
+  const updateFormData = (updatedData: Partial<Leaf>) => {
     if (formData) {
         const newFormData = { ...formData, ...updatedData };
         setFormData(newFormData);
-        if (save) {
-            onSave(newFormData);
-        }
     }
   }
 
@@ -90,7 +84,15 @@ export function LeafDetails({
             q.id === questId ? { ...q, [field]: value } : q
         );
         const newMasteryLevel = calculateMasteryLevel(updatedQuests);
-        updateFormData({ quests: updatedQuests, masteryLevel: newMasteryLevel });
+        
+        const newFormData = {
+          ...formData,
+          quests: updatedQuests,
+          masteryLevel: newMasteryLevel
+        };
+        
+        setFormData(newFormData);
+        onSave(sanitizeForFirestore(newFormData));
     }
   };
 
@@ -104,7 +106,9 @@ export function LeafDetails({
         };
         const updatedQuests = [...(formData.quests || []), newQuest];
         const newMasteryLevel = calculateMasteryLevel(updatedQuests);
-        updateFormData({ quests: updatedQuests, masteryLevel: newMasteryLevel });
+        const newFormData = { ...formData, quests: updatedQuests, masteryLevel: newMasteryLevel };
+        setFormData(newFormData);
+        onSave(sanitizeForFirestore(newFormData));
     }
   }
 
@@ -112,7 +116,9 @@ export function LeafDetails({
     if(formData) {
         const updatedQuests = formData.quests.filter(q => q.id !== questId);
         const newMasteryLevel = calculateMasteryLevel(updatedQuests);
-        updateFormData({ quests: updatedQuests, masteryLevel: newMasteryLevel });
+        const newFormData = { ...formData, quests: updatedQuests, masteryLevel: newMasteryLevel };
+        setFormData(newFormData);
+        onSave(sanitizeForFirestore(newFormData));
     }
   }
 
@@ -133,27 +139,16 @@ export function LeafDetails({
       const newQuestsOrder = arrayMove(formData.quests, oldIndex, newIndex);
       const updatedQuestsWithOrder = newQuestsOrder.map((q, index) => ({...q, order: index}));
       
-      // Update state immediately for responsive UI
-      updateFormData({ quests: updatedQuestsWithOrder }, false);
-
-      // Batch update Firestore
-      const batch = writeBatch(firestore);
-      updatedQuestsWithOrder.forEach(quest => {
-        const leafRef = doc(firestore, 'users', leaf.userId, 'leaves', leaf.id);
-        // This assumes quests are subcollection, but they are embedded. So we update the leaf doc.
-      });
-      // The quests are embedded in the leaf document, so we just need to update the leaf.
-      const leafRef = doc(firestore, 'users', leaf.userId, 'leaves', leaf.id);
-      batch.update(leafRef, { quests: updatedQuestsWithOrder });
-
-      try {
-        await batch.commit();
-      } catch (error) {
-        console.error("Failed to reorder quests:", error);
-        // Optionally revert state or show an error toast
-      }
+      const newFormData = { ...formData, quests: updatedQuestsWithOrder };
+      setFormData(newFormData);
+      
+      onSave(sanitizeForFirestore(newFormData));
     }
   }
+
+  const handleBlur = () => {
+    onSave(sanitizeForFirestore(formData));
+  };
 
 
   if (!formData) return null;
@@ -211,8 +206,9 @@ export function LeafDetails({
             <Label htmlFor="notes">Notes & Reflections</Label>
             <Textarea
               id="notes"
-              value={formData.notes}
+              value={formData.notes || ''}
               onChange={(e) => updateFormData({ notes: e.target.value })}
+              onBlur={handleBlur}
               placeholder="What have you learned? What are your thoughts?"
               className="min-h-[150px] text-base"
             />
@@ -225,8 +221,9 @@ export function LeafDetails({
             <Input
               id="link"
               type="url"
-              value={formData.link}
+              value={formData.link || ''}
               onChange={(e) => updateFormData({ link: e.target.value })}
+              onBlur={handleBlur}
               placeholder="https://example.com"
               className="text-base"
             />
