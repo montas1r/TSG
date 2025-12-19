@@ -5,6 +5,7 @@ export interface Quest {
   id: string;
   text: string;
   completed: boolean;
+  order: number;
 }
 
 export interface Leaf {

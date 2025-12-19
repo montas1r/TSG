@@ -5,10 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import type { Leaf, Quest } from '@/lib/types';
 import { useState, useEffect, useMemo } from 'react';
-import { Flower2, Link as LinkIcon, Trash2, PlusCircle } from 'lucide-react';
+import { Flower2, Link as LinkIcon, Trash2, PlusCircle, GripVertical } from 'lucide-react';
 import { calculateMasteryLevel } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Highlight } from '@/components/ui/highlight';
@@ -21,6 +20,24 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent,
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { DraggableQuestItem } from './draggable-quest-item';
+import { writeBatch, doc } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
 
 
 interface LeafDetailsProps {
@@ -39,9 +56,17 @@ export function LeafDetails({
   className
 }: LeafDetailsProps) {
   const [formData, setFormData] = useState<Leaf>(leaf);
+  const firestore = useFirestore();
 
   useEffect(() => {
-    setFormData(leaf);
+    // Ensure quests have an order property
+    const questsWithOrder = leaf.quests.map((q, index) => ({
+      ...q,
+      order: q.order ?? index,
+    }));
+    // Sort quests by order
+    questsWithOrder.sort((a, b) => a.order - b.order);
+    setFormData({ ...leaf, quests: questsWithOrder });
   }, [leaf]);
   
   const masteryLevel = useMemo(() => {
@@ -49,11 +74,13 @@ export function LeafDetails({
     return calculateMasteryLevel(formData.quests);
   }, [formData]);
 
-  const updateFormData = (updatedData: Partial<Leaf>) => {
+  const updateFormData = (updatedData: Partial<Leaf>, save: boolean = true) => {
     if (formData) {
         const newFormData = { ...formData, ...updatedData };
         setFormData(newFormData);
-        onSave(newFormData);
+        if (save) {
+            onSave(newFormData);
+        }
     }
   }
 
@@ -73,6 +100,7 @@ export function LeafDetails({
             id: uuidv4(),
             text: '',
             completed: false,
+            order: formData.quests.length > 0 ? Math.max(...formData.quests.map(q => q.order)) + 1 : 0,
         };
         const updatedQuests = [...(formData.quests || []), newQuest];
         const newMasteryLevel = calculateMasteryLevel(updatedQuests);
@@ -88,6 +116,46 @@ export function LeafDetails({
     }
   }
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const {active, over} = event;
+    
+    if (active.id !== over?.id && formData && over) {
+      const oldIndex = formData.quests.findIndex((q) => q.id === active.id);
+      const newIndex = formData.quests.findIndex((q) => q.id === over.id);
+      
+      const newQuestsOrder = arrayMove(formData.quests, oldIndex, newIndex);
+      const updatedQuestsWithOrder = newQuestsOrder.map((q, index) => ({...q, order: index}));
+      
+      // Update state immediately for responsive UI
+      updateFormData({ quests: updatedQuestsWithOrder }, false);
+
+      // Batch update Firestore
+      const batch = writeBatch(firestore);
+      updatedQuestsWithOrder.forEach(quest => {
+        const leafRef = doc(firestore, 'users', leaf.userId, 'leaves', leaf.id);
+        // This assumes quests are subcollection, but they are embedded. So we update the leaf doc.
+      });
+      // The quests are embedded in the leaf document, so we just need to update the leaf.
+      const leafRef = doc(firestore, 'users', leaf.userId, 'leaves', leaf.id);
+      batch.update(leafRef, { quests: updatedQuestsWithOrder });
+
+      try {
+        await batch.commit();
+      } catch (error) {
+        console.error("Failed to reorder quests:", error);
+        // Optionally revert state or show an error toast
+      }
+    }
+  }
+
+
   if (!formData) return null;
 
   return (
@@ -102,26 +170,28 @@ export function LeafDetails({
         <div className="space-y-6">
           <div className="space-y-4 rounded-lg border p-4">
               <h3 className="font-heading text-lg">Quests</h3>
-              <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-                  {(formData.quests || []).map((quest) => (
-                      <div key={quest.id} className="flex items-center gap-2">
-                          <Checkbox 
-                              id={`quest-check-${quest.id}`}
-                              checked={quest.completed}
-                              onCheckedChange={(checked) => handleQuestChange(quest.id, 'completed', !!checked)}
-                          />
-                          <Input 
-                              value={quest.text}
-                              onChange={(e) => handleQuestChange(quest.id, 'text', e.target.value)}
-                              placeholder="Define your quest..."
-                              className="flex-grow"
-                          />
-                          <Button variant="ghost" size="icon" className="shrink-0" onClick={() => handleDeleteQuest(quest.id)}>
-                              <Trash2 className="size-4 text-muted-foreground" />
-                          </Button>
-                      </div>
-                  ))}
-              </div>
+              <DndContext 
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext 
+                  items={formData.quests.map(q => q.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                    <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+                        {formData.quests.map((quest) => (
+                            <DraggableQuestItem
+                                key={quest.id}
+                                quest={quest}
+                                onTextChange={handleQuestChange}
+                                onCompletedChange={handleQuestChange}
+                                onDelete={handleDeleteQuest}
+                            />
+                        ))}
+                    </div>
+                </SortableContext>
+              </DndContext>
               <Button variant="outline" size="sm" className="mt-4 w-full gap-2" onClick={handleAddQuest}>
                   <PlusCircle className="size-4" />
                   Add Quest

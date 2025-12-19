@@ -117,13 +117,7 @@
           "type": "array",
           "description": "A list of tasks or goals to achieve for this skill.",
           "items": {
-            "type": "object",
-            "properties": {
-              "id": { "type": "string" },
-              "text": { "type": "string" },
-              "completed": { "type": "boolean" }
-            },
-            "required": ["id", "text", "completed"]
+            "$ref": "#/backend/entities/Quest"
           }
         }
       },
@@ -133,6 +127,18 @@
         "stemId",
         "name"
       ]
+    },
+    "Quest": {
+        "title": "Quest",
+        "type": "object",
+        "description": "A single task or goal associated with a Leaf (skill).",
+        "properties": {
+            "id": { "type": "string" },
+            "text": { "type": "string" },
+            "completed": { "type": "boolean" },
+            "order": { "type": "number" }
+        },
+        "required": ["id", "text", "completed", "order"]
     },
     "UserStats": {
       "title": "UserStats",
