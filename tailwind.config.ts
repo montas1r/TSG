@@ -68,8 +68,8 @@ export default {
       },
       borderRadius: {
         lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        md: 'calc(var(--radius) - 4px)',
+        sm: 'calc(var(--radius) - 8px)',
       },
       keyframes: {
         'accordion-down': {
@@ -89,8 +89,8 @@ export default {
           },
         },
         'sway': {
-          '0%, 100%': { transform: 'rotate(-1deg)' },
-          '50%': { transform: 'rotate(1deg)' },
+          '0%, 100%': { transform: 'rotate(-1.5deg)' },
+          '50%': { transform: 'rotate(1.5deg)' },
         },
         'marquee': {
           '0%': { transform: 'translateX(0%)' },
@@ -98,11 +98,17 @@ export default {
         },
       },
       animation: {
-        'accordion-down': 'accordion-down 0.2s ease-out',
-        'accordion-up': 'accordion-up 0.2s ease-out',
-        'sway': 'sway 3s ease-in-out infinite',
+        'accordion-down': 'accordion-down 0.3s ease-out',
+        'accordion-up': 'accordion-up 0.3s ease-out',
+        'sway': 'sway 3.5s ease-in-out infinite',
         'marquee': 'marquee 40s linear infinite',
       },
+      transitionDuration: {
+        '300': '300ms',
+      },
+      transitionTimingFunction: {
+        'in-out': 'cubic-bezier(0.4, 0, 0.2, 1)',
+      }
     },
   },
   plugins: [require('tailwindcss-animate')],
