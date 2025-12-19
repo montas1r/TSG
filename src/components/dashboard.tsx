@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { Leaf as LeafType, Stem as StemType } from '@/lib/types';
 import { Stem } from '@/components/garden/stem';
 import { LeafDetailsSheet } from '@/components/garden/leaf-details-sheet';
