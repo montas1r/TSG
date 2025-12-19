@@ -1,48 +1,55 @@
 
 'use client';
 
-import { useState, useMemo, useRef } from 'react';
-import type { Leaf as LeafType, Stem as StemTypeWithLeaves } from '@/lib/types';
+import { useState, useMemo } from 'react';
+import type { Leaf as LeafType, Stem as StemType } from '@/lib/types';
 import { Stem } from '@/components/garden/stem';
 import { LeafDetailsSheet } from '@/components/garden/leaf-details-sheet';
 import { AddStemDialog } from '@/components/garden/add-stem-dialog';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Wand2, Sprout, Search, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { AddLeafDialog } from '@/components/garden/add-leaf-dialog';
 import { SuggestionDialog } from '@/components/garden/suggestion-dialog';
-import { calculateMasteryLevel } from '@/lib/utils';
-import { Input } from '@/components/ui/input';
-import { useVirtualizer } from '@tanstack/react-virtual';
+import { calculateMasteryLevel, cn } from '@/lib/utils';
 import type { User } from 'firebase/auth';
-import { collection, doc, query } from 'firebase/firestore';
+import { collection, doc, query, deleteDoc, orderBy } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import {
   deleteDocumentNonBlocking,
   setDocumentNonBlocking,
 } from '@/firebase/non-blocking-updates';
 import { v4 as uuidv4 } from 'uuid';
-import type { Stem as StemType } from '@/lib/types';
-
+import { StemSelector } from '@/components/garden/stem-selector';
+import { EditStemDialog } from '@/components/garden/edit-stem-dialog';
 
 export function Dashboard({ user }: { user: User }) {
   const [selectedLeaf, setSelectedLeaf] = useState<LeafType | null>(null);
   const [isLeafSheetOpen, setIsLeafSheetOpen] = useState(false);
   
   const [isAddStemOpen, setIsAddStemOpen] = useState(false);
+  const [isEditStemOpen, setIsEditStemOpen] = useState(false);
+  const [stemToEdit, setStemToEdit] = useState<StemType | null>(null);
+
   const [isAddLeafOpen, setIsAddLeafOpen] = useState(false);
-  const [stemToAddLeafTo, setStemToAddLeafTo] = useState<string | null>(null);
   const [isSuggestionOpen, setIsSuggestionOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedStemId, setSelectedStemId] = useState<string | null>(null);
 
   const firestore = useFirestore();
 
-  const stemsRef = useMemoFirebase(() => collection(firestore, 'users', user.uid, 'stems'), [firestore, user.uid]);
-  const { data: stems, isLoading: areStemsLoading } = useCollection<Omit<StemType, 'leaves'>>(stemsRef);
+  const stemsQuery = useMemoFirebase(() => query(collection(firestore, 'users', user.uid, 'stems'), orderBy('createdAt', 'desc')), [firestore, user.uid]);
+  const { data: stems, isLoading: areStemsLoading } = useCollection<Omit<StemType, 'leaves'>>(stemsQuery);
   
   const allLeavesQuery = useMemoFirebase(() => query(collection(firestore, `users/${user.uid}/leaves`)), [firestore, user.uid]);
   const { data: allLeavesFlat, isLoading: areLeavesLoading } = useCollection<LeafType>(allLeavesQuery);
   
+  // Select the first stem by default if none is selected
+  useEffect(() => {
+    if (!selectedStemId && stems && stems.length > 0) {
+      setSelectedStemId(stems[0].id);
+    }
+  }, [stems, selectedStemId]);
+
   const leavesByStem = useMemo(() => {
     if (!allLeavesFlat) return {};
     return allLeavesFlat.reduce((acc, leaf) => {
@@ -54,60 +61,18 @@ export function Dashboard({ user }: { user: User }) {
     }, {} as Record<string, LeafType[]>);
   }, [allLeavesFlat]);
 
-  const gardenWithLeaves: StemTypeWithLeaves[] = useMemo(() => {
+  const gardenWithLeaves: StemType[] = useMemo(() => {
     return (stems || []).map(stem => ({
       ...stem,
       leaves: leavesByStem[stem.id] || [],
-    })).sort((a, b) => (new Date(a.createdAt) > new Date(b.createdAt) ? -1 : 1));
+    }));
   }, [stems, leavesByStem]);
 
-  const progress = useMemo(() => {
-    if (!allLeavesFlat || allLeavesFlat.length === 0) return 0;
-    const totalMastery = allLeavesFlat.reduce((sum, leaf) => {
-        const mastery = calculateMasteryLevel(leaf.quests);
-        return sum + mastery;
-    }, 0);
-    const maxMastery = allLeavesFlat.length * 100;
-    return maxMastery > 0 ? (totalMastery / maxMastery) * 100 : 0;
-  }, [allLeavesFlat]);
-  
   const currentSkillNames = useMemo(() => (allLeavesFlat || []).map(leaf => leaf.name), [allLeavesFlat]);
 
-  const filteredGarden = useMemo(() => {
-    if (!searchQuery) {
-      return gardenWithLeaves;
-    }
-
-    const lowerCaseQuery = searchQuery.toLowerCase();
-
-    return gardenWithLeaves.map(stem => {
-        const matchingLeaves = (stem.leaves || []).filter((leaf: LeafType) => {
-            const inName = leaf.name.toLowerCase().includes(lowerCaseQuery);
-            const inNotes = (leaf.notes || '').toLowerCase().includes(lowerCaseQuery);
-            const inQuests = (leaf.quests || []).some(quest => quest.text.toLowerCase().includes(lowerCaseQuery));
-            return inName || inNotes || inQuests;
-        });
-
-        if (stem.name.toLowerCase().includes(lowerCaseQuery)) {
-             return { ...stem, leaves: stem.leaves };
-        }
-
-        if (matchingLeaves.length > 0) {
-            return { ...stem, leaves: matchingLeaves };
-        }
-        
-        return null;
-    }).filter((stem): stem is StemTypeWithLeaves => stem !== null);
-  }, [gardenWithLeaves, searchQuery]);
-
-  // Virtualization logic
-  const parentRef = useRef<HTMLDivElement>(null);
-  const rowVirtualizer = useVirtualizer({
-    count: filteredGarden.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 280, // Estimate height for a stem component
-    overscan: 5,
-  });
+  const selectedStem = useMemo(() => {
+    return gardenWithLeaves.find(stem => stem.id === selectedStemId) || null;
+  }, [gardenWithLeaves, selectedStemId]);
 
   const handleSelectLeaf = (leaf: LeafType) => {
     setSelectedLeaf(leaf);
@@ -126,19 +91,52 @@ export function Dashboard({ user }: { user: User }) {
   const handleDeleteLeaf = (leafId: string) => {
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', leafId);
     deleteDocumentNonBlocking(leafRef);
-  }
+  };
 
-  const handleAddStem = (name: string) => {
+  const handleAddStem = (name: string, description: string, icon: string, color: string) => {
     const stemId = uuidv4();
     const newStem: Omit<StemType, 'leaves'> = {
       name,
+      description,
+      icon,
+      color,
       userId: user.uid,
       id: stemId,
       createdAt: new Date().toISOString()
     };
     const stemRef = doc(firestore, 'users', user.uid, 'stems', stemId);
     setDocumentNonBlocking(stemRef, newStem, { merge: false });
+    setSelectedStemId(stemId); // Select the new stem
   };
+
+  const handleEditStemSubmit = (updatedStem: Omit<StemType, 'leaves'>) => {
+    const stemRef = doc(firestore, 'users', user.uid, 'stems', updatedStem.id);
+    setDocumentNonBlocking(stemRef, updatedStem, { merge: true });
+  }
+
+  const handleOpenEditStem = (stem: StemType) => {
+    setStemToEdit(stem);
+    setIsEditStemOpen(true);
+  }
+
+  const handleDeleteStem = async (stemId: string) => {
+    if (!window.confirm("Are you sure you want to delete this stem and all its leaves? This action cannot be undone.")) return;
+
+    // Delete all leaves associated with the stem first
+    const leavesToDelete = leavesByStem[stemId] || [];
+    const deletePromises = leavesToDelete.map(leaf => deleteDoc(doc(firestore, 'users', user.uid, 'leaves', leaf.id)));
+    await Promise.all(deletePromises);
+
+    // Then delete the stem
+    const stemRef = doc(firestore, 'users', user.uid, 'stems', stemId);
+    deleteDocumentNonBlocking(stemRef);
+
+    // If the deleted stem was selected, select another one
+    if(selectedStemId === stemId) {
+      const remainingStems = stems?.filter(s => s.id !== stemId);
+      setSelectedStemId(remainingStems && remainingStems.length > 0 ? remainingStems[0].id : null);
+    }
+  }
   
   const handleAddLeaf = (name: string, stemId: string) => {
     const leafId = uuidv4();
@@ -162,103 +160,65 @@ export function Dashboard({ user }: { user: User }) {
       name: stemName,
       userId: user.uid,
       id: stemId,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      icon: 'Sprout',
+      color: '#8bc34a',
+      description: 'AI-suggested skills'
     };
     const stemRef = doc(firestore, 'users', user.uid, 'stems', stemId);
     setDocumentNonBlocking(stemRef, newStem, { merge: false });
 
     leafNames.forEach(leafName => {
         handleAddLeaf(leafName, stemId);
-    })
+    });
+    setSelectedStemId(stemId);
   }
 
   const handleOpenAddLeaf = (stemId: string) => {
-    setStemToAddLeafTo(stemId);
     setIsAddLeafOpen(true);
   }
 
   if (areStemsLoading || areLeavesLoading) {
-    return <div className="flex h-full items-center justify-center"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>
+    return <div className="flex h-screen items-center justify-center"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-2rem)]">
-      <header className="mb-6 shrink-0">
-        <div className="flex flex-col items-center justify-between gap-6 rounded-lg border bg-card p-6 sm:flex-row">
-          <div className="text-center sm:text-left">
-              <div className="flex items-center gap-4">
-                <h1 className="font-headline text-4xl tracking-tight text-primary">The Skill Garden</h1>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setIsAddStemOpen(true)} aria-label="Plant a New Stem">
-                    <Sprout className="size-6 text-muted-foreground/50 transition-colors group-hover:text-primary" />
-                </Button>
-              </div>
-              <p className="text-muted-foreground">Nurture your skills and watch them grow.</p>
-          </div>
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <Input 
-                placeholder="Search your garden..."
-                className="w-full pl-10 sm:w-64"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <Button onClick={() => setIsSuggestionOpen(true)} className="w-full sm:w-auto">
-                <Wand2 className="mr-2" />
-                Get Suggestions
-            </Button>
-          </div>
-        </div>
-        <div className="mt-6 space-y-2">
-            <div className="flex justify-between text-sm text-muted-foreground">
-                <span>Overall Garden Mastery</span>
-                <span>{Math.round(progress)}% Complete</span>
-            </div>
-            <Progress value={progress} />
-        </div>
-      </header>
+    <div className={cn("h-screen w-full flex", "bg-background font-body")}>
+      <StemSelector 
+        stems={gardenWithLeaves}
+        selectedStemId={selectedStemId}
+        onSelectStem={setSelectedStemId}
+        onAddStem={() => setIsAddStemOpen(true)}
+        onGetSuggestions={() => setIsSuggestionOpen(true)}
+        onSearch={setSearchQuery}
+        searchQuery={searchQuery}
+        user={user}
+      />
       
-      <main ref={parentRef} className="flex-grow space-y-8 overflow-y-auto pr-4">
-        <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
-        {rowVirtualizer.getVirtualItems().map((virtualItem) => {
-          const stem = filteredGarden[virtualItem.index];
-          if (!stem) return null;
-          return (
-             <div
-                key={virtualItem.key}
-                style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    transform: `translateY(${virtualItem.start}px)`,
-                }}
-             >
-                <Stem 
-                    stem={stem}
-                    onSelectLeaf={handleSelectLeaf}
-                    onAddLeaf={handleOpenAddLeaf}
-                    searchQuery={searchQuery}
-                />
-            </div>
-          )
-        })}
-        </div>
-        {!rowVirtualizer.getVirtualItems().length && (
-           <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-24 text-center">
-            <h3 className="font-headline text-2xl">
-              {searchQuery ? "No skills found" : "Your garden is empty"}
-            </h3>
-            <p className="text-muted-foreground">
-              {searchQuery ? "Try a different search term." : "Start by planting a new stem for your skills."}
+      <main className="flex-grow h-screen overflow-y-auto">
+        {selectedStem ? (
+          <Stem 
+            stem={selectedStem}
+            onSelectLeaf={handleSelectLeaf}
+            onAddLeaf={handleOpenAddLeaf}
+            onEditStem={handleOpenEditStem}
+            onDeleteStem={handleDeleteStem}
+            searchQuery={searchQuery}
+          />
+        ) : (
+          <div className="flex h-full flex-col items-center justify-center text-center p-8">
+            <h3 className="font-headline text-4xl text-primary">Welcome to your Skill Garden!</h3>
+            <p className="mt-4 max-w-md text-lg text-muted-foreground">
+              Your garden is a place to cultivate new talents. Start by planting a "Stem" — a category for the skills you want to grow.
             </p>
-             {!searchQuery && (
-              <Button onClick={() => setIsAddStemOpen(true)} className="mt-4">
-                <Sprout className="mr-2" />
+            <div className="mt-8 flex gap-4">
+              <Button onClick={() => setIsAddStemOpen(true)} size="lg">
                 Plant Your First Stem
               </Button>
-            )}
+               <Button onClick={() => setIsSuggestionOpen(true)} size="lg" variant="outline">
+                Get AI Suggestions
+              </Button>
+            </div>
           </div>
         )}
       </main>
@@ -281,11 +241,20 @@ export function Dashboard({ user }: { user: User }) {
         onAddStem={handleAddStem}
       />
 
+       {stemToEdit && (
+         <EditStemDialog
+            isOpen={isEditStemOpen}
+            onOpenChange={setIsEditStemOpen}
+            stem={stemToEdit}
+            onEditStem={handleEditStemSubmit}
+         />
+       )}
+
       <AddLeafDialog
         isOpen={isAddLeafOpen}
         onOpenChange={setIsAddLeafOpen}
-        onAddLeaf={handleAddLeaf}
-        stemId={stemToAddLeafTo}
+        onAddLeaf={(name) => selectedStemId && handleAddLeaf(name, selectedStemId)}
+        stemId={selectedStemId}
       />
 
       <SuggestionDialog 

@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -62,7 +63,7 @@ export function AddLeafDialog({ isOpen, onOpenChange, onAddLeaf, stemId }: AddLe
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleAdd} disabled={!name.trim()}>Plant Skill</Button>
+          <Button onClick={handleAdd} disabled={!name.trim() || !stemId}>Plant Skill</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

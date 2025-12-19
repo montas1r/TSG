@@ -17,11 +17,15 @@ export interface Leaf {
 }
 
 export interface Stem {
-  id: string;
+  id:string;
   userId: string;
   name: string;
   leaves: Leaf[];
   createdAt: string;
+  // NEW FIELDS
+  icon?: string;
+  color?: string;
+  description?: string;
 }
 
 export type Garden = Stem[];

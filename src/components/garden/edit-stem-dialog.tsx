@@ -14,32 +14,40 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useState, useEffect } from 'react';
 import { Textarea } from '../ui/textarea';
-import { IconPicker, ColorPicker, colorPalette } from './icon-picker';
+import { IconPicker, ColorPicker } from './icon-picker';
+import type { Stem } from '@/lib/types';
 
-interface AddStemDialogProps {
+interface EditStemDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onAddStem: (name: string, description: string, icon: string, color: string) => void;
+  stem: Omit<Stem, 'leaves'>;
+  onEditStem: (updatedStem: Omit<Stem, 'leaves'>) => void;
 }
 
-export function AddStemDialog({ isOpen, onOpenChange, onAddStem }: AddStemDialogProps) {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [icon, setIcon] = useState('Sprout');
-  const [color, setColor] = useState(colorPalette[Math.floor(Math.random() * colorPalette.length)]);
+export function EditStemDialog({ isOpen, onOpenChange, stem, onEditStem }: EditStemDialogProps) {
+  const [name, setName] = useState(stem.name);
+  const [description, setDescription] = useState(stem.description || '');
+  const [icon, setIcon] = useState(stem.icon || 'Sprout');
+  const [color, setColor] = useState(stem.color || '#8bc34a');
 
   useEffect(() => {
     if (isOpen) {
-      setName('');
-      setDescription('');
-      setIcon('Sprout');
-      setColor(colorPalette[Math.floor(Math.random() * colorPalette.length)]);
+      setName(stem.name);
+      setDescription(stem.description || '');
+      setIcon(stem.icon || 'Sprout');
+      setColor(stem.color || '#8bc34a');
     }
-  }, [isOpen]);
+  }, [isOpen, stem]);
 
-  const handleAdd = () => {
+  const handleSave = () => {
     if (name.trim()) {
-      onAddStem(name.trim(), description.trim(), icon, color);
+      onEditStem({
+        ...stem,
+        name: name.trim(),
+        description: description.trim(),
+        icon,
+        color,
+      });
       onOpenChange(false);
     }
   };
@@ -48,9 +56,9 @@ export function AddStemDialog({ isOpen, onOpenChange, onAddStem }: AddStemDialog
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="font-headline">Plant a New Stem</DialogTitle>
+          <DialogTitle className="font-headline">Edit Stem</DialogTitle>
           <DialogDescription>
-            A stem is a category for your skills. Give it a name and choose an icon and color to represent it.
+            Update the details for your skill category.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -58,9 +66,9 @@ export function AddStemDialog({ isOpen, onOpenChange, onAddStem }: AddStemDialog
             <IconPicker value={icon} onChange={setIcon} />
             <ColorPicker value={color} onChange={setColor} />
             <div className="flex-grow space-y-2">
-              <Label htmlFor="stem-name">Stem Name</Label>
+              <Label htmlFor="stem-name-edit">Stem Name</Label>
               <Input
-                id="stem-name"
+                id="stem-name-edit"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g., Creative Writing"
@@ -69,9 +77,9 @@ export function AddStemDialog({ isOpen, onOpenChange, onAddStem }: AddStemDialog
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="stem-description">Description (Optional)</Label>
+            <Label htmlFor="stem-description-edit">Description (Optional)</Label>
             <Textarea
-              id="stem-description"
+              id="stem-description-edit"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What's this skill category about?"
@@ -80,7 +88,7 @@ export function AddStemDialog({ isOpen, onOpenChange, onAddStem }: AddStemDialog
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleAdd}>Plant Stem</Button>
+          <Button onClick={handleSave}>Save Changes</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

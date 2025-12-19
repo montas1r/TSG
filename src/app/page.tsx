@@ -1,9 +1,11 @@
+
 'use client';
 
 import { useUser, useAuth, initiateAnonymousSignIn } from '@/firebase';
 import { Dashboard } from '@/components/dashboard';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { useEffect } from 'react';
 
 export default function Home() {
   const { user, isUserLoading } = useUser();
@@ -14,6 +16,13 @@ export default function Home() {
       initiateAnonymousSignIn(auth);
     }
   };
+
+  useEffect(() => {
+    // Prefetch dashboard assets when on the login page
+    if (!user) {
+        // You can prefetch necessary assets here if needed
+    }
+  }, [user]);
 
   if (isUserLoading) {
     return (
@@ -37,9 +46,6 @@ export default function Home() {
     );
   }
 
-  return (
-    <div className="container mx-auto h-screen p-4 sm:p-8">
-      <Dashboard user={user} />
-    </div>
-  );
+  return <Dashboard user={user} />;
 }
+

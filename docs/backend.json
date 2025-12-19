@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -58,6 +59,14 @@
             "type": "string",
             "format": "date-time",
             "description": "The timestamp when the stem was created."
+        },
+        "icon": {
+            "type": "string",
+            "description": "The icon for the stem (e.g., Lucide icon name)."
+        },
+        "color": {
+            "type": "string",
+            "description": "The accent color for the stem (HEX code)."
         }
       },
       "required": [
