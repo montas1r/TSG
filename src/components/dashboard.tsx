@@ -4,7 +4,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import type { Leaf as LeafType, Stem as StemType } from '@/lib/types';
 import { Stem } from '@/components/garden/stem';
-import { LeafDetailsSheet } from '@/components/garden/leaf-details-sheet';
 import { AddStemDialog } from '@/components/garden/add-stem-dialog';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
@@ -24,7 +23,6 @@ import { EditStemDialog } from '@/components/garden/edit-stem-dialog';
 
 export function Dashboard({ user }: { user: User }) {
   const [selectedLeaf, setSelectedLeaf] = useState<LeafType | null>(null);
-  const [isLeafSheetOpen, setIsLeafSheetOpen] = useState(false);
   
   const [isAddStemOpen, setIsAddStemOpen] = useState(false);
   const [isEditStemOpen, setIsEditStemOpen] = useState(false);
@@ -74,9 +72,13 @@ export function Dashboard({ user }: { user: User }) {
     return gardenWithLeaves.find(stem => stem.id === selectedStemId) || null;
   }, [gardenWithLeaves, selectedStemId]);
 
+  // When the selected stem changes, reset the selected leaf
+  useEffect(() => {
+    setSelectedLeaf(null);
+  }, [selectedStemId]);
+
   const handleSelectLeaf = (leaf: LeafType) => {
-    setSelectedLeaf(leaf);
-    setIsLeafSheetOpen(true);
+    setSelectedLeaf(prev => prev?.id === leaf.id ? null : leaf); // Toggle selection
   };
 
   const handleSaveLeaf = (updatedLeaf: LeafType) => {
@@ -91,6 +93,7 @@ export function Dashboard({ user }: { user: User }) {
   const handleDeleteLeaf = (leafId: string) => {
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', leafId);
     deleteDocumentNonBlocking(leafRef);
+    setSelectedLeaf(null); // Deselect after deleting
   };
 
   const handleAddStem = (name: string, description: string, icon: string, color: string) => {
@@ -200,6 +203,9 @@ export function Dashboard({ user }: { user: User }) {
           <Stem 
             stem={selectedStem}
             onSelectLeaf={handleSelectLeaf}
+            selectedLeaf={selectedLeaf}
+            onSaveLeaf={handleSaveLeaf}
+            onDeleteLeaf={handleDeleteLeaf}
             onAddLeaf={handleOpenAddLeaf}
             onEditStem={handleOpenEditStem}
             onDeleteStem={handleDeleteStem}
@@ -222,18 +228,6 @@ export function Dashboard({ user }: { user: User }) {
           </div>
         )}
       </main>
-
-      <LeafDetailsSheet
-        leaf={selectedLeaf}
-        isOpen={isLeafSheetOpen}
-        onOpenChange={(open) => {
-            if (!open) setSelectedLeaf(null);
-            setIsLeafSheetOpen(open);
-        }}
-        onSave={handleSaveLeaf}
-        onDelete={() => selectedLeaf && handleDeleteLeaf(selectedLeaf.id)}
-        searchQuery={searchQuery}
-      />
       
       <AddStemDialog
         isOpen={isAddStemOpen}

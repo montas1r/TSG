@@ -1,13 +1,6 @@
+
 'use client';
 
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-} from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,26 +13,32 @@ import { calculateMasteryLevel } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Highlight } from '@/components/ui/highlight';
 import { v4 as uuidv4 } from 'uuid';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 
 
-interface LeafDetailsSheetProps {
-  leaf: Leaf | null;
-  isOpen: boolean;
-  onOpenChange: (isOpen: boolean) => void;
+interface LeafDetailsProps {
+  leaf: Leaf;
   onSave: (updatedLeaf: Leaf) => void;
   onDelete: () => void;
   searchQuery?: string;
+  className?: string;
 }
 
-export function LeafDetailsSheet({
+export function LeafDetails({
   leaf,
-  isOpen,
-  onOpenChange,
   onSave,
   onDelete,
   searchQuery = '',
-}: LeafDetailsSheetProps) {
-  const [formData, setFormData] = useState<Leaf | null>(leaf);
+  className
+}: LeafDetailsProps) {
+  const [formData, setFormData] = useState<Leaf>(leaf);
 
   useEffect(() => {
     setFormData(leaf);
@@ -89,66 +88,55 @@ export function LeafDetailsSheet({
     }
   }
 
-  const handleDelete = () => {
-    if (formData) {
-      onDelete();
-      onOpenChange(false);
-    }
-  };
-
   if (!formData) return null;
 
   return (
-    <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="flex flex-col sm:max-w-lg">
-        <SheetHeader>
-          <SheetTitle className="font-headline text-2xl">
-            <Highlight text={formData.name} query={searchQuery} />
-          </SheetTitle>
-          <SheetDescription>Nurture your skill. Add quests, notes, and track your progress. Changes save automatically.</SheetDescription>
-        </SheetHeader>
-        <div className="flex-grow space-y-6 overflow-y-auto py-4 pr-4">
+    <Card className={className}>
+      <CardHeader>
+        <CardTitle className="font-headline text-2xl">
+          <Highlight text={formData.name} query={searchQuery} />
+        </CardTitle>
+        <CardDescription>Nurture your skill. Add quests, notes, and track your progress. Changes save automatically.</CardDescription>
+      </CardHeader>
+      <CardContent className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-6">
           <div className="space-y-4 rounded-lg border p-4">
-            <div className="space-y-0.5">
+              <h3 className="font-headline text-lg">Quests</h3>
+              <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+                  {(formData.quests || []).map((quest) => (
+                      <div key={quest.id} className="flex items-center gap-2">
+                          <Checkbox 
+                              id={`quest-check-${quest.id}`}
+                              checked={quest.completed}
+                              onCheckedChange={(checked) => handleQuestChange(quest.id, 'completed', !!checked)}
+                          />
+                          <Input 
+                              value={quest.text}
+                              onChange={(e) => handleQuestChange(quest.id, 'text', e.target.value)}
+                              placeholder="Define your quest..."
+                              className="flex-grow"
+                          />
+                          <Button variant="ghost" size="icon" className="shrink-0" onClick={() => handleDeleteQuest(quest.id)}>
+                              <Trash2 className="size-4 text-muted-foreground" />
+                          </Button>
+                      </div>
+                  ))}
+              </div>
+              <Button variant="outline" size="sm" className="mt-4 w-full gap-2" onClick={handleAddQuest}>
+                  <PlusCircle className="size-4" />
+                  Add Quest
+              </Button>
+          </div>
+          <div className="space-y-2">
               <Label htmlFor="mastery-slider" className="flex items-center gap-2 text-base">
                 <Flower2 className="size-5 text-primary" />
                 Mastery Level: {masteryLevel}%
               </Label>
-              <p className="text-sm text-muted-foreground">
-                Complete quests to increase your mastery.
-              </p>
+              <Progress value={masteryLevel} />
             </div>
-            <Progress value={masteryLevel} />
-          </div>
+        </div>
 
-          <div className="space-y-4 rounded-lg border p-4">
-            <h3 className="font-headline text-lg">Quests</h3>
-            <div className="space-y-3">
-                {(formData.quests || []).map((quest) => (
-                    <div key={quest.id} className="flex items-center gap-2">
-                        <Checkbox 
-                            id={`quest-check-${quest.id}`}
-                            checked={quest.completed}
-                            onCheckedChange={(checked) => handleQuestChange(quest.id, 'completed', !!checked)}
-                        />
-                        <Input 
-                            value={quest.text}
-                            onChange={(e) => handleQuestChange(quest.id, 'text', e.target.value)}
-                            placeholder="Define your quest..."
-                            className="flex-grow"
-                        />
-                        <Button variant="ghost" size="icon" className="shrink-0" onClick={() => handleDeleteQuest(quest.id)}>
-                            <Trash2 className="size-4 text-muted-foreground" />
-                        </Button>
-                    </div>
-                ))}
-            </div>
-            <Button variant="outline" size="sm" className="mt-4 w-full gap-2" onClick={handleAddQuest}>
-                <PlusCircle className="size-4" />
-                Add Quest
-            </Button>
-          </div>
-
+        <div className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="notes">Notes & Reflections</Label>
             <Textarea
@@ -174,12 +162,12 @@ export function LeafDetailsSheet({
             />
           </div>
         </div>
-        <SheetFooter className="mt-auto flex-row justify-start pt-4">
-          <Button variant="outline" onClick={handleDelete}>
-            <Trash2 className="mr-2 size-4" /> Remove
-          </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+      </CardContent>
+      <CardFooter>
+        <Button variant="outline" onClick={onDelete}>
+            <Trash2 className="mr-2 size-4" /> Remove Skill
+        </Button>
+      </CardFooter>
+    </Card>
   );
 }

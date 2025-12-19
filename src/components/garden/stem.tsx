@@ -8,25 +8,40 @@ import { PlusCircle, MoreVertical } from 'lucide-react';
 import { Highlight } from '../ui/highlight';
 import { calculateMasteryLevel } from '@/lib/utils';
 import { Progress } from '../ui/progress';
-import { HybridCarousel } from './hybrid-carousel';
+import { SkillMarquee } from './skill-marquee';
 import type { Stem as StemTypeWithLeaves } from '@/lib/types';
+import { LeafDetails } from './leaf-details-sheet';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface StemProps {
   stem: StemTypeWithLeaves;
+  selectedLeaf: LeafType | null;
   onSelectLeaf: (leaf: LeafType) => void;
+  onSaveLeaf: (leaf: LeafType) => void;
+  onDeleteLeaf: (leafId: string) => void;
   onAddLeaf: (stemId: string) => void;
   onEditStem: (stem: StemTypeWithLeaves) => void;
   onDeleteStem: (stemId: string) => void;
   searchQuery?: string;
 }
 
-export function Stem({ stem, onSelectLeaf, onAddLeaf, onEditStem, onDeleteStem, searchQuery = '' }: StemProps) {
+export function Stem({ 
+    stem, 
+    selectedLeaf,
+    onSelectLeaf, 
+    onSaveLeaf,
+    onDeleteLeaf,
+    onAddLeaf, 
+    onEditStem, 
+    onDeleteStem, 
+    searchQuery = '' 
+}: StemProps) {
   const leafList = stem.leaves || [];
   
   const stemMastery = useMemo(() => {
@@ -36,10 +51,10 @@ export function Stem({ stem, onSelectLeaf, onAddLeaf, onEditStem, onDeleteStem, 
   }, [leafList]);
 
   return (
-    <div className="relative h-full flex flex-col p-6 bg-card rounded-lg">
+    <div className="relative h-full flex flex-col p-6 rounded-lg overflow-hidden">
       
       {/* Stem Header */}
-      <div className="relative z-10 flex items-center justify-between">
+      <header className="relative z-10 flex items-center justify-between pb-4 border-b">
         <div className="flex-grow">
             <h2 className="font-headline text-3xl text-foreground/80 truncate">
                 <Highlight text={stem.name} query={searchQuery} />
@@ -68,20 +83,20 @@ export function Stem({ stem, onSelectLeaf, onAddLeaf, onEditStem, onDeleteStem, 
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>
-      </div>
+      </header>
       <div className='mt-4 w-full'>
           <Progress value={stemMastery} indicatorColor={stem.color} />
       </div>
       
-      <div className="relative mt-8 flex-grow flex items-center">
+      <div className="relative mt-4 bg-muted/20 border border-dashed rounded-lg p-2">
         {leafList.length > 0 ? (
-            <HybridCarousel 
-            leaves={leafList}
-            onSelectLeaf={onSelectLeaf}
-            searchQuery={searchQuery}
+            <SkillMarquee 
+              leaves={leafList}
+              onSelectLeaf={onSelectLeaf}
+              searchQuery={searchQuery}
             />
         ) : (
-            <div className="flex-grow flex flex-col items-center justify-center text-center text-muted-foreground p-8 rounded-lg border-2 border-dashed">
+            <div className="flex-grow flex flex-col items-center justify-center text-center text-muted-foreground p-8">
               <p className="font-headline text-xl">This stem is empty.</p>
               <p className="mb-4">Plant your first skill to get started.</p>
               <Button onClick={() => onAddLeaf(stem.id)}>
@@ -90,6 +105,28 @@ export function Stem({ stem, onSelectLeaf, onAddLeaf, onEditStem, onDeleteStem, 
             </div>
         )}
       </div>
+
+      <div className="flex-grow mt-6">
+        <AnimatePresence>
+            {selectedLeaf && (
+                 <motion.div
+                    key={selectedLeaf.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                 >
+                    <LeafDetails 
+                        leaf={selectedLeaf}
+                        onSave={onSaveLeaf}
+                        onDelete={() => onDeleteLeaf(selectedLeaf.id)}
+                        searchQuery={searchQuery}
+                    />
+                </motion.div>
+            )}
+        </AnimatePresence>
+      </div>
+
     </div>
   );
 }
