@@ -2,7 +2,17 @@
 
 import type { Leaf as LeafType } from '@/lib/types';
 import { Leaf } from './leaf';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel"
+import { useEmblaCarousel } from '@/hooks/use-embla-carousel';
+import Autoplay from "embla-carousel-autoplay"
+
 
 interface LeafGridProps {
   leaves: LeafType[];
@@ -11,26 +21,38 @@ interface LeafGridProps {
 }
 
 export function LeafGrid({ leaves, onSelectLeaf, searchQuery = '' }: LeafGridProps) {
+  const [emblaRef] = useEmblaCarousel({ loop: false }, [Autoplay({ delay: 5000, stopOnInteraction: true })]);
+
   return (
-    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-4">
-      <AnimatePresence>
-        {leaves.map((leaf) => (
-          <motion.div
-            key={leaf.id}
-            layout
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          >
-            <Leaf
-              leaf={leaf}
-              onClick={() => onSelectLeaf(leaf)}
-              searchQuery={searchQuery}
-            />
-          </motion.div>
+    <Carousel
+      opts={{
+        align: "start",
+        dragFree: true,
+      }}
+      className="w-full"
+    >
+      <CarouselContent ref={emblaRef} className="-ml-2">
+        {leaves.map((leaf, index) => (
+          <CarouselItem key={leaf.id} className="basis-auto pl-2">
+             <motion.div
+                layout
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className="w-24"
+             >
+                <Leaf
+                leaf={leaf}
+                onClick={() => onSelectLeaf(leaf)}
+                searchQuery={searchQuery}
+                />
+            </motion.div>
+          </CarouselItem>
         ))}
-      </AnimatePresence>
-    </div>
+      </CarouselContent>
+      <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2" />
+      <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2" />
+    </Carousel>
   );
 }
