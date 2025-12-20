@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import type { Leaf as LeafType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, MoreVertical } from 'lucide-react';
+import { PlusCircle, MoreVertical, Wand2 } from 'lucide-react';
 import { calculateMasteryLevel } from '@/lib/utils';
 import { Progress } from '../ui/progress';
 import { LeafGrid } from './leaf-grid';
@@ -24,6 +24,7 @@ interface StemProps {
   onSaveLeaf: (leaf: LeafType) => void;
   onDeleteLeaf: (leafId: string) => void;
   onAddLeaf: (stemId: string) => void;
+  onSuggestSkills: (stemId: string) => void; // New prop
   onEditStem: (stem: StemTypeWithLeaves) => void;
   onDeleteStem: (stemId: string) => void;
 }
@@ -35,6 +36,7 @@ export function Stem({
     onSaveLeaf,
     onDeleteLeaf,
     onAddLeaf, 
+    onSuggestSkills, // New prop
     onEditStem, 
     onDeleteStem, 
 }: StemProps) {
@@ -62,6 +64,9 @@ export function Stem({
         <div className="flex items-center gap-1 shrink-0">
             <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => onAddLeaf(stem.id)} aria-label={`Add new skill to ${stem.name}`}>
                 <PlusCircle className="size-5 text-muted-foreground/50 transition-colors group-hover:text-primary" />
+            </Button>
+             <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => onSuggestSkills(stem.id)} aria-label={`Get AI skill suggestions for ${stem.name}`}>
+                <Wand2 className="size-5 text-muted-foreground/50 transition-colors group-hover:text-primary" />
             </Button>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -94,9 +99,14 @@ export function Stem({
             <div className="flex-grow flex flex-col items-center justify-center text-center text-muted-foreground p-8">
               <p className="font-heading text-xl">This stem is empty.</p>
               <p className="mb-4">Plant your first skill to get started.</p>
-              <Button onClick={() => onAddLeaf(stem.id)}>
-                <PlusCircle className="mr-2" /> Plant a Skill
-              </Button>
+              <div className="flex items-center gap-4">
+                <Button onClick={() => onAddLeaf(stem.id)}>
+                    <PlusCircle className="mr-2" /> Plant a Skill
+                </Button>
+                <Button variant="outline" onClick={() => onSuggestSkills(stem.id)}>
+                    <Wand2 className="mr-2" /> Get Suggestions
+                </Button>
+              </div>
             </div>
         )}
       </div>

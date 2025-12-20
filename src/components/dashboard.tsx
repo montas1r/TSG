@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { AddLeafDialog } from '@/components/garden/add-leaf-dialog';
 import { SuggestionDialog } from '@/components/garden/suggestion-dialog';
+import { SuggestSkillsDialog } from '@/components/garden/suggest-skills-dialog'; // New import
 import type { User } from 'firebase/auth';
 import { collection, doc, query, deleteDoc, orderBy } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
@@ -31,6 +32,7 @@ export function Dashboard({ user }: { user: User }) {
 
   const [isAddLeafOpen, setIsAddLeafOpen] = useState(false);
   const [isSuggestionOpen, setIsSuggestionOpen] = useState(false);
+  const [isSuggestSkillsOpen, setIsSuggestSkillsOpen] = useState(false); // New state
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStemId, setSelectedStemId] = useState<string | null>(null);
 
@@ -241,6 +243,10 @@ export function Dashboard({ user }: { user: User }) {
     setDocumentNonBlocking(leafRef, sanitizedLeaf, { merge: false });
   };
   
+  const handleAddMultipleLeaves = (names: string[], stemId: string) => {
+    names.forEach(name => handleAddLeaf(name, stemId));
+  };
+  
   const handleAddSkillBundle = (stemName: string, leafNames: string[]) => {
     const stemId = uuidv4();
     const newStem: Omit<StemType, 'leaves'> = {
@@ -262,8 +268,12 @@ export function Dashboard({ user }: { user: User }) {
     setSelectedStemId(stemId);
   }
 
-  const handleOpenAddLeaf = (stemId: string) => {
+  const handleOpenAddLeaf = () => {
     setIsAddLeafOpen(true);
+  }
+
+  const handleOpenSuggestSkills = () => {
+    setIsSuggestSkillsOpen(true);
   }
 
   if (areStemsLoading || areLeavesLoading || isStatsLoading) {
@@ -294,6 +304,7 @@ export function Dashboard({ user }: { user: User }) {
             onSaveLeaf={handleSaveLeaf}
             onDeleteLeaf={handleDeleteLeaf}
             onAddLeaf={handleOpenAddLeaf}
+            onSuggestSkills={handleOpenSuggestSkills}
             onEditStem={handleOpenEditStem}
             onDeleteStem={handleDeleteStem}
           />
@@ -338,7 +349,14 @@ export function Dashboard({ user }: { user: User }) {
         isOpen={isAddLeafOpen}
         onOpenChange={setIsAddLeafOpen}
         onAddLeaf={(name) => selectedStemId && handleAddLeaf(name, selectedStemId)}
-        stem={selectedStem}
+        stemId={selectedStemId}
+      />}
+
+      {selectedStem && <SuggestSkillsDialog
+          isOpen={isSuggestSkillsOpen}
+          onOpenChange={setIsSuggestSkillsOpen}
+          stem={selectedStem}
+          onAddSkills={(names) => handleAddMultipleLeaves(names, selectedStem.id)}
       />}
 
       <SuggestionDialog 
