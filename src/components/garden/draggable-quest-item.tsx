@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useSortable } from '@dnd-kit/sortable';
@@ -12,12 +11,13 @@ import type { Quest } from '@/lib/types';
 
 interface DraggableQuestItemProps {
   quest: Quest;
-  onTextChange: (id: string, text: string) => void;
-  onCompletedChange: (id: string, completed: boolean) => void;
+  onTextChange: (id: string, field: 'text', value: string) => void;
+  onCompletedChange: (id: string, field: 'completed', value: boolean) => void;
   onDelete: (id: string) => void;
+  onBlur: () => void;
 }
 
-export function DraggableQuestItem({ quest, onTextChange, onCompletedChange, onDelete }: DraggableQuestItemProps) {
+export function DraggableQuestItem({ quest, onTextChange, onCompletedChange, onDelete, onBlur }: DraggableQuestItemProps) {
   const {
     attributes,
     listeners,
@@ -52,12 +52,13 @@ export function DraggableQuestItem({ quest, onTextChange, onCompletedChange, onD
       <Checkbox
         id={`quest-check-${quest.id}`}
         checked={quest.completed}
-        onCheckedChange={(checked) => onCompletedChange(quest.id, !!checked)}
+        onCheckedChange={(checked) => onCompletedChange(quest.id, 'completed', !!checked)}
         className="size-5"
       />
       <Input
         value={quest.text}
-        onChange={(e) => onTextChange(quest.id, e.target.value)}
+        onChange={(e) => onTextChange(quest.id, 'text', e.target.value)}
+        onBlur={onBlur}
         placeholder="Define your quest..."
         className={cn(
           'flex-grow',
@@ -75,3 +76,5 @@ export function DraggableQuestItem({ quest, onTextChange, onCompletedChange, onD
     </div>
   );
 }
+
+    

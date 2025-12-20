@@ -35,9 +35,6 @@ import {
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { DraggableQuestItem } from './draggable-quest-item';
-import { writeBatch, doc } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
-
 
 interface LeafDetailsProps {
   leaf: Leaf;
@@ -55,7 +52,6 @@ export function LeafDetails({
   className
 }: LeafDetailsProps) {
   const [formData, setFormData] = useState<Leaf>(leaf);
-  const firestore = useFirestore();
 
   useEffect(() => {
     const questsWithOrder = (leaf.quests || []).map((q, index) => ({
@@ -69,14 +65,7 @@ export function LeafDetails({
   const masteryLevel = useMemo(() => {
     if (!formData) return 0;
     return calculateMasteryLevel(formData.quests);
-  }, [formData]);
-
-  const updateFormData = (updatedData: Partial<Leaf>) => {
-    if (formData) {
-        const newFormData = { ...formData, ...updatedData };
-        setFormData(newFormData);
-    }
-  }
+  }, [formData.quests]);
 
   const handleQuestChange = (questId: string, field: 'completed' | 'text', value: string | boolean) => {
     if (formData) {
@@ -90,9 +79,12 @@ export function LeafDetails({
           quests: updatedQuests,
           masteryLevel: newMasteryLevel
         };
-        
         setFormData(newFormData);
-        onSave(sanitizeForFirestore(newFormData));
+        
+        // For checkboxes, save immediately. For text, save on blur.
+        if (field === 'completed') {
+            onSave(sanitizeForFirestore(newFormData));
+        }
     }
   };
 
@@ -129,7 +121,7 @@ export function LeafDetails({
     })
   );
 
-  async function handleDragEnd(event: DragEndEvent) {
+  function handleDragEnd(event: DragEndEvent) {
     const {active, over} = event;
     
     if (active.id !== over?.id && formData && over) {
@@ -182,6 +174,7 @@ export function LeafDetails({
                                 onTextChange={handleQuestChange}
                                 onCompletedChange={handleQuestChange}
                                 onDelete={handleDeleteQuest}
+                                onBlur={handleBlur}
                             />
                         ))}
                     </div>
@@ -207,7 +200,7 @@ export function LeafDetails({
             <Textarea
               id="notes"
               value={formData.notes || ''}
-              onChange={(e) => updateFormData({ notes: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               onBlur={handleBlur}
               placeholder="What have you learned? What are your thoughts?"
               className="min-h-[150px] text-base"
@@ -222,7 +215,7 @@ export function LeafDetails({
               id="link"
               type="url"
               value={formData.link || ''}
-              onChange={(e) => updateFormData({ link: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, link: e.target.value })}
               onBlur={handleBlur}
               placeholder="https://example.com"
               className="text-base"
@@ -238,3 +231,5 @@ export function LeafDetails({
     </Card>
   );
 }
+
+    
