@@ -39,7 +39,26 @@ export function Dashboard({ user }: { user: User }) {
 
   // Fetch Gamification Stats
   const userStatsRef = useMemoFirebase(() => doc(firestore, 'users', user.uid, 'stats', user.uid), [firestore, user.uid]);
-  const { data: userStats, isLoading: isStatsLoading } = useDoc<UserStats>(userStatsRef);
+  const { data: userStats, isLoading: isStatsLoading, error: statsError } = useDoc<UserStats>(userStatsRef);
+
+  // Effect to initialize user stats if they don't exist
+  useEffect(() => {
+    // Check if loading is complete, there's no data, and there wasn't a permission error
+    if (!isStatsLoading && !userStats && !statsError) {
+      console.log("No user stats found, creating new document.");
+      const defaultStats: UserStats = {
+        userId: user.uid,
+        totalXP: 0,
+        level: 1,
+        currentStreak: 0,
+        longestStreak: 0,
+        lastActivityDate: new Date().toISOString(),
+      };
+      // userStatsRef is already memoized, safe to use here.
+      setDocumentNonBlocking(userStatsRef, defaultStats, { merge: false });
+    }
+  }, [isStatsLoading, userStats, statsError, user.uid, userStatsRef]);
+
 
   const stemsQuery = useMemoFirebase(() => query(collection(firestore, 'users', user.uid, 'stems'), orderBy('createdAt', 'desc')), [firestore, user.uid]);
   const { data: stems, isLoading: areStemsLoading } = useCollection<Omit<StemType, 'leaves'>>(stemsQuery);
@@ -335,3 +354,5 @@ export function Dashboard({ user }: { user: User }) {
     </div>
   );
 }
+
+    
