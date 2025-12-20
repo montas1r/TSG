@@ -240,7 +240,6 @@ export function LeafDetails({
               id="notes"
               value={formData.notes || ''}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              onBlur={handleBlur}
               placeholder="What have you learned? What are your thoughts?"
               className="min-h-[150px] text-base"
             />
@@ -255,7 +254,6 @@ export function LeafDetails({
               type="url"
               value={formData.link || ''}
               onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-              onBlur={handleBlur}
               placeholder="https://example.com"
               className="text-base"
             />
