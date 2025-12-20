@@ -27,7 +27,6 @@ export function Dashboard({ user }: { user: User }) {
   const [selectedLeaf, setSelectedLeaf] = useState<LeafType | null>(null);
   
   const [isAddStemOpen, setIsAddStemOpen] = useState(false);
-  const [isEditStemOpen, setIsEditStemOpen] = useState(false);
   const [stemToEdit, setStemToEdit] = useState<StemType | null>(null);
 
   const [isAddLeafOpen, setIsAddLeafOpen] = useState(false);
@@ -161,10 +160,6 @@ export function Dashboard({ user }: { user: User }) {
     setSelectedLeaf(null);
   }, [selectedStemId]);
 
-  const handleSelectLeaf = (leaf: LeafType) => {
-    setSelectedLeaf(prev => prev?.id === leaf.id ? null : leaf);
-  };
-
   const handleSaveLeaf = (updatedLeaf: LeafType) => {
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', updatedLeaf.id);
     const sanitizedLeaf = sanitizeForFirestore(updatedLeaf);
@@ -202,18 +197,11 @@ export function Dashboard({ user }: { user: User }) {
     const stemRef = doc(firestore, 'users', user.uid, 'stems', updatedStem.id);
     const sanitizedStem = sanitizeForFirestore(updatedStem);
     setDocumentNonBlocking(stemRef, sanitizedStem, { merge: true });
+    setStemToEdit(null); // Close dialog on submit
   }
 
   const handleOpenEditStem = (stem: StemType) => {
     setStemToEdit(stem);
-    setIsEditStemOpen(true);
-  }
-
-  const handleEditStemDialogClose = (isOpen: boolean) => {
-    setIsEditStemOpen(isOpen);
-    if (!isOpen) {
-      setStemToEdit(null);
-    }
   }
 
   const handleDeleteStem = async (stemId: string) => {
@@ -331,8 +319,12 @@ export function Dashboard({ user }: { user: User }) {
 
        {stemToEdit && (
          <EditStemDialog
-            isOpen={isEditStemOpen}
-            onOpenChange={handleEditStemDialogClose}
+            isOpen={!!stemToEdit}
+            onOpenChange={(isOpen) => {
+              if (!isOpen) {
+                setStemToEdit(null);
+              }
+            }}
             stem={stemToEdit}
             onEditStem={handleEditStemSubmit}
          />
@@ -354,5 +346,7 @@ export function Dashboard({ user }: { user: User }) {
     </div>
   );
 }
+
+    
 
     
