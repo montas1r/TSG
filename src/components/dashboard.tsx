@@ -160,6 +160,10 @@ export function Dashboard({ user }: { user: User }) {
     setSelectedLeaf(null);
   }, [selectedStemId]);
 
+  const handleSelectLeaf = (leaf: LeafType) => {
+    setSelectedLeaf(leaf);
+  };
+
   const handleSaveLeaf = (updatedLeaf: LeafType) => {
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', updatedLeaf.id);
     const sanitizedLeaf = sanitizeForFirestore(updatedLeaf);
@@ -346,7 +350,3 @@ export function Dashboard({ user }: { user: User }) {
     </div>
   );
 }
-
-    
-
-    
