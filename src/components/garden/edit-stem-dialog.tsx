@@ -30,6 +30,9 @@ export function EditStemDialog({ isOpen, onOpenChange, stem, onEditStem }: EditS
   const [icon, setIcon] = useState(stem.icon || 'Sprout');
   const [color, setColor] = useState(stem.color || '#8b5cf6');
 
+  // This effect ensures that if a new stem is passed in while the dialog is already open,
+  // the dialog's internal state updates to reflect the new stem's data.
+  // It also resets the state when the dialog is opened.
   useEffect(() => {
     if (isOpen) {
       setName(stem.name);
