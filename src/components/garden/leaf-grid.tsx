@@ -27,7 +27,7 @@ export function LeafGrid({ leaves, onSelectLeaf, searchQuery = '' }: LeafGridPro
     >
       <CarouselContent className="-ml-2">
         {leaves.map((leaf) => (
-          <CarouselItem key={leaf.id} className="basis-1/4 md:basis-1/6 lg:basis-1/8 pl-2">
+          <CarouselItem key={leaf.id} className="basis-1/5 md:basis-1/8 lg:basis-1/10 pl-2">
             <Leaf
               leaf={leaf}
               onClick={() => onSelectLeaf(leaf)}
