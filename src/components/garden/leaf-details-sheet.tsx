@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { Leaf, Quest } from '@/lib/types';
 import { useState, useEffect, useMemo } from 'react';
-import { Flower2, Link as LinkIcon, Trash2, PlusCircle, GripVertical } from 'lucide-react';
+import { Flower2, Link as LinkIcon, Trash2, PlusCircle, Pencil } from 'lucide-react';
 import { calculateMasteryLevel, sanitizeForFirestore } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Highlight } from '@/components/ui/highlight';
@@ -52,6 +52,7 @@ export function LeafDetails({
   className
 }: LeafDetailsProps) {
   const [formData, setFormData] = useState<Leaf>(leaf);
+  const [isEditingName, setIsEditingName] = useState(false);
 
   useEffect(() => {
     const questsWithOrder = (leaf.quests || []).map((q, index) => ({
@@ -65,53 +66,63 @@ export function LeafDetails({
   const masteryLevel = useMemo(() => {
     if (!formData) return 0;
     return calculateMasteryLevel(formData.quests);
-  }, [formData.quests]);
+  }, [formData?.quests]);
 
   const handleQuestChange = (questId: string, field: 'completed' | 'text', value: string | boolean) => {
-    if (formData) {
-        const updatedQuests = formData.quests.map(q => 
+    setFormData(prevData => {
+        if (!prevData) return prevData;
+        
+        const updatedQuests = prevData.quests.map(q => 
             q.id === questId ? { ...q, [field]: value } : q
         );
         const newMasteryLevel = calculateMasteryLevel(updatedQuests);
         
         const newFormData = {
-          ...formData,
+          ...prevData,
           quests: updatedQuests,
           masteryLevel: newMasteryLevel
         };
-        setFormData(newFormData);
         
         // For checkboxes, save immediately. For text, save on blur.
         if (field === 'completed') {
             onSave(sanitizeForFirestore(newFormData));
         }
-    }
+        
+        return newFormData;
+    });
   };
 
   const handleAddQuest = () => {
-    if(formData) {
+    setFormData(prevData => {
+        if(!prevData) return prevData;
+
         const newQuest: Quest = {
             id: uuidv4(),
             text: '',
             completed: false,
-            order: formData.quests.length > 0 ? Math.max(...formData.quests.map(q => q.order)) + 1 : 0,
+            order: prevData.quests.length > 0 ? Math.max(...prevData.quests.map(q => q.order)) + 1 : 0,
         };
-        const updatedQuests = [...(formData.quests || []), newQuest];
+        const updatedQuests = [...(prevData.quests || []), newQuest];
         const newMasteryLevel = calculateMasteryLevel(updatedQuests);
-        const newFormData = { ...formData, quests: updatedQuests, masteryLevel: newMasteryLevel };
-        setFormData(newFormData);
+        const newFormData = { ...prevData, quests: updatedQuests, masteryLevel: newMasteryLevel };
+        
+        // Save immediately after adding the new quest structure
         onSave(sanitizeForFirestore(newFormData));
-    }
+        return newFormData;
+    });
   }
 
   const handleDeleteQuest = (questId: string) => {
-    if(formData) {
-        const updatedQuests = formData.quests.filter(q => q.id !== questId);
+    setFormData(prevData => {
+        if(!prevData) return prevData;
+
+        const updatedQuests = prevData.quests.filter(q => q.id !== questId);
         const newMasteryLevel = calculateMasteryLevel(updatedQuests);
-        const newFormData = { ...formData, quests: updatedQuests, masteryLevel: newMasteryLevel };
-        setFormData(newFormData);
+        const newFormData = { ...prevData, quests: updatedQuests, masteryLevel: newMasteryLevel };
+        
         onSave(sanitizeForFirestore(newFormData));
-    }
+        return newFormData;
+    });
   }
 
   const sensors = useSensors(
@@ -142,16 +153,44 @@ export function LeafDetails({
     onSave(sanitizeForFirestore(formData));
   };
 
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({...prev, name: e.target.value}));
+  }
+
+  const handleNameSave = () => {
+    setIsEditingName(false);
+    onSave(sanitizeForFirestore(formData));
+  }
+
 
   if (!formData) return null;
 
   return (
     <Card className={className}>
-      <CardHeader>
-        <CardTitle className="font-heading text-2xl">
-          <Highlight text={formData.name} query={searchQuery} />
-        </CardTitle>
-        <CardDescription>Nurture your skill. Add quests, notes, and track your progress. Changes save automatically.</CardDescription>
+      <CardHeader className="flex flex-row items-start justify-between">
+        <div className="flex-grow space-y-1.5">
+           {isEditingName ? (
+              <Input
+                value={formData.name}
+                onChange={handleNameChange}
+                onBlur={handleNameSave}
+                onKeyDown={(e) => e.key === 'Enter' && handleNameSave()}
+                autoFocus
+                className="text-2xl font-semibold h-auto p-0 border-none focus-visible:ring-0"
+              />
+           ) : (
+             <CardTitle className="font-heading text-2xl flex items-center gap-2">
+                <Highlight text={formData.name} query={searchQuery} />
+                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => setIsEditingName(true)}>
+                    <Pencil className="size-4" />
+                </Button>
+            </CardTitle>
+           )}
+          <CardDescription>Nurture your skill. Add quests, notes, and track your progress. Changes save automatically.</CardDescription>
+        </div>
+         <Button variant="ghost" size="icon" onClick={onDelete} className="text-destructive hover:text-destructive-foreground hover:bg-destructive/90">
+            <Trash2 className="size-5" />
+        </Button>
       </CardHeader>
       <CardContent className="grid md:grid-cols-2 gap-6">
         <div className="space-y-6">
@@ -223,13 +262,6 @@ export function LeafDetails({
           </div>
         </div>
       </CardContent>
-      <CardFooter>
-        <Button variant="destructive" onClick={onDelete}>
-            <Trash2 className="mr-2 size-4" /> Remove Skill
-        </Button>
-      </CardFooter>
     </Card>
   );
 }
-
-    
