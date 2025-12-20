@@ -190,6 +190,13 @@ export function Dashboard({ user }: { user: User }) {
     setIsEditStemOpen(true);
   }
 
+  const handleEditStemDialogClose = (isOpen: boolean) => {
+    setIsEditStemOpen(isOpen);
+    if (!isOpen) {
+      setStemToEdit(null);
+    }
+  }
+
   const handleDeleteStem = async (stemId: string) => {
     if (!window.confirm("Are you sure you want to delete this stem and all its leaves? This action cannot be undone.")) return;
 
@@ -306,7 +313,7 @@ export function Dashboard({ user }: { user: User }) {
        {stemToEdit && (
          <EditStemDialog
             isOpen={isEditStemOpen}
-            onOpenChange={setIsEditStemOpen}
+            onOpenChange={handleEditStemDialogClose}
             stem={stemToEdit}
             onEditStem={handleEditStemSubmit}
          />
