@@ -30,9 +30,11 @@ const prompt = ai.definePrompt({
   name: 'suggestRelatedSkillsPrompt',
   input: {schema: SuggestRelatedSkillsInputSchema},
   output: {schema: SuggestRelatedSkillsOutputSchema},
-  prompt: `Based on the user's current skills, suggest 3 new skill categories (stems) they might be interested in. For each stem, provide a list of 3-5 beginner-friendly skills (leaves).
-  
-If the user has no current skills, provide 3 diverse and popular skill categories to get them started.
+  prompt: `You are a creative and encouraging learning coach. Your goal is to inspire users by suggesting new skills to learn.
+
+Based on the user's current skills, suggest 5 new skill categories (stems) they might be interested in. For each stem, provide a list of 3-5 engaging, beginner-friendly skills (leaves).
+
+If the user has no current skills, provide 5 diverse and popular skill categories to get them started. Make them interesting and cover a range of topics like technology, creativity, wellness, and practical life skills.
 
 Current user skills:
 {{#if input.length}}
@@ -40,7 +42,7 @@ Current user skills:
   - {{{this}}}
   {{/each}}
 {{else}}
-  None
+  The user is new and has no skills yet. Please provide a welcoming and diverse set of starting points.
 {{/if}}`,
 });
 
