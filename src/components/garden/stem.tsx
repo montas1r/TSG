@@ -115,6 +115,7 @@ export function Stem({
                         leaf={selectedLeaf}
                         onSave={onSaveLeaf}
                         onDelete={() => onDeleteLeaf(selectedLeaf.id)}
+                        stemName={stem.name}
                     />
                 </motion.div>
             )}

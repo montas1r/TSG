@@ -5,12 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { Leaf, Quest } from '@/lib/types';
-import { useState, useEffect, useMemo } from 'react';
-import { Flower2, Link as LinkIcon, Trash2, PlusCircle, Pencil } from 'lucide-react';
+import { useState, useEffect, useMemo, useTransition } from 'react';
+import { Flower2, Link as LinkIcon, Trash2, PlusCircle, Pencil, Wand2, Loader2 } from 'lucide-react';
 import { calculateMasteryLevel, sanitizeForFirestore } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Highlight } from '@/components/ui/highlight';
 import { v4 as uuidv4 } from 'uuid';
+import { suggestQuests } from '@/ai/flows/suggest-quests';
 import {
   Card,
   CardContent,
@@ -35,6 +36,7 @@ import {
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { DraggableQuestItem } from './draggable-quest-item';
+import { useToast } from '@/hooks/use-toast';
 
 interface LeafDetailsProps {
   leaf: Leaf;
@@ -42,6 +44,7 @@ interface LeafDetailsProps {
   onDelete: () => void;
   searchQuery?: string;
   className?: string;
+  stemName?: string;
 }
 
 export function LeafDetails({
@@ -49,10 +52,13 @@ export function LeafDetails({
   onSave,
   onDelete,
   searchQuery = '',
-  className
+  className,
+  stemName,
 }: LeafDetailsProps) {
   const [formData, setFormData] = useState<Leaf>(leaf);
   const [isEditingName, setIsEditingName] = useState(false);
+  const [isSuggestingQuests, startQuestSuggestion] = useTransition();
+  const { toast } = useToast();
 
   // Effect to update internal state when the leaf prop changes from the parent
   useEffect(() => {
@@ -71,7 +77,7 @@ export function LeafDetails({
     if (JSON.stringify(formData.quests) !== JSON.stringify(leaf.quests)) {
         onSave(sanitizeForFirestore(formData));
     }
-  }, [formData.quests, leaf.quests, onSave]);
+  }, [formData.quests, onSave]);
 
   const masteryLevel = useMemo(() => {
     return calculateMasteryLevel(formData.quests);
@@ -151,6 +157,46 @@ export function LeafDetails({
     handleBlur(); // Trigger save on name save
   }
 
+  const handleSuggestQuests = () => {
+    startQuestSuggestion(async () => {
+      try {
+        const suggestedTexts = await suggestQuests({
+          skillName: formData.name,
+          stemName: stemName,
+        });
+
+        if (suggestedTexts && suggestedTexts.length > 0) {
+          setFormData(prevData => {
+            const existingQuests = prevData.quests || [];
+            const lastOrder = existingQuests.length > 0 ? Math.max(...existingQuests.map(q => q.order)) : -1;
+            
+            const newQuests: Quest[] = suggestedTexts.map((text, index) => ({
+              id: uuidv4(),
+              text,
+              completed: false,
+              order: lastOrder + 1 + index,
+            }));
+
+            const updatedQuests = [...existingQuests, ...newQuests];
+            return { ...prevData, quests: updatedQuests };
+          });
+        }
+        toast({
+          title: "Quests Suggested!",
+          description: `${suggestedTexts.length} new quests have been added for "${formData.name}".`,
+        });
+
+      } catch (error) {
+        console.error("Failed to suggest quests:", error);
+        toast({
+          variant: "destructive",
+          title: "AI Suggestion Failed",
+          description: "Could not generate quests. Please try again.",
+        });
+      }
+    });
+  };
+
   return (
     <Card className={className}>
       <CardHeader className="flex flex-row items-start justify-between">
@@ -172,7 +218,7 @@ export function LeafDetails({
                 </Button>
             </CardTitle>
            )}
-          <CardDescription>Nurture your skill. Add quests, notes, and track your progress. Changes save automatically.</CardDescription>
+          <CardDescription>Nurture your skill. Add quests, notes, and track your progress.</CardDescription>
         </div>
          <Button variant="ghost" size="icon" onClick={onDelete} className="text-destructive hover:text-destructive-foreground hover:bg-destructive/90">
             <Trash2 className="size-5" />
@@ -181,7 +227,17 @@ export function LeafDetails({
       <CardContent className="grid md:grid-cols-2 gap-6">
         <div className="space-y-6">
           <div className="space-y-4 rounded-lg border p-4">
-              <h3 className="font-heading text-lg">Quests</h3>
+              <div className="flex justify-between items-center">
+                <h3 className="font-heading text-lg">Quests</h3>
+                <Button variant="ghost" size="sm" onClick={handleSuggestQuests} disabled={isSuggestingQuests}>
+                    {isSuggestingQuests ? (
+                        <Loader2 className="size-4 animate-spin mr-2" />
+                    ) : (
+                        <Wand2 className="size-4 mr-2" />
+                    )}
+                  Suggest Quests
+                </Button>
+              </div>
               <DndContext 
                 sensors={sensors}
                 collisionDetection={closestCenter}
