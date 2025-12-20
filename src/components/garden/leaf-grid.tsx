@@ -2,7 +2,13 @@
 
 import type { Leaf as LeafType } from '@/lib/types';
 import { Leaf } from './leaf';
-import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui/carousel';
 
 interface LeafGridProps {
   leaves: LeafType[];
@@ -12,26 +18,26 @@ interface LeafGridProps {
 
 export function LeafGrid({ leaves, onSelectLeaf, searchQuery = '' }: LeafGridProps) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
-      <AnimatePresence>
+    <Carousel
+      opts={{
+        align: 'start',
+        dragFree: true,
+      }}
+      className="w-full"
+    >
+      <CarouselContent className="-ml-2">
         {leaves.map((leaf) => (
-          <motion.div
-            key={leaf.id}
-            layout
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="w-full"
-          >
+          <CarouselItem key={leaf.id} className="basis-1/4 md:basis-1/6 lg:basis-1/8 pl-2">
             <Leaf
               leaf={leaf}
               onClick={() => onSelectLeaf(leaf)}
               searchQuery={searchQuery}
             />
-          </motion.div>
+          </CarouselItem>
         ))}
-      </AnimatePresence>
-    </div>
+      </CarouselContent>
+      <CarouselPrevious className="absolute left-[-20px] top-1/2 -translate-y-1/2" />
+      <CarouselNext className="absolute right-[-20px] top-1/2 -translate-y-1/2" />
+    </Carousel>
   );
 }
