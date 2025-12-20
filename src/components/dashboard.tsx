@@ -322,7 +322,7 @@ export function Dashboard({ user }: { user: User }) {
       />
 
        {stemToEdit && (
-         <EditStemDialog
+        <EditStemDialog
             isOpen={!!stemToEdit}
             onOpenChange={(isOpen) => {
               if (!isOpen) {
@@ -331,15 +331,15 @@ export function Dashboard({ user }: { user: User }) {
             }}
             stem={stemToEdit}
             onEditStem={handleEditStemSubmit}
-         />
+        />
        )}
 
-      <AddLeafDialog
+      {selectedStem && <AddLeafDialog
         isOpen={isAddLeafOpen}
         onOpenChange={setIsAddLeafOpen}
         onAddLeaf={(name) => selectedStemId && handleAddLeaf(name, selectedStemId)}
-        stemId={selectedStemId}
-      />
+        stem={selectedStem}
+      />}
 
       <SuggestionDialog 
           isOpen={isSuggestionOpen}
