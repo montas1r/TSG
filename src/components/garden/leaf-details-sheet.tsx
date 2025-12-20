@@ -54,6 +54,7 @@ export function LeafDetails({
   const [formData, setFormData] = useState<Leaf>(leaf);
   const [isEditingName, setIsEditingName] = useState(false);
 
+  // Effect to update internal state when the leaf prop changes from the parent
   useEffect(() => {
     const questsWithOrder = (leaf.quests || []).map((q, index) => ({
       ...q,
@@ -63,39 +64,36 @@ export function LeafDetails({
     setFormData({ ...leaf, quests: questsWithOrder });
   }, [leaf]);
   
+  // Effect to save changes when quests are updated.
+  // This avoids the "cannot update during render" error.
+  useEffect(() => {
+    // Only save if the quests data is actually different from the initial leaf prop
+    if (JSON.stringify(formData.quests) !== JSON.stringify(leaf.quests)) {
+        onSave(sanitizeForFirestore(formData));
+    }
+  }, [formData.quests, leaf.quests, onSave]);
+
   const masteryLevel = useMemo(() => {
-    if (!formData) return 0;
     return calculateMasteryLevel(formData.quests);
-  }, [formData?.quests]);
+  }, [formData.quests]);
 
   const handleQuestChange = (questId: string, field: 'completed' | 'text', value: string | boolean) => {
     setFormData(prevData => {
-        if (!prevData) return prevData;
-        
         const updatedQuests = prevData.quests.map(q => 
             q.id === questId ? { ...q, [field]: value } : q
         );
         const newMasteryLevel = calculateMasteryLevel(updatedQuests);
         
-        const newFormData = {
+        return {
           ...prevData,
           quests: updatedQuests,
           masteryLevel: newMasteryLevel
         };
-        
-        // For checkboxes, save immediately. For text, save on blur.
-        if (field === 'completed') {
-            onSave(sanitizeForFirestore(newFormData));
-        }
-        
-        return newFormData;
     });
   };
 
   const handleAddQuest = () => {
     setFormData(prevData => {
-        if(!prevData) return prevData;
-
         const newQuest: Quest = {
             id: uuidv4(),
             text: '',
@@ -103,25 +101,14 @@ export function LeafDetails({
             order: prevData.quests.length > 0 ? Math.max(...prevData.quests.map(q => q.order)) + 1 : 0,
         };
         const updatedQuests = [...(prevData.quests || []), newQuest];
-        const newMasteryLevel = calculateMasteryLevel(updatedQuests);
-        const newFormData = { ...prevData, quests: updatedQuests, masteryLevel: newMasteryLevel };
-        
-        // Save immediately after adding the new quest structure
-        onSave(sanitizeForFirestore(newFormData));
-        return newFormData;
+        return { ...prevData, quests: updatedQuests };
     });
   }
 
   const handleDeleteQuest = (questId: string) => {
     setFormData(prevData => {
-        if(!prevData) return prevData;
-
         const updatedQuests = prevData.quests.filter(q => q.id !== questId);
-        const newMasteryLevel = calculateMasteryLevel(updatedQuests);
-        const newFormData = { ...prevData, quests: updatedQuests, masteryLevel: newMasteryLevel };
-        
-        onSave(sanitizeForFirestore(newFormData));
-        return newFormData;
+        return { ...prevData, quests: updatedQuests };
     });
   }
 
@@ -135,22 +122,24 @@ export function LeafDetails({
   function handleDragEnd(event: DragEndEvent) {
     const {active, over} = event;
     
-    if (active.id !== over?.id && formData && over) {
-      const oldIndex = formData.quests.findIndex((q) => q.id === active.id);
-      const newIndex = formData.quests.findIndex((q) => q.id === over.id);
-      
-      const newQuestsOrder = arrayMove(formData.quests, oldIndex, newIndex);
-      const updatedQuestsWithOrder = newQuestsOrder.map((q, index) => ({...q, order: index}));
-      
-      const newFormData = { ...formData, quests: updatedQuestsWithOrder };
-      setFormData(newFormData);
-      
-      onSave(sanitizeForFirestore(newFormData));
+    if (active.id !== over?.id && over) {
+      setFormData(prevData => {
+        const oldIndex = prevData.quests.findIndex((q) => q.id === active.id);
+        const newIndex = prevData.quests.findIndex((q) => q.id === over.id);
+        
+        const newQuestsOrder = arrayMove(prevData.quests, oldIndex, newIndex);
+        const updatedQuestsWithOrder = newQuestsOrder.map((q, index) => ({...q, order: index}));
+        
+        return { ...prevData, quests: updatedQuestsWithOrder };
+      });
     }
   }
 
   const handleBlur = () => {
-    onSave(sanitizeForFirestore(formData));
+    // Only save if something has actually changed
+    if (JSON.stringify(formData) !== JSON.stringify(leaf)) {
+      onSave(sanitizeForFirestore(formData));
+    }
   };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -159,11 +148,8 @@ export function LeafDetails({
 
   const handleNameSave = () => {
     setIsEditingName(false);
-    onSave(sanitizeForFirestore(formData));
+    handleBlur(); // Trigger save on name save
   }
-
-
-  if (!formData) return null;
 
   return (
     <Card className={className}>
@@ -240,6 +226,7 @@ export function LeafDetails({
               id="notes"
               value={formData.notes || ''}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              onBlur={handleBlur}
               placeholder="What have you learned? What are your thoughts?"
               className="min-h-[150px] text-base"
             />
@@ -254,6 +241,7 @@ export function LeafDetails({
               type="url"
               value={formData.link || ''}
               onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+              onBlur={handleBlur}
               placeholder="https://example.com"
               className="text-base"
             />
