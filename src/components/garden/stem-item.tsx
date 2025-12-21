@@ -95,13 +95,21 @@ export function StemItem({ stem, isSelected, onClick, onEdit }: StemItemProps) {
   }
 
   return (
-    <button
+    <div
       onClick={onClick}
       className={cn(
-        'w-full text-left p-3 rounded-lg transition-colors flex flex-col gap-2 group relative',
+        'w-full text-left p-3 rounded-lg transition-colors flex flex-col gap-2 group relative cursor-pointer',
         isSelected ? 'bg-primary/10' : 'hover:bg-accent/5'
       )}
       style={isSelected ? { '--stem-color': stem.color } as React.CSSProperties : {}}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onClick();
+          }
+      }}
     >
       <div className='flex items-center gap-3'>
         <div className={cn(
@@ -130,6 +138,6 @@ export function StemItem({ stem, isSelected, onClick, onEdit }: StemItemProps) {
         </Button>
       </div>
       <AnimatedStemProgress value={mastery} />
-    </button>
+    </div>
   );
 }
