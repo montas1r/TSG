@@ -29,22 +29,28 @@ export function sanitizeForFirestore<T extends Record<string, any>>(data: T): Pa
     if (Object.prototype.hasOwnProperty.call(data, key)) {
       const value = data[key];
       
-      // Skip undefined values entirely
       if (value === undefined) {
         continue;
       }
       
-      // Firestore does not support custom objects with private properties,
-      // so we should be careful about deep sanitization.
-      // For this app's data structures, a one-level deep check is safe.
-      // If we had deeply nested custom objects, we would need a more robust recursive solution.
-      if (value !== null && typeof value === 'object' && !Array.isArray(value) && !(value.constructor.name !== 'Object')) {
-         sanitized[key] = sanitizeForFirestore(value);
+      // Correctly handle arrays of objects
+      if (Array.isArray(value)) {
+        sanitized[key] = value.map(item => {
+          if (item !== null && typeof item === 'object') {
+            return sanitizeForFirestore(item);
+          }
+          return item;
+        });
+      } else if (value !== null && typeof value === 'object' && value.constructor === Object) {
+        // Recurse only for plain objects, not for Timestamps or other special types
+        sanitized[key] = sanitizeForFirestore(value);
       } else {
-         sanitized[key] = value;
+        sanitized[key] = value;
       }
     }
   }
   
   return sanitized;
 }
+
+    

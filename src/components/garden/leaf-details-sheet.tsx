@@ -186,10 +186,9 @@ export function LeafDetails({
             }));
 
             const updatedQuests = [...existingQuests, ...newQuests];
-            const finalData = { ...prevData, quests: updatedQuests };
-            // Save after suggestions are added
-            onSave(sanitizeForFirestore(finalData));
-            return finalData;
+            // CRITICAL FIX: Do NOT save here. Only update local state.
+            // The user will save by blurring another field.
+            return { ...prevData, quests: updatedQuests };
           });
         }
         toast({
@@ -318,7 +317,5 @@ export function LeafDetails({
     </Card>
   );
 }
-
-    
 
     
