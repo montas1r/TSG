@@ -11,7 +11,7 @@ import { AddLeafDialog } from '@/components/garden/add-leaf-dialog';
 import { SuggestionDialog } from '@/components/garden/suggestion-dialog';
 import { SuggestSkillsDialog } from '@/components/garden/suggest-skills-dialog';
 import type { User } from 'firebase/auth';
-import { collection, doc, query, deleteDoc, orderBy, writeBatch } from 'firebase/firestore';
+import { collection, doc, query, deleteDoc, orderBy, writeBatch, where, getDocs } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { v4 as uuidv4 } from 'uuid';
 import { StemSelector } from '@/components/garden/stem-selector';
@@ -140,20 +140,20 @@ export function Dashboard({ user }: { user: User }) {
   // It only updates the state if the data has meaningfully changed.
   useEffect(() => {
     if (selectedLeaf && allLeavesFlat) {
-        const firestoreVersion = allLeavesFlat.find(l => l.id === selectedLeaf.id);
-        
-        // If leaf was deleted from Firestore
-        if (!firestoreVersion) {
-            setSelectedLeaf(null);
-            return;
-        }
+      const firestoreVersion = allLeavesFlat.find(l => l.id === selectedLeaf.id);
+      
+      // If leaf was deleted from Firestore
+      if (!firestoreVersion) {
+        setSelectedLeaf(null);
+        return;
+      }
 
-        // If leaf data has changed in Firestore, update the local state
-        if (JSON.stringify(firestoreVersion) !== JSON.stringify(selectedLeaf)) {
-            setSelectedLeaf(firestoreVersion);
-        }
+      // If leaf data has changed in Firestore, update the local state
+      if (JSON.stringify(firestoreVersion) !== JSON.stringify(selectedLeaf)) {
+        setSelectedLeaf(firestoreVersion);
+      }
     }
-  }, [allLeavesFlat, selectedLeaf]);
+  }, [allLeavesFlat, selectedLeaf, setSelectedLeaf]);
 
 
   // When the selected stem changes, clear the selected leaf.
@@ -214,30 +214,34 @@ export function Dashboard({ user }: { user: User }) {
 
   const handleDeleteStem = async (stemId: string) => {
     if (!firestore || !user || !window.confirm("Are you sure you want to delete this stem and all its skills? This action cannot be undone.")) return;
-
+  
     try {
       const batch = writeBatch(firestore);
-
-      // Delete the stem document
+  
+      // 1. Query for all leaves associated with the stem
+      const leavesCollectionRef = collection(firestore, 'users', user.uid, 'leaves');
+      const q = query(leavesCollectionRef, where("stemId", "==", stemId));
+      const leavesSnapshot = await getDocs(q);
+  
+      // 2. Add each leaf to the batch for deletion
+      leavesSnapshot.forEach((leafDoc) => {
+        batch.delete(leafDoc.ref);
+      });
+  
+      // 3. Add the stem document itself to the batch for deletion
       const stemRef = doc(firestore, 'users', user.uid, 'stems', stemId);
       batch.delete(stemRef);
-
-      // Find and delete all associated leaves
-      const leavesInStem = (allLeavesFlat || []).filter(leaf => leaf.stemId === stemId);
-      leavesInStem.forEach(leaf => {
-        const leafRef = doc(firestore, 'users', user.uid, 'leaves', leaf.id);
-        batch.delete(leafRef);
-      });
-
-      // Commit the atomic batch operation
+  
+      // 4. Commit the atomic batch operation
       await batch.commit();
-
+  
       toast({
         title: "Stem Deleted",
         description: `The stem and all its skills have been removed.`,
       });
-
-      // UI will update automatically via the onSnapshot listeners
+  
+      // The real-time listeners from useCollection will handle the UI update automatically.
+      // The useEffect hook for selectedStemId will select a new stem if the current one was deleted.
       
     } catch (error) {
       console.error("Error deleting stem and leaves: ", error);
@@ -391,7 +395,3 @@ export function Dashboard({ user }: { user: User }) {
     </div>
   );
 }
-
-    
-
-    
