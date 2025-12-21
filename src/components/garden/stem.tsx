@@ -1,9 +1,10 @@
+
 'use client';
 
 import { useMemo, useState } from 'react';
 import type { Leaf as LeafType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Wand2, MoreHorizontal, Pencil } from 'lucide-react';
+import { PlusCircle, Wand2, MoreHorizontal, Pencil, Edit } from 'lucide-react';
 import { calculateMasteryLevel } from '@/lib/utils';
 import type { Stem as StemTypeWithLeaves } from '@/lib/types';
 import { LeafDetails } from './leaf-details-sheet';
@@ -81,8 +82,11 @@ export function Stem({
               </p>
           </div>
           <div className="flex items-center gap-1 shrink-0">
+              <Button variant="ghost" size="sm" onClick={onEditStem}>
+                  <Edit className="size-4 mr-2" /> Edit
+              </Button>
               <Button variant="ghost" size="sm" onClick={onSuggestSkills}>
-                  <Wand2 className="size-4 mr-2" /> Suggest Skills
+                  <Wand2 className="size-4 mr-2" /> Suggest
               </Button>
               <Button variant="ghost" size="sm" onClick={onAddLeaf} aria-label={`Add new skill to ${stem.name}`}>
                   <PlusCircle className="size-4 mr-2" /> New Skill
@@ -96,7 +100,7 @@ export function Stem({
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={onEditStem}>
                     <Pencil className="mr-2 h-4 w-4" />
-                    Edit Stem
+                    Edit Stem Details
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
@@ -113,7 +117,7 @@ export function Stem({
         {/* Main Content Area */}
         <div className="flex-grow flex overflow-hidden">
             <ScrollArea className="flex-grow h-full">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 p-4">
                     {leafList.length > 0 ? (
                         leafList.map(leaf => (
                             <Leaf 
