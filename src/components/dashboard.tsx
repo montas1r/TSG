@@ -15,7 +15,6 @@ import { collection, doc, query, deleteDoc, orderBy } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import {
   deleteDocumentNonBlocking,
-  setDocumentNonBlocking,
 } from '@/firebase/non-blocking-updates';
 import { v4 as uuidv4 } from 'uuid';
 import { StemSelector } from '@/components/garden/stem-selector';
@@ -25,6 +24,7 @@ import type { UserStats } from '@/lib/types';
 import { sanitizeForFirestore } from '@/lib/utils';
 import { getOrCreateUserStats } from '@/lib/services/gamification-service';
 import { useToast } from '@/hooks/use-toast';
+import { safeSetDoc } from '@/lib/firestore-safe';
 
 export function Dashboard({ user }: { user: User }) {
   const [selectedLeaf, setSelectedLeaf] = useState<LeafType | null>(null);
@@ -177,15 +177,14 @@ export function Dashboard({ user }: { user: User }) {
     setSelectedLeaf(leaf);
   };
 
-  const handleSaveLeaf = useCallback((updatedLeaf: LeafType) => {
+  const handleSaveLeaf = (updatedLeaf: LeafType) => {
     if (!firestore || !user?.uid) return;
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', updatedLeaf.id);
-    const sanitizedLeaf = sanitizeForFirestore(updatedLeaf);
-    setDocumentNonBlocking(leafRef, sanitizedLeaf, { merge: true });
     // The useCollection hook will automatically update the UI.
     // We update the local selectedLeaf state to keep it in sync for immediate feedback.
+    safeSetDoc(leafRef, updatedLeaf, { merge: true });
     setSelectedLeaf(updatedLeaf);
-  }, [firestore, user?.uid]);
+  };
   
   const handleDeleteLeaf = (leafId: string) => {
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', leafId);
@@ -205,15 +204,13 @@ export function Dashboard({ user }: { user: User }) {
       createdAt: new Date().toISOString()
     };
     const stemRef = doc(firestore, 'users', user.uid, 'stems', stemId);
-    const sanitizedStem = sanitizeForFirestore(newStem);
-    setDocumentNonBlocking(stemRef, sanitizedStem, { merge: false });
+    safeSetDoc(stemRef, newStem, { merge: false });
     setSelectedStemId(stemId);
   };
 
   const handleEditStemSubmit = (updatedStem: Omit<StemType, 'leaves'>) => {
     const stemRef = doc(firestore, 'users', user.uid, 'stems', updatedStem.id);
-    const sanitizedStem = sanitizeForFirestore(updatedStem);
-    setDocumentNonBlocking(stemRef, sanitizedStem, { merge: true });
+    safeSetDoc(stemRef, updatedStem, { merge: true });
     setStemToEdit(null); // Close dialog on submit
   }
 
@@ -250,8 +247,7 @@ export function Dashboard({ user }: { user: User }) {
         quests: []
     };
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', leafId);
-    const sanitizedLeaf = sanitizeForFirestore(newLeaf);
-    setDocumentNonBlocking(leafRef, sanitizedLeaf, { merge: false });
+    safeSetDoc(leafRef, newLeaf, { merge: false });
   };
   
   const handleAddMultipleLeaves = (names: string[], stemId: string) => {
@@ -270,8 +266,7 @@ export function Dashboard({ user }: { user: User }) {
       description: 'AI-suggested skills'
     };
     const stemRef = doc(firestore, 'users', user.uid, 'stems', stemId);
-    const sanitizedStem = sanitizeForFirestore(newStem);
-    setDocumentNonBlocking(stemRef, sanitizedStem, { merge: false });
+    safeSetDoc(stemRef, newStem, { merge: false });
 
     leafNames.forEach(leafName => {
         handleAddLeaf(leafName, stemId);

@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import type { Leaf, Quest } from '@/lib/types';
 import { useState, useEffect, useMemo, useTransition } from 'react';
 import { Flower2, Link as LinkIcon, Trash2, PlusCircle, Pencil, Wand2, Loader2 } from 'lucide-react';
-import { calculateMasteryLevel, sanitizeForFirestore } from '@/lib/utils';
+import { calculateMasteryLevel } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Highlight } from '@/components/ui/highlight';
 import { v4 as uuidv4 } from 'uuid';
@@ -65,8 +65,6 @@ export function LeafDetails({
   const firestore = useFirestore();
 
   useEffect(() => {
-    // This effect now ONLY runs when the leaf prop itself changes (i.e., a new leaf is selected).
-    // It resets the internal form state to match the newly selected leaf.
     const questsWithOrder = (leaf.quests || []).map((q, index) => ({
       ...q,
       order: q.order ?? index,
@@ -150,13 +148,10 @@ export function LeafDetails({
     }
   }
 
-  // This function is the single source for saving data.
-  // It's called when a user finishes an edit (onBlur).
   const handleBlur = () => {
-    // Only save if there's a meaningful difference.
     if (JSON.stringify(formData) !== JSON.stringify(leaf)) {
-      onSave(sanitizeForFirestore(formData));
-      toast({
+      onSave(formData);
+       toast({
           title: "Skill Saved",
           description: `Changes to "${formData.name}" have been saved.`,
       });

@@ -36,7 +36,7 @@ export function sanitizeForFirestore<T extends Record<string, any>>(data: T): Pa
       // Correctly handle arrays of objects
       if (Array.isArray(value)) {
         sanitized[key] = value.map(item => {
-          if (item !== null && typeof item === 'object') {
+          if (item !== null && typeof item === 'object' && !Array.isArray(item)) {
             return sanitizeForFirestore(item);
           }
           return item;
@@ -52,5 +52,3 @@ export function sanitizeForFirestore<T extends Record<string, any>>(data: T): Pa
   
   return sanitized;
 }
-
-    

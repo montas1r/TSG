@@ -7,10 +7,10 @@ import {
   increment,
   type Firestore,
   getDoc,
-  setDoc,
 } from 'firebase/firestore';
 import { calculateLevelFromXP } from '../gamification';
 import type { UserStats } from '../types';
+import { safeSetDoc } from '../firestore-safe';
 
 const XP_PER_QUEST = 10;
 
@@ -38,8 +38,8 @@ export async function getOrCreateUserStats(
       longestStreak: 0,
       lastActivityDate: new Date().toISOString(),
     };
-    // Use setDoc, not setDocumentNonBlocking, as this should be an awaited operation
-    await setDoc(statsRef, defaultStats);
+    // Use safeSetDoc to ensure data is clean and to prevent loops
+    await safeSetDoc(statsRef, defaultStats);
     return defaultStats;
   }
 }
@@ -103,7 +103,9 @@ export async function awardXPForQuestCompletion(
           transaction.update(statsRef, statsUpdate);
       } else {
           // If for some reason the doc was deleted between get and here
-          transaction.set(statsRef, { ...currentStats, ...statsUpdate, totalXP: newTotalXP });
+          const newStatsData = { ...currentStats, ...statsUpdate, totalXP: newTotalXP };
+          // We don't use safeSetDoc inside a transaction, but the transaction itself is safe.
+          transaction.set(statsRef, newStatsData);
       }
     });
 
