@@ -4,7 +4,7 @@
 import { useMemo, useState } from 'react';
 import type { Leaf as LeafType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Wand2, Trash2 } from 'lucide-react';
+import { PlusCircle, Wand2, Edit, Trash2 } from 'lucide-react';
 import { calculateMasteryLevel } from '@/lib/utils';
 import { LeafGrid } from './leaf-grid';
 import type { Stem as StemTypeWithLeaves } from '@/lib/types';

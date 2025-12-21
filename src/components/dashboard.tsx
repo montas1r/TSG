@@ -18,7 +18,6 @@ import { Sidebar } from './garden/sidebar';
 import Fuse from 'fuse.js';
 import { useToast } from '@/hooks/use-toast';
 import { safeSetDoc, safeUpdateDoc } from '@/lib/firestore-safe';
-import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 
 export function Dashboard({ user }: { user: User }) {
@@ -306,31 +305,25 @@ export function Dashboard({ user }: { user: User }) {
 
   return (
     <div className={"h-screen w-full flex bg-background font-body"}>
-      <AnimatePresence>
-        {isSidebarOpen && (
-          <motion.div
-            initial={{ x: '-100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '-100%' }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="h-full"
-          >
-            <Sidebar
-              stems={gardenWithLeaves}
-              selectedStemId={selectedStemId}
-              onSelectStem={setSelectedStemId}
-              onAddStem={() => setIsAddStemOpen(true)}
-              onEditStem={handleEditStem}
-              onGetSuggestions={() => setIsSuggestionOpen(true)}
-              onSearch={setSearchQuery}
-              searchQuery={searchQuery}
-              user={user}
-              searchResults={searchResults}
-              onSearchResultClick={handleSearchResultClick}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <motion.div
+        animate={{ width: isSidebarOpen ? 288 : 0 }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+        className="h-full flex-shrink-0"
+      >
+        <Sidebar
+          stems={gardenWithLeaves}
+          selectedStemId={selectedStemId}
+          onSelectStem={setSelectedStemId}
+          onAddStem={() => setIsAddStemOpen(true)}
+          onEditStem={handleEditStem}
+          onGetSuggestions={() => setIsSuggestionOpen(true)}
+          onSearch={setSearchQuery}
+          searchQuery={searchQuery}
+          user={user}
+          searchResults={searchResults}
+          onSearchResultClick={handleSearchResultClick}
+        />
+      </motion.div>
       
       <main className="flex-grow h-screen overflow-y-auto flex flex-col">
         <header className="flex items-center p-2 border-b h-[72px] shrink-0">
@@ -349,7 +342,6 @@ export function Dashboard({ user }: { user: User }) {
               onDeleteLeaf={handleDeleteLeaf}
               onAddLeaf={handleOpenAddLeaf}
               onSuggestSkills={handleOpenSuggestSkills}
-              onEditStem={handleEditStem}
               onDeleteStem={handleDeleteStem}
             />
           ) : (

@@ -87,10 +87,8 @@ export function StemItem({ stem, isSelected, onClick, onEdit }: StemItemProps) {
         </div>
         {/* Color and Icon Pickers */}
         <div className='flex items-center justify-between gap-2 z-10'>
-            <ColorPicker value={editedStem.color} onChange={handleColorChange} isInline />
-        </div>
-        <div className="z-10">
-           <IconPicker value={editedStem.icon} onChange={handleIconChange} />
+            <IconPicker value={editedStem.icon} onChange={handleIconChange} />
+            <ColorPicker value={editedStem.color} onChange={handleColorChange} />
         </div>
       </div>
     );
@@ -143,3 +141,4 @@ export function StemItem({ stem, isSelected, onClick, onEdit }: StemItemProps) {
     </div>
   );
 }
+
