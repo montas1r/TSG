@@ -73,15 +73,6 @@ export function LeafDetails({
     questsWithOrder.sort((a, b) => a.order - b.order);
     setFormData({ ...leaf, quests: questsWithOrder });
   }, [leaf]);
-  
-  // Effect to save changes when quests are updated.
-  // This avoids the "cannot update during render" error.
-  useEffect(() => {
-    // Only save if the quests data is actually different from the initial leaf prop
-    if (JSON.stringify(formData.quests) !== JSON.stringify(leaf.quests)) {
-        onSave(sanitizeForFirestore(formData));
-    }
-  }, [formData.quests, onSave]);
 
   const masteryLevel = useMemo(() => {
     return calculateMasteryLevel(formData.quests);
@@ -105,11 +96,14 @@ export function LeafDetails({
         );
         const newMasteryLevel = calculateMasteryLevel(updatedQuests);
         
-        return {
+        const newFormData = {
           ...prevData,
           quests: updatedQuests,
           masteryLevel: newMasteryLevel
         };
+        
+        onSave(sanitizeForFirestore(newFormData));
+        return newFormData;
     });
   };
 
@@ -122,14 +116,18 @@ export function LeafDetails({
             order: prevData.quests.length > 0 ? Math.max(...prevData.quests.map(q => q.order)) + 1 : 0,
         };
         const updatedQuests = [...(prevData.quests || []), newQuest];
-        return { ...prevData, quests: updatedQuests };
+        const newFormData = { ...prevData, quests: updatedQuests };
+        onSave(sanitizeForFirestore(newFormData));
+        return newFormData;
     });
   }
 
   const handleDeleteQuest = (questId: string) => {
     setFormData(prevData => {
         const updatedQuests = prevData.quests.filter(q => q.id !== questId);
-        return { ...prevData, quests: updatedQuests };
+        const newFormData = { ...prevData, quests: updatedQuests };
+        onSave(sanitizeForFirestore(newFormData));
+        return newFormData;
     });
   }
 
@@ -151,7 +149,9 @@ export function LeafDetails({
         const newQuestsOrder = arrayMove(prevData.quests, oldIndex, newIndex);
         const updatedQuestsWithOrder = newQuestsOrder.map((q, index) => ({...q, order: index}));
         
-        return { ...prevData, quests: updatedQuestsWithOrder };
+        const newFormData = { ...prevData, quests: updatedQuestsWithOrder };
+        onSave(sanitizeForFirestore(newFormData));
+        return newFormData;
       });
     }
   }
@@ -193,7 +193,9 @@ export function LeafDetails({
             }));
 
             const updatedQuests = [...existingQuests, ...newQuests];
-            return { ...prevData, quests: updatedQuests };
+            const newFormData = { ...prevData, quests: updatedQuests };
+            onSave(sanitizeForFirestore(newFormData));
+            return newFormData;
           });
         }
         toast({
