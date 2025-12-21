@@ -136,25 +136,18 @@ export function Dashboard({ user }: { user: User }) {
     return gardenWithLeaves.find(stem => stem.id === selectedStemId) || null;
   }, [gardenWithLeaves, selectedStemId]);
 
-  // This is the SAFE way to keep the selectedLeaf state in sync with Firestore data.
-  // It only updates the state if the data has meaningfully changed.
   useEffect(() => {
     if (selectedLeaf && allLeavesFlat) {
-      const firestoreVersion = allLeavesFlat.find(l => l.id === selectedLeaf.id);
-      
-      // If leaf was deleted from Firestore
-      if (!firestoreVersion) {
-        setSelectedLeaf(null);
-        return;
-      }
-
-      // If leaf data has changed in Firestore, update the local state
-      if (JSON.stringify(firestoreVersion) !== JSON.stringify(selectedLeaf)) {
-        setSelectedLeaf(firestoreVersion);
-      }
+        const firestoreVersion = allLeavesFlat.find(l => l.id === selectedLeaf.id);
+        if (!firestoreVersion) {
+            setSelectedLeaf(null);
+            return;
+        }
+        if (JSON.stringify(firestoreVersion) !== JSON.stringify(selectedLeaf)) {
+            setSelectedLeaf(firestoreVersion);
+        }
     }
-  }, [allLeavesFlat, selectedLeaf, setSelectedLeaf]);
-
+  }, [allLeavesFlat, selectedLeaf]);
 
   // When the selected stem changes, clear the selected leaf.
   useEffect(() => {
@@ -240,8 +233,8 @@ export function Dashboard({ user }: { user: User }) {
         description: `The stem and all its skills have been removed.`,
       });
   
-      // The real-time listeners from useCollection will handle the UI update automatically.
-      // The useEffect hook for selectedStemId will select a new stem if the current one was deleted.
+      // UI will update automatically via useCollection listeners.
+      // The useEffect for selectedStemId will select a new stem if the current one was deleted.
       
     } catch (error) {
       console.error("Error deleting stem and leaves: ", error);
