@@ -66,8 +66,10 @@ export function LeafDetails({
   const firestore = useFirestore();
 
   useEffect(() => {
-    // Only reset form data if the leaf ID actually changes
-    if (leaf.id !== formData.id) {
+    // Deep comparison to prevent infinite loops.
+    // This effect now correctly syncs the internal form state ONLY when the incoming `leaf` prop
+    // has meaningfully changed (either a different leaf is selected, or its content has been updated from Firestore).
+    if (JSON.stringify(leaf) !== JSON.stringify(formData)) {
         const questsWithOrder = (leaf.quests || []).map((q, index) => ({
             ...q,
             order: q.order ?? index,
@@ -75,7 +77,7 @@ export function LeafDetails({
         questsWithOrder.sort((a, b) => a.order - b.order);
         setFormData({ ...leaf, quests: questsWithOrder });
     }
-  }, [leaf, formData.id]);
+  }, [leaf]);
 
     useEffect(() => {
         if (questToAwardXp && firestore && leaf.userId) {
