@@ -63,17 +63,17 @@ export function LeafDetails({
   const { toast } = useToast();
   const firestore = useFirestore();
   
-  // This is the SAFE way to sync form data with the incoming prop.
-  // It only runs when a DIFFERENT leaf is selected.
   useEffect(() => {
-    // Sort quests by order to ensure consistent state
     const questsWithOrder = (leaf.quests || []).map((q, index) => ({
       ...q,
       order: q.order ?? index,
     })).sort((a, b) => a.order - b.order);
 
-    setFormData({ ...leaf, quests: questsWithOrder });
-  }, [leaf.id]); // Only depends on the ID of the leaf
+    // Deep comparison to prevent loops
+    if (JSON.stringify(leaf) !== JSON.stringify(formData)) {
+        setFormData({ ...leaf, quests: questsWithOrder });
+    }
+  }, [leaf]);
 
 
   const masteryLevel = useMemo(() => {
@@ -142,10 +142,6 @@ export function LeafDetails({
     // Deep comparison to avoid unnecessary saves
     if (JSON.stringify(formData) !== JSON.stringify(leaf)) {
       onSave(formData);
-       toast({
-          title: "Skill Saved",
-          description: `Changes to "${formData.name}" have been saved.`,
-      });
     }
   };
 
