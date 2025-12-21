@@ -11,13 +11,13 @@ import { AddLeafDialog } from '@/components/garden/add-leaf-dialog';
 import { SuggestionDialog } from '@/components/garden/suggestion-dialog';
 import { SuggestSkillsDialog } from '@/components/garden/suggest-skills-dialog';
 import type { User } from 'firebase/auth';
-import { collection, doc, query, deleteDoc, orderBy, writeBatch, where, getDocs } from 'firebase/firestore';
+import { collection, doc, query, deleteDoc, orderBy, writeBatch, where, getDocs, updateDoc } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { v4 as uuidv4 } from 'uuid';
 import { StemSelector } from '@/components/garden/stem-selector';
 import Fuse from 'fuse.js';
 import { useToast } from '@/hooks/use-toast';
-import { safeSetDoc } from '@/lib/firestore-safe';
+import { safeSetDoc, safeUpdateDoc } from '@/lib/firestore-safe';
 
 export function Dashboard({ user }: { user: User }) {
   const [selectedLeaf, setSelectedLeaf] = useState<LeafType | null>(null);
@@ -193,6 +193,28 @@ export function Dashboard({ user }: { user: User }) {
     safeSetDoc(stemRef, newStem, { merge: false });
     setSelectedStemId(stemId);
   };
+  
+  const handleEditStem = useCallback(async (updatedStemData: Omit<StemType, 'leaves'>) => {
+    if (!firestore || !user) return;
+
+    const stemRef = doc(firestore, 'users', user.uid, 'stems', updatedStemData.id);
+    const { id, userId, createdAt, ...dataToUpdate } = updatedStemData;
+
+    try {
+      await safeUpdateDoc(stemRef, dataToUpdate);
+      toast({
+        title: "Stem Updated",
+        description: `"${dataToUpdate.name}" has been successfully updated.`,
+      });
+    } catch (error) {
+      console.error("Error updating stem: ", error);
+      toast({
+        variant: "destructive",
+        title: "Update Failed",
+        description: "Could not update the stem. Please try again.",
+      });
+    }
+  }, [firestore, user, toast]);
 
   const handleDeleteStem = async (stemId: string) => {
     if (!firestore || !user) return;
@@ -313,6 +335,7 @@ export function Dashboard({ user }: { user: User }) {
             onAddLeaf={handleOpenAddLeaf}
             onSuggestSkills={handleOpenSuggestSkills}
             onDeleteStem={handleDeleteStem}
+            onEditStem={handleEditStem}
           />
         ) : (
           <div className="flex h-full flex-col items-center justify-center text-center p-8">
