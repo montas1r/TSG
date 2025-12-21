@@ -83,25 +83,27 @@ export function LeafDetails({
     const originalQuest = formData.quests.find(q => q.id === questId);
     const questJustCompleted = field === 'completed' && value === true && originalQuest?.completed === false;
 
-    if (questJustCompleted) {
-      awardXPForQuestCompletion(firestore, leaf.userId);
-       toast({
-        title: "Quest Complete!",
-        description: "+10 XP Earned!",
-      });
-    }
-
     setFormData(prevData => {
         const updatedQuests = prevData.quests.map(q => 
             q.id === questId ? { ...q, [field]: value } : q
         );
         const newMasteryLevel = calculateMasteryLevel(updatedQuests);
         
-        return {
+        const newData = {
           ...prevData,
           quests: updatedQuests,
           masteryLevel: newMasteryLevel
         };
+
+        if (questJustCompleted) {
+            awardXPForQuestCompletion(firestore, leaf.userId);
+            toast({
+                title: "Quest Complete!",
+                description: "+10 XP Earned!",
+            });
+        }
+        
+        return newData;
     });
   };
 
