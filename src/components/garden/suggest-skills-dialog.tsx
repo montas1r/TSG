@@ -62,9 +62,11 @@ export function SuggestSkillsDialog({ isOpen, onOpenChange, onAddSkills, stem }:
     if (isOpen) {
       handleGetSuggestions();
     } else {
+      // Reset state when dialog closes
       setSuggestions([]);
       setSelectedSkills({});
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, stem]);
 
   const handleCheckboxChange = (skill: string, checked: boolean) => {
@@ -142,3 +144,5 @@ export function SuggestSkillsDialog({ isOpen, onOpenChange, onAddSkills, stem }:
     </Dialog>
   );
 }
+
+    

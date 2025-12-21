@@ -162,8 +162,8 @@ export function Dashboard({ user }: { user: User }) {
     safeSetDoc(leafRef, updatedLeaf, { merge: true });
   }, [firestore, user?.uid]);
   
-  const handleDeleteLeaf = (leafId: string) => {
-    if (!firestore || !user) return;
+  const handleDeleteLeaf = useCallback((leafId: string) => {
+    if (!firestore || !user?.uid) return;
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', leafId);
     deleteDoc(leafRef);
     setSelectedLeaf(null);
@@ -171,7 +171,7 @@ export function Dashboard({ user }: { user: User }) {
       title: "Skill Deleted",
       description: "The skill has been removed from your garden.",
     });
-  };
+  }, [firestore, user?.uid, toast]);
 
   const handleAddStem = (name: string, description: string, icon: string, color: string) => {
     if (!firestore || !user) return;
@@ -196,21 +196,17 @@ export function Dashboard({ user }: { user: User }) {
     try {
       const batch = writeBatch(firestore);
   
-      // 1. Query for all leaves associated with the stem
       const leavesCollectionRef = collection(firestore, 'users', user.uid, 'leaves');
       const q = query(leavesCollectionRef, where("stemId", "==", stemId));
       const leavesSnapshot = await getDocs(q);
   
-      // 2. Add each leaf to the batch for deletion
       leavesSnapshot.forEach((leafDoc) => {
         batch.delete(leafDoc.ref);
       });
   
-      // 3. Add the stem document itself to the batch for deletion
       const stemRef = doc(firestore, 'users', user.uid, 'stems', stemId);
       batch.delete(stemRef);
   
-      // 4. Commit the atomic batch operation
       await batch.commit();
   
       toast({
@@ -342,7 +338,7 @@ export function Dashboard({ user }: { user: User }) {
 
       {selectedStem && <SuggestSkillsDialog
           isOpen={isSuggestSkillsOpen}
-          onOpenchaOpenChange={setIsSuggestSkillsOpen}
+          onOpenChange={setIsSuggestSkillsOpen}
           stem={selectedStem}
           onAddSkills={(names) => handleAddMultipleLeaves(names, selectedStem.id)}
       />}
@@ -356,3 +352,5 @@ export function Dashboard({ user }: { user: User }) {
     </div>
   );
 }
+
+    
