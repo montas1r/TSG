@@ -30,8 +30,6 @@ export function EditStemDialog({ isOpen, onOpenChange, stem, onEditStem }: EditS
   const [icon, setIcon] = useState(stem.icon || 'Sprout');
   const [color, setColor] = useState(stem.color || '#8b5cf6');
 
-  // This effect now correctly resets the dialog's state whenever a new stem is passed in
-  // or when the dialog is reopened, ensuring the pickers always work.
   useEffect(() => {
     if (stem) {
       setName(stem.name);
