@@ -61,12 +61,34 @@ export function LeafDetails({
   const [formData, setFormData] = useState<Leaf>(leaf);
   const [isEditingName, setIsEditingName] = useState(false);
   const [isSuggestingQuests, startQuestSuggestion] = useTransition();
+  const [questToAwardXp, setQuestToAwardXp] = useState<string | null>(null);
   const { toast } = useToast();
   const firestore = useFirestore();
 
   useEffect(() => {
-    setFormData(leaf);
-  }, [leaf.id]);
+    // Only reset form data if the leaf ID actually changes
+    if (leaf.id !== formData.id) {
+        const questsWithOrder = (leaf.quests || []).map((q, index) => ({
+            ...q,
+            order: q.order ?? index,
+        }));
+        questsWithOrder.sort((a, b) => a.order - b.order);
+        setFormData({ ...leaf, quests: questsWithOrder });
+    }
+  }, [leaf, formData.id]);
+
+    useEffect(() => {
+        if (questToAwardXp && firestore && leaf.userId) {
+            awardXPForQuestCompletion(firestore, leaf.userId);
+            toast({
+                title: "Quest Complete!",
+                description: "+10 XP Earned!",
+            });
+            // Reset the state to prevent re-awarding
+            setQuestToAwardXp(null);
+        }
+    }, [questToAwardXp, firestore, leaf.userId, toast]);
+
 
   const masteryLevel = useMemo(() => {
     return calculateMasteryLevel(formData.quests);
@@ -76,27 +98,21 @@ export function LeafDetails({
     const originalQuest = formData.quests.find(q => q.id === questId);
     const questJustCompleted = field === 'completed' && value === true && originalQuest?.completed === false;
 
+    if (questJustCompleted) {
+        setQuestToAwardXp(questId);
+    }
+    
     setFormData(prevData => {
         const updatedQuests = prevData.quests.map(q => 
             q.id === questId ? { ...q, [field]: value } : q
         );
         const newMasteryLevel = calculateMasteryLevel(updatedQuests);
         
-        const newData = {
+        return {
           ...prevData,
           quests: updatedQuests,
           masteryLevel: newMasteryLevel
         };
-
-        if (questJustCompleted) {
-            awardXPForQuestCompletion(firestore, leaf.userId);
-            toast({
-                title: "Quest Complete!",
-                description: "+10 XP Earned!",
-            });
-        }
-        
-        return newData;
     });
   };
 
@@ -144,6 +160,7 @@ export function LeafDetails({
   }
 
   const handleBlur = () => {
+    // Deep comparison to avoid unnecessary saves
     if (JSON.stringify(formData) !== JSON.stringify(leaf)) {
       onSave(formData);
        toast({
@@ -312,3 +329,5 @@ export function LeafDetails({
     </Card>
   );
 }
+
+    
