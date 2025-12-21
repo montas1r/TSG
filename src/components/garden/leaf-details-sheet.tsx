@@ -118,13 +118,10 @@ export function LeafDetails({
   }
 
   const handleDeleteQuest = (questId: string) => {
-    setFormData(prevData => {
-        const updatedQuests = prevData.quests.filter(q => q.id !== questId);
-        // This change will be saved on the next blur event.
-        const updatedWithSave = { ...prevData, quests: updatedQuests };
-        onSave(sanitizeForFirestore(updatedWithSave));
-        return updatedWithSave;
-    });
+    setFormData(prevData => ({
+        ...prevData,
+        quests: prevData.quests.filter(q => q.id !== questId)
+    }));
   }
 
   const sensors = useSensors(
@@ -145,10 +142,7 @@ export function LeafDetails({
         const newQuestsOrder = arrayMove(prevData.quests, oldIndex, newIndex);
         const updatedQuestsWithOrder = newQuestsOrder.map((q, index) => ({...q, order: index}));
         
-        const finalData = { ...prevData, quests: updatedQuestsWithOrder };
-        // Save on drag end
-        onSave(sanitizeForFirestore(finalData));
-        return finalData;
+        return { ...prevData, quests: updatedQuestsWithOrder };
       });
     }
   }
@@ -324,5 +318,7 @@ export function LeafDetails({
     </Card>
   );
 }
+
+    
 
     
