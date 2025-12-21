@@ -14,7 +14,6 @@ import { useState, useEffect } from 'react';
 import { suggestRelatedSkills, SuggestRelatedSkillsOutput } from '@/ai/flows/suggest-related-skills';
 import { Loader2, Sparkles, Wand2, PlusCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 interface SuggestionDialogProps {
@@ -27,7 +26,6 @@ interface SuggestionDialogProps {
 export function SuggestionDialog({ isOpen, onOpenChange, currentSkills, onAddSkillBundle }: SuggestionDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<SuggestRelatedSkillsOutput>([]);
-  const { toast } = useToast();
 
   const handleGetSuggestions = async () => {
     setIsLoading(true);
@@ -37,11 +35,6 @@ export function SuggestionDialog({ isOpen, onOpenChange, currentSkills, onAddSki
       setSuggestions(result);
     } catch (error) {
       console.error('Failed to get skill suggestions:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Could not fetch suggestions. Please try again later.',
-      });
     } finally {
       setIsLoading(false);
     }
@@ -50,10 +43,6 @@ export function SuggestionDialog({ isOpen, onOpenChange, currentSkills, onAddSki
   const handleAddBundle = (stem: string, leaves: string[]) => {
     onAddSkillBundle(stem, leaves);
     onOpenChange(false);
-    toast({
-      title: 'Skill Bundle Planted!',
-      description: `The "${stem}" stem and its skills have been added to your garden.`,
-    })
   }
 
   // Fetch suggestions when the dialog opens

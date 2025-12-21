@@ -27,7 +27,6 @@ import {
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { DraggableQuestItem } from './draggable-quest-item';
-import { useToast } from '@/hooks/use-toast';
 import { useDebouncedCallback } from 'use-debounce';
 import { ScrollArea } from '../ui/scroll-area';
 import { Progress } from '../ui/progress';
@@ -53,7 +52,6 @@ export function LeafDetails({
   const [formData, setFormData] = useState<Leaf>(leaf);
   const [isEditingName, setIsEditingName] = useState(false);
   const [isSuggestingQuests, startQuestSuggestion] = useTransition();
-  const { toast } = useToast();
   
   // Debounce the onSave callback
   const debouncedSave = useDebouncedCallback((data: Leaf) => {
@@ -172,18 +170,9 @@ export function LeafDetails({
           const updatedQuests = [...existingQuests, ...newQuests];
           handleLocalChange({ quests: updatedQuests });
         }
-        toast({
-          title: "Quests Suggested!",
-          description: `${suggestedTexts.length} new quests have been added for "${formData.name}".`,
-        });
 
       } catch (error) {
         console.error("Failed to suggest quests:", error);
-        toast({
-          variant: "destructive",
-          title: "AI Suggestion Failed",
-          description: "Could not generate quests. Please try again.",
-        });
       }
     });
   };

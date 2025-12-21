@@ -14,7 +14,6 @@ import { useState, useEffect, useTransition } from 'react';
 import type { Stem } from '@/lib/types';
 import { Loader2, Wand2, PlusCircle, Sparkles } from 'lucide-react';
 import { suggestSkillsForStem } from '@/ai/flows/suggest-skills-for-stem';
-import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 
@@ -29,7 +28,6 @@ export function SuggestSkillsDialog({ isOpen, onOpenChange, onAddSkills, stem }:
   const [isSuggesting, startSuggestion] = useTransition();
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [selectedSkills, setSelectedSkills] = useState<Record<string, boolean>>({});
-  const { toast } = useToast();
 
   const handleGetSuggestions = () => {
     if (!stem) return;
@@ -41,19 +39,8 @@ export function SuggestSkillsDialog({ isOpen, onOpenChange, onAddSkills, stem }:
           existingSkills: existingSkills,
         });
         setSuggestions(result);
-        if (result.length === 0) {
-          toast({
-            title: "No new suggestions",
-            description: "You've explored a lot of this stem already!",
-          });
-        }
       } catch (error) {
         console.error("Failed to get skill suggestions:", error);
-        toast({
-          variant: "destructive",
-          title: "AI Suggestion Failed",
-          description: "Could not fetch suggestions. Please try again.",
-        });
       }
     });
   };
@@ -81,10 +68,6 @@ export function SuggestSkillsDialog({ isOpen, onOpenChange, onAddSkills, stem }:
     if (skillsToAdd.length > 0) {
         onAddSkills(skillsToAdd);
         onOpenChange(false);
-         toast({
-            title: 'Skills Planted!',
-            description: `${skillsToAdd.length} new skill(s) have been added to your "${stem?.name}" stem.`,
-        });
     }
   };
 

@@ -16,7 +16,6 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { v4 as uuidv4 } from 'uuid';
 import { Sidebar } from './garden/sidebar';
 import Fuse from 'fuse.js';
-import { useToast } from '@/hooks/use-toast';
 import { safeSetDoc } from '@/lib/firestore-safe';
 import { EditStemDialog } from './garden/edit-stem-dialog';
 
@@ -32,7 +31,6 @@ export function Dashboard({ user }: { user: User }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStemId, setSelectedStemId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const { toast } = useToast();
 
   const firestore = useFirestore();
 
@@ -182,11 +180,7 @@ export function Dashboard({ user }: { user: User }) {
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', leafId);
     deleteDoc(leafRef);
     setSelectedLeaf(null);
-    toast({
-      title: "Skill Deleted",
-      description: "The skill has been removed from your garden.",
-    });
-  }, [firestore, user?.uid, toast]);
+  }, [firestore, user?.uid]);
 
   const handleAddStem = (name: string, description: string, icon: string, color: string) => {
     if (!firestore || !user) return;
@@ -221,19 +215,10 @@ export function Dashboard({ user }: { user: User }) {
     try {
       // Using updateDoc to only change specified fields
       await updateDoc(stemRef, dataToUpdate);
-      toast({
-        title: "Stem Updated",
-        description: `"${dataToUpdate.name}" has been successfully updated.`,
-      });
     } catch (error) {
       console.error("Error updating stem: ", error);
-      toast({
-        variant: "destructive",
-        title: "Update Failed",
-        description: "Could not update the stem. Please try again.",
-      });
     }
-  }, [firestore, user, toast]);
+  }, [firestore, user]);
 
   const handleDeleteStem = async (stemId: string) => {
     if (!firestore || !user) return;
@@ -254,18 +239,8 @@ export function Dashboard({ user }: { user: User }) {
   
       await batch.commit();
   
-      toast({
-        title: "Stem Deleted",
-        description: `The stem and all its skills have been removed.`,
-      });
-  
     } catch (error) {
       console.error("Error deleting stem and leaves: ", error);
-      toast({
-        variant: "destructive",
-        title: "Deletion Failed",
-        description: "Could not delete the stem. Please try again.",
-      });
     }
   };
   
