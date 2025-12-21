@@ -65,13 +65,8 @@ export function LeafDetails({
   const firestore = useFirestore();
 
   useEffect(() => {
-    const questsWithOrder = (leaf.quests || []).map((q, index) => ({
-      ...q,
-      order: q.order ?? index,
-    }));
-    questsWithOrder.sort((a, b) => a.order - b.order);
-    setFormData({ ...leaf, quests: questsWithOrder });
-  }, [leaf]);
+    setFormData(leaf);
+  }, [leaf.id]);
 
   const masteryLevel = useMemo(() => {
     return calculateMasteryLevel(formData.quests);
