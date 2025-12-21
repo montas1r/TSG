@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import type { Leaf as LeafType, Stem as StemType, SearchableItem } from '@/lib/types';
 import { Stem } from '@/components/garden/stem';
 import { AddStemDialog } from '@/components/garden/add-stem-dialog';
@@ -24,6 +24,7 @@ import Fuse from 'fuse.js';
 import type { UserStats } from '@/lib/types';
 import { sanitizeForFirestore } from '@/lib/utils';
 import { getOrCreateUserStats } from '@/lib/services/gamification-service';
+import { useToast } from '@/hooks/use-toast';
 
 export function Dashboard({ user }: { user: User }) {
   const [selectedLeaf, setSelectedLeaf] = useState<LeafType | null>(null);
@@ -36,6 +37,7 @@ export function Dashboard({ user }: { user: User }) {
   const [isSuggestSkillsOpen, setIsSuggestSkillsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStemId, setSelectedStemId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const firestore = useFirestore();
 
@@ -156,7 +158,8 @@ export function Dashboard({ user }: { user: User }) {
     setSelectedLeaf(leaf);
   };
 
-  const handleSaveLeaf = (updatedLeaf: LeafType) => {
+  const handleSaveLeaf = useCallback((updatedLeaf: LeafType) => {
+    if (!firestore || !user?.uid) return;
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', updatedLeaf.id);
     const sanitizedLeaf = sanitizeForFirestore(updatedLeaf);
     setDocumentNonBlocking(leafRef, sanitizedLeaf, { merge: true });
@@ -164,7 +167,11 @@ export function Dashboard({ user }: { user: User }) {
     if (selectedLeaf && selectedLeaf.id === updatedLeaf.id) {
       setSelectedLeaf(updatedLeaf);
     }
-  };
+    toast({
+        title: "Skill Saved",
+        description: `Changes to "${updatedLeaf.name}" have been saved.`,
+    });
+  }, [firestore, user?.uid, selectedLeaf, toast]);
   
   const handleDeleteLeaf = (leafId: string) => {
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', leafId);
@@ -359,3 +366,5 @@ export function Dashboard({ user }: { user: User }) {
     </div>
   );
 }
+
+    
