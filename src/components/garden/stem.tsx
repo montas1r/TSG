@@ -4,18 +4,11 @@
 import { useMemo, useState } from 'react';
 import type { Leaf as LeafType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Wand2, Trash2, Pencil } from 'lucide-react';
+import { PlusCircle, Wand2, Trash2 } from 'lucide-react';
 import { calculateMasteryLevel } from '@/lib/utils';
-import { Progress } from '../ui/progress';
 import { LeafGrid } from './leaf-grid';
 import type { Stem as StemTypeWithLeaves } from '@/lib/types';
 import { LeafDetails } from './leaf-details-sheet';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -89,9 +82,6 @@ export function Stem({
               </Button>
           </div>
         </header>
-        <div className='mt-4 w-full'>
-            <Progress value={stemMastery} indicatorColor={stem.color} />
-        </div>
         
         <div className="relative mt-4 bg-muted/20 border border-dashed rounded-lg p-4">
           {leafList.length > 0 ? (
