@@ -81,8 +81,9 @@ export function LeafDetails({
 
   const handleQuestChange = (questId: string, field: 'completed' | 'text', value: string | boolean) => {
     const originalQuest = formData.quests.find(q => q.id === questId);
+    const questJustCompleted = field === 'completed' && value === true && originalQuest?.completed === false;
 
-    if (field === 'completed' && value === true && originalQuest?.completed === false) {
+    if (questJustCompleted) {
       awardXPForQuestCompletion(firestore, leaf.userId);
        toast({
         title: "Quest Complete!",
@@ -186,8 +187,6 @@ export function LeafDetails({
             }));
 
             const updatedQuests = [...existingQuests, ...newQuests];
-            // CRITICAL FIX: Do NOT save here. Only update local state.
-            // The user will save by blurring another field.
             return { ...prevData, quests: updatedQuests };
           });
         }
@@ -317,5 +316,3 @@ export function LeafDetails({
     </Card>
   );
 }
-
-    
