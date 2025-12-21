@@ -57,9 +57,9 @@ export function StemItem({ stem, isSelected, onClick, isCollapsed }: StemItemPro
               exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="flex w-full items-start justify-between gap-2">
+              <div className="flex w-full items-center justify-between gap-2">
                 <p className={cn(
-                    "font-medium truncate pr-2",
+                    "font-medium truncate",
                     isSelected ? 'text-primary' : 'text-foreground'
                 )} style={isSelected ? { color: stem.color } : {}}>{stem.name}</p>
               </div>

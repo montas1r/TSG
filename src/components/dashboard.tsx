@@ -11,13 +11,13 @@ import { AddLeafDialog } from '@/components/garden/add-leaf-dialog';
 import { SuggestionDialog } from '@/components/garden/suggestion-dialog';
 import { SuggestSkillsDialog } from '@/components/garden/suggest-skills-dialog';
 import type { User } from 'firebase/auth';
-import { collection, doc, query, deleteDoc, orderBy, writeBatch, where, getDocs } from 'firebase/firestore';
+import { collection, doc, query, deleteDoc, orderBy, writeBatch, where, getDocs, updateDoc } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { v4 as uuidv4 } from 'uuid';
 import { Sidebar } from './garden/sidebar';
 import Fuse from 'fuse.js';
 import { useToast } from '@/hooks/use-toast';
-import { safeSetDoc, safeUpdateDoc } from '@/lib/firestore-safe';
+import { safeSetDoc } from '@/lib/firestore-safe';
 import { EditStemDialog } from './garden/edit-stem-dialog';
 
 export function Dashboard({ user }: { user: User }) {
@@ -25,7 +25,6 @@ export function Dashboard({ user }: { user: User }) {
   
   const [isAddStemOpen, setIsAddStemOpen] = useState(false);
   const [isEditStemOpen, setIsEditStemOpen] = useState(false);
-  const [stemToEdit, setStemToEdit] = useState<Omit<StemType, 'leaves'> | null>(null);
   
   const [isAddLeafOpen, setIsAddLeafOpen] = useState(false);
   const [isSuggestionOpen, setIsSuggestionOpen] = useState(false);
@@ -142,6 +141,12 @@ export function Dashboard({ user }: { user: User }) {
     return gardenWithLeaves.find(stem => stem.id === selectedStemId) || null;
   }, [gardenWithLeaves, selectedStemId]);
 
+  const stemToEdit = useMemo(() => {
+    if (!selectedStem) return null;
+    const { leaves, ...stemData } = selectedStem;
+    return stemData;
+  }, [selectedStem]);
+
   useEffect(() => {
     // When the selected leaf is updated from the server, find the new version
     const liveLeaf = selectedLeaf && allLeavesFlat?.find(l => l.id === selectedLeaf.id);
@@ -196,19 +201,22 @@ export function Dashboard({ user }: { user: User }) {
     setSelectedStemId(stemId);
   };
   
-  const handleOpenEditStem = (stem: Omit<StemType, 'leaves'>) => {
-    setStemToEdit(stem);
-    setIsEditStemOpen(true);
+  const handleOpenEditStem = () => {
+    if (selectedStem) {
+      setIsEditStemOpen(true);
+    }
   };
 
   const handleEditStem = useCallback(async (updatedStemData: Omit<StemType, 'leaves'>) => {
     if (!firestore || !user) return;
 
     const stemRef = doc(firestore, 'users', user.uid, 'stems', updatedStemData.id);
+    // Destructure to remove fields that should not be updated directly or are immutable
     const { id, userId, createdAt, ...dataToUpdate } = updatedStemData;
-
+    
     try {
-      await safeUpdateDoc(stemRef, dataToUpdate);
+      // Using updateDoc to only change specified fields
+      await updateDoc(stemRef, dataToUpdate);
       toast({
         title: "Stem Updated",
         description: `"${dataToUpdate.name}" has been successfully updated.`,
@@ -397,5 +405,3 @@ export function Dashboard({ user }: { user: User }) {
     </div>
   );
 }
-
-    

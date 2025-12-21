@@ -4,7 +4,7 @@
 import { useMemo, useState } from 'react';
 import type { Leaf as LeafType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Wand2, MoreHorizontal } from 'lucide-react';
+import { PlusCircle, Wand2, MoreHorizontal, Pencil } from 'lucide-react';
 import { calculateMasteryLevel } from '@/lib/utils';
 import type { Stem as StemTypeWithLeaves } from '@/lib/types';
 import { LeafDetails } from './leaf-details-sheet';
@@ -37,7 +37,7 @@ interface StemProps {
   onDeleteLeaf: (leafId: string) => void;
   onAddLeaf: (stemId: string) => void;
   onSuggestSkills: (stemId: string) => void;
-  onEditStem: (stem: Omit<StemTypeWithLeaves, 'leaves'>) => void;
+  onEditStem: () => void;
   onDeleteStem: (stemId: string) => void;
 }
 
@@ -73,7 +73,7 @@ export function Stem({
       <div className="flex flex-col h-full">
         {/* Stem Header */}
         <header className="flex items-center justify-between p-4 border-b shrink-0">
-          <div className="flex-grow">
+          <div className="flex-grow min-w-0">
               <h2 className="font-heading text-2xl text-foreground truncate">
                   {stem.name}
               </h2>
@@ -82,6 +82,9 @@ export function Stem({
               </p>
           </div>
           <div className="flex items-center gap-1 shrink-0">
+              <Button variant="ghost" size="sm" onClick={() => onSuggestSkills(stem.id)}>
+                  <Wand2 className="size-4 mr-2" /> Suggest Skills
+              </Button>
               <Button variant="ghost" size="sm" onClick={() => onAddLeaf(stem.id)} aria-label={`Add new skill to ${stem.name}`}>
                   <PlusCircle className="size-4 mr-2" /> New Skill
               </Button>
@@ -92,11 +95,8 @@ export function Stem({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onSuggestSkills(stem.id)}>
-                    <Wand2 className="mr-2" />
-                    Suggest Skills
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onEditStem(stemData)}>
+                  <DropdownMenuItem onClick={onEditStem}>
+                    <Pencil className="mr-2 h-4 w-4" />
                     Edit Stem
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -178,5 +178,3 @@ export function Stem({
     </>
   );
 }
-
-    
