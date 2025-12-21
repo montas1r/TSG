@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo, useState } from 'react';
@@ -35,8 +34,8 @@ interface StemProps {
   onSelectLeaf: (leaf: LeafType | null) => void;
   onSaveLeaf: (leaf: LeafType) => void;
   onDeleteLeaf: (leafId: string) => void;
-  onAddLeaf: (stemId: string) => void;
-  onSuggestSkills: (stemId: string) => void;
+  onAddLeaf: () => void;
+  onSuggestSkills: () => void;
   onEditStem: () => void;
   onDeleteStem: (stemId: string) => void;
 }
@@ -82,10 +81,10 @@ export function Stem({
               </p>
           </div>
           <div className="flex items-center gap-1 shrink-0">
-              <Button variant="ghost" size="sm" onClick={() => onSuggestSkills(stem.id)}>
+              <Button variant="ghost" size="sm" onClick={onSuggestSkills}>
                   <Wand2 className="size-4 mr-2" /> Suggest Skills
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => onAddLeaf(stem.id)} aria-label={`Add new skill to ${stem.name}`}>
+              <Button variant="ghost" size="sm" onClick={onAddLeaf} aria-label={`Add new skill to ${stem.name}`}>
                   <PlusCircle className="size-4 mr-2" /> New Skill
               </Button>
               <DropdownMenu>
@@ -128,7 +127,7 @@ export function Stem({
                         <div className="col-span-full flex-grow flex flex-col items-center justify-center text-center text-muted-foreground p-8 bg-background/50 rounded-lg">
                             <p className="font-heading text-xl">This stem is empty.</p>
                             <p className="mb-4">Plant your first skill to get started.</p>
-                            <Button onClick={() => onAddLeaf(stem.id)}>
+                            <Button onClick={onAddLeaf}>
                                 <PlusCircle className="mr-2" /> Plant a Skill
                             </Button>
                         </div>
