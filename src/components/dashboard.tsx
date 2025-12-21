@@ -151,19 +151,13 @@ export function Dashboard({ user }: { user: User }) {
   }, [gardenWithLeaves, selectedStemId]);
 
   useEffect(() => {
-    // When a new leaf is selected from a DIFFERENT stem, the old selectedLeaf might not be in the new selectedStem.
-    // So we should find the corresponding leaf object from the new `allLeavesFlat` data.
-    if (selectedLeaf) {
-      const updatedSelectedLeaf = allLeavesFlat?.find(l => l.id === selectedLeaf.id);
-      if (updatedSelectedLeaf) {
-        // Only update if it's different to prevent loops
-        if (JSON.stringify(selectedLeaf) !== JSON.stringify(updatedSelectedLeaf)) {
-          setSelectedLeaf(updatedSelectedLeaf);
+    // When the selected leaf is deleted from Firestore, `allLeavesFlat` updates.
+    // We need to check if our `selectedLeaf` still exists in the new data.
+    if (selectedLeaf && allLeavesFlat) {
+        const stillExists = allLeavesFlat.some(l => l.id === selectedLeaf.id);
+        if (!stillExists) {
+            setSelectedLeaf(null);
         }
-      } else {
-        // If the leaf was deleted, it won't be found.
-        setSelectedLeaf(null);
-      }
     }
   }, [allLeavesFlat, selectedLeaf]);
 
@@ -177,15 +171,15 @@ export function Dashboard({ user }: { user: User }) {
     setSelectedLeaf(leaf);
   };
 
-  const handleSaveLeaf = useCallback((updatedLeaf: LeafType) => {
+  const handleSaveLeaf = (updatedLeaf: LeafType) => {
     if (!firestore || !user?.uid) return;
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', updatedLeaf.id);
     const sanitizedLeaf = sanitizeForFirestore(updatedLeaf);
     setDocumentNonBlocking(leafRef, sanitizedLeaf, { merge: true });
-    // IMPORTANT: We do not call setSelectedLeaf here.
-    // The change will be picked up by the useCollection listener, which will then update the state.
-    // This breaks the infinite loop.
-  }, [firestore, user?.uid]);
+    // The useCollection hook will automatically update the UI.
+    // We update the local selectedLeaf state to keep it in sync for immediate feedback.
+    setSelectedLeaf(updatedLeaf);
+  };
   
   const handleDeleteLeaf = (leafId: string) => {
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', leafId);
