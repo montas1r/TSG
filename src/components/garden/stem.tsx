@@ -4,7 +4,7 @@
 import { useMemo, useState } from 'react';
 import type { Leaf as LeafType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, MoreVertical, Wand2, Trash2, Pencil } from 'lucide-react';
+import { PlusCircle, Wand2, Trash2, Pencil } from 'lucide-react';
 import { calculateMasteryLevel } from '@/lib/utils';
 import { Progress } from '../ui/progress';
 import { LeafGrid } from './leaf-grid';
@@ -35,8 +35,7 @@ interface StemProps {
   onSaveLeaf: (leaf: LeafType) => void;
   onDeleteLeaf: (leafId: string) => void;
   onAddLeaf: (stemId: string) => void;
-  onSuggestSkills: (stemId: string) => void; // New prop
-  onEditStem: (stem: StemTypeWithLeaves) => void;
+  onSuggestSkills: (stemId: string) => void;
   onDeleteStem: (stemId: string) => void;
 }
 
@@ -47,8 +46,7 @@ export function Stem({
     onSaveLeaf,
     onDeleteLeaf,
     onAddLeaf, 
-    onSuggestSkills, // New prop
-    onEditStem, 
+    onSuggestSkills,
     onDeleteStem, 
 }: StemProps) {
   const leafList = stem.leaves || [];
@@ -85,9 +83,6 @@ export function Stem({
               </Button>
                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => onSuggestSkills(stem.id)} aria-label={`Get AI skill suggestions for ${stem.name}`}>
                   <Wand2 className="size-5 text-muted-foreground/50 transition-colors group-hover:text-primary" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => onEditStem(stem)}>
-                  <Pencil className="size-5 text-muted-foreground/50" />
               </Button>
               <Button variant="ghost" size="icon" onClick={() => setIsDeleteAlertOpen(true)} className="h-8 w-8 rounded-full hover:bg-destructive/10 hover:text-destructive">
                 <Trash2 className="size-5" />

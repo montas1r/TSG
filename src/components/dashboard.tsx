@@ -15,7 +15,6 @@ import { collection, doc, query, deleteDoc, orderBy, writeBatch, where, getDocs 
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { v4 as uuidv4 } from 'uuid';
 import { StemSelector } from '@/components/garden/stem-selector';
-import { EditStemDialog } from '@/components/garden/edit-stem-dialog';
 import Fuse from 'fuse.js';
 import { useToast } from '@/hooks/use-toast';
 import { safeSetDoc } from '@/lib/firestore-safe';
@@ -24,8 +23,7 @@ export function Dashboard({ user }: { user: User }) {
   const [selectedLeaf, setSelectedLeaf] = useState<LeafType | null>(null);
   
   const [isAddStemOpen, setIsAddStemOpen] = useState(false);
-  const [stemToEdit, setStemToEdit] = useState<StemType | null>(null);
-
+  
   const [isAddLeafOpen, setIsAddLeafOpen] = useState(false);
   const [isSuggestionOpen, setIsSuggestionOpen] = useState(false);
   const [isSuggestSkillsOpen, setIsSuggestSkillsOpen] = useState(false);
@@ -192,17 +190,6 @@ export function Dashboard({ user }: { user: User }) {
     setSelectedStemId(stemId);
   };
 
-  const handleEditStemSubmit = (updatedStem: Omit<StemType, 'leaves'>) => {
-    if (!firestore || !user) return;
-    const stemRef = doc(firestore, 'users', user.uid, 'stems', updatedStem.id);
-    safeSetDoc(stemRef, updatedStem, { merge: true });
-    setStemToEdit(null); // Close dialog on submit
-  }
-
-  const handleOpenEditStem = (stem: StemType) => {
-    setStemToEdit(stem);
-  }
-
   const handleDeleteStem = async (stemId: string) => {
     if (!firestore || !user) return;
   
@@ -320,7 +307,6 @@ export function Dashboard({ user }: { user: User }) {
             onDeleteLeaf={handleDeleteLeaf}
             onAddLeaf={handleOpenAddLeaf}
             onSuggestSkills={handleOpenSuggestSkills}
-            onEditStem={handleOpenEditStem}
             onDeleteStem={handleDeleteStem}
           />
         ) : (
@@ -347,19 +333,6 @@ export function Dashboard({ user }: { user: User }) {
         onAddStem={handleAddStem}
       />
 
-       {stemToEdit && (
-        <EditStemDialog
-            isOpen={!!stemToEdit}
-            onOpenChange={(isOpen) => {
-              if (!isOpen) {
-                setStemToEdit(null);
-              }
-            }}
-            stem={stemToEdit}
-            onEditStem={handleEditStemSubmit}
-        />
-       )}
-
       {selectedStem && <AddLeafDialog
         isOpen={isAddLeafOpen}
         onOpenChange={setIsAddLeafOpen}
@@ -369,7 +342,7 @@ export function Dashboard({ user }: { user: User }) {
 
       {selectedStem && <SuggestSkillsDialog
           isOpen={isSuggestSkillsOpen}
-          onOpenChange={setIsSuggestSkillsOpen}
+          onOpenchaOpenChange={setIsSuggestSkillsOpen}
           stem={selectedStem}
           onAddSkills={(names) => handleAddMultipleLeaves(names, selectedStem.id)}
       />}
