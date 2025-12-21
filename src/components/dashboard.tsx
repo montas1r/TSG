@@ -155,6 +155,7 @@ export function Dashboard({ user }: { user: User }) {
     }
   }, [allLeavesFlat, selectedLeaf]);
 
+
   // When the selected stem changes, clear the selected leaf.
   useEffect(() => {
     setSelectedLeaf(null);
@@ -170,16 +171,21 @@ export function Dashboard({ user }: { user: User }) {
     if (!firestore || !user?.uid) return;
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', updatedLeaf.id);
     safeSetDoc(leafRef, updatedLeaf, { merge: true });
-    // Toast is now handled in the blur event in LeafDetails for better UX
   }, [firestore, user?.uid]);
   
   const handleDeleteLeaf = (leafId: string) => {
+    if (!firestore || !user) return;
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', leafId);
     deleteDoc(leafRef);
     setSelectedLeaf(null);
+    toast({
+      title: "Skill Deleted",
+      description: "The skill has been removed from your garden.",
+    });
   };
 
   const handleAddStem = (name: string, description: string, icon: string, color: string) => {
+    if (!firestore || !user) return;
     const stemId = uuidv4();
     const newStem: Omit<StemType, 'leaves'> = {
       name,
@@ -196,6 +202,7 @@ export function Dashboard({ user }: { user: User }) {
   };
 
   const handleEditStemSubmit = (updatedStem: Omit<StemType, 'leaves'>) => {
+    if (!firestore || !user) return;
     const stemRef = doc(firestore, 'users', user.uid, 'stems', updatedStem.id);
     safeSetDoc(stemRef, updatedStem, { merge: true });
     setStemToEdit(null); // Close dialog on submit
@@ -206,33 +213,32 @@ export function Dashboard({ user }: { user: User }) {
   }
 
   const handleDeleteStem = async (stemId: string) => {
-    if (!window.confirm("Are you sure you want to delete this stem and all its skills? This action cannot be undone.")) return;
-  
+    if (!firestore || !user || !window.confirm("Are you sure you want to delete this stem and all its skills? This action cannot be undone.")) return;
+
     try {
-      // 1. Get all leaves for the stem
-      const leavesToDelete = leavesByStem[stemId] || [];
-  
-      // 2. Create a batch of delete operations for the leaves
       const batch = writeBatch(firestore);
-      leavesToDelete.forEach(leaf => {
+
+      // Delete the stem document
+      const stemRef = doc(firestore, 'users', user.uid, 'stems', stemId);
+      batch.delete(stemRef);
+
+      // Find and delete all associated leaves
+      const leavesInStem = (allLeavesFlat || []).filter(leaf => leaf.stemId === stemId);
+      leavesInStem.forEach(leaf => {
         const leafRef = doc(firestore, 'users', user.uid, 'leaves', leaf.id);
         batch.delete(leafRef);
       });
-  
-      // 3. Delete the stem itself in the same batch
-      const stemRef = doc(firestore, 'users', user.uid, 'stems', stemId);
-      batch.delete(stemRef);
-  
-      // 4. Commit the batch
+
+      // Commit the atomic batch operation
       await batch.commit();
-  
+
       toast({
         title: "Stem Deleted",
         description: `The stem and all its skills have been removed.`,
       });
-  
-      // The useEffect watching `stems` will handle re-selecting a new stem
-  
+
+      // UI will update automatically via the onSnapshot listeners
+      
     } catch (error) {
       console.error("Error deleting stem and leaves: ", error);
       toast({
@@ -244,6 +250,7 @@ export function Dashboard({ user }: { user: User }) {
   };
   
   const handleAddLeaf = (name: string, stemId: string) => {
+    if (!firestore || !user) return;
     const leafId = uuidv4();
     const newLeaf: LeafType = {
         id: leafId,
@@ -264,6 +271,7 @@ export function Dashboard({ user }: { user: User }) {
   };
   
   const handleAddSkillBundle = (stemName: string, leafNames: string[]) => {
+    if (!firestore || !user) return;
     const stemId = uuidv4();
     const newStem: Omit<StemType, 'leaves'> = {
       name: stemName,
@@ -383,5 +391,7 @@ export function Dashboard({ user }: { user: User }) {
     </div>
   );
 }
+
+    
 
     
