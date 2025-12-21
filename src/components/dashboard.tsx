@@ -244,7 +244,6 @@ export function Dashboard({ user }: { user: User }) {
         userId: user.uid,
         masteryLevel: 0,
         notes: '',
-        link: '',
         quests: []
     };
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', leafId);

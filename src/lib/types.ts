@@ -16,7 +16,6 @@ export interface Leaf {
   userId: string;
   masteryLevel: number; // This will now be calculated
   notes: string;
-  link: string;
   quests: Quest[];
 }
 
@@ -39,7 +38,7 @@ export type SearchableStem = Omit<Stem, 'leaves'> & {
     type: 'stem';
 }
 
-export type SearchableLeaf = Leaf & {
+export type SearchableLeaf = Omit<Leaf, 'link'> & {
     type: 'leaf';
     stemName: string; // denormalized for search display
 }

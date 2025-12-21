@@ -6,10 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { Leaf, Quest } from '@/lib/types';
-import { useState, useEffect, useMemo, useTransition, useCallback } from 'react';
-import { Flower2, Link as LinkIcon, Trash2, PlusCircle, Pencil, Wand2, Loader2 } from 'lucide-react';
+import { useState, useEffect, useMemo, useTransition } from 'react';
+import { Trash2, PlusCircle, Pencil, Wand2, Loader2 } from 'lucide-react';
 import { calculateMasteryLevel } from '@/lib/utils';
-import { Progress } from '@/components/ui/progress';
 import { Highlight } from '@/components/ui/highlight';
 import { v4 as uuidv4 } from 'uuid';
 import { suggestQuests } from '@/ai/flows/suggest-quests';
@@ -218,7 +217,7 @@ export function LeafDetails({
                 </Button>
             </CardTitle>
            )}
-          <CardDescription>Nurture your skill. Add quests, notes, and track your progress.</CardDescription>
+          <CardDescription>Nurture your skill. Add quests and notes to track your progress.</CardDescription>
         </div>
          <Button variant="ghost" size="icon" onClick={onDelete} className="text-destructive hover:text-destructive-foreground hover:bg-destructive/90">
             <Trash2 className="size-5" />
@@ -228,7 +227,7 @@ export function LeafDetails({
         <div className="space-y-6">
           <div className="space-y-4 rounded-lg border p-4">
               <div className="flex justify-between items-center">
-                <h3 className="font-heading text-lg">Quests</h3>
+                <h3 className="font-heading text-lg">Quests ({formData.quests.filter(q => q.completed).length}/{formData.quests.length})</h3>
                 <Button variant="ghost" size="sm" onClick={handleSuggestQuests} disabled={isSuggestingQuests}>
                     {isSuggestingQuests ? (
                         <Loader2 className="size-4 animate-spin mr-2" />
@@ -266,13 +265,6 @@ export function LeafDetails({
                   Add Quest
               </Button>
           </div>
-          <div className="space-y-2">
-              <Label htmlFor="mastery-slider" className="flex items-center gap-2 text-base">
-                <Flower2 className="size-5 text-primary" />
-                Mastery Level: {masteryLevel}%
-              </Label>
-              <Progress value={masteryLevel} />
-            </div>
         </div>
 
         <div className="space-y-6">
@@ -284,20 +276,6 @@ export function LeafDetails({
               onChange={(e) => handleLocalChange({ notes: e.target.value })}
               placeholder="What have you learned? What are your thoughts?"
               className="min-h-[150px] text-base"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="link" className="flex items-center gap-2">
-              <LinkIcon className="size-4" />
-              Resource Link
-            </Label>
-            <Input
-              id="link"
-              type="url"
-              value={formData.link || ''}
-              onChange={(e) => handleLocalChange({ link: e.target.value })}
-              placeholder="https://example.com"
-              className="text-base"
             />
           </div>
         </div>
