@@ -151,8 +151,27 @@ export function Dashboard({ user }: { user: User }) {
   }, [gardenWithLeaves, selectedStemId]);
 
   useEffect(() => {
+    // When a new leaf is selected from a DIFFERENT stem, the old selectedLeaf might not be in the new selectedStem.
+    // So we should find the corresponding leaf object from the new `allLeavesFlat` data.
+    if (selectedLeaf) {
+      const updatedSelectedLeaf = allLeavesFlat?.find(l => l.id === selectedLeaf.id);
+      if (updatedSelectedLeaf) {
+        // Only update if it's different to prevent loops
+        if (JSON.stringify(selectedLeaf) !== JSON.stringify(updatedSelectedLeaf)) {
+          setSelectedLeaf(updatedSelectedLeaf);
+        }
+      } else {
+        // If the leaf was deleted, it won't be found.
+        setSelectedLeaf(null);
+      }
+    }
+  }, [allLeavesFlat, selectedLeaf]);
+
+  useEffect(() => {
     setSelectedLeaf(null);
   }, [selectedStemId]);
+
+
 
   const handleSelectLeaf = (leaf: LeafType) => {
     setSelectedLeaf(leaf);
@@ -163,15 +182,10 @@ export function Dashboard({ user }: { user: User }) {
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', updatedLeaf.id);
     const sanitizedLeaf = sanitizeForFirestore(updatedLeaf);
     setDocumentNonBlocking(leafRef, sanitizedLeaf, { merge: true });
-
-    if (selectedLeaf && selectedLeaf.id === updatedLeaf.id) {
-      setSelectedLeaf(updatedLeaf);
-    }
-    toast({
-        title: "Skill Saved",
-        description: `Changes to "${updatedLeaf.name}" have been saved.`,
-    });
-  }, [firestore, user?.uid, selectedLeaf, toast]);
+    // IMPORTANT: We do not call setSelectedLeaf here.
+    // The change will be picked up by the useCollection listener, which will then update the state.
+    // This breaks the infinite loop.
+  }, [firestore, user?.uid]);
   
   const handleDeleteLeaf = (leafId: string) => {
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', leafId);
@@ -366,5 +380,3 @@ export function Dashboard({ user }: { user: User }) {
     </div>
   );
 }
-
-    

@@ -154,6 +154,10 @@ export function LeafDetails({
     // Only save if there's a meaningful difference.
     if (JSON.stringify(formData) !== JSON.stringify(leaf)) {
       onSave(sanitizeForFirestore(formData));
+      toast({
+          title: "Skill Saved",
+          description: `Changes to "${formData.name}" have been saved.`,
+      });
     }
   };
 
