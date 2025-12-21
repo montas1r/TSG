@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
@@ -6,7 +5,7 @@ import type { Leaf as LeafType, Stem as StemType, SearchableItem } from '@/lib/t
 import { Stem } from '@/components/garden/stem';
 import { AddStemDialog } from '@/components/garden/add-stem-dialog';
 import { Button } from '@/components/ui/button';
-import { Loader2, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { AddLeafDialog } from '@/components/garden/add-leaf-dialog';
 import { SuggestionDialog } from '@/components/garden/suggestion-dialog';
 import { SuggestSkillsDialog } from '@/components/garden/suggest-skills-dialog';
@@ -18,7 +17,6 @@ import { Sidebar } from './garden/sidebar';
 import Fuse from 'fuse.js';
 import { useToast } from '@/hooks/use-toast';
 import { safeSetDoc, safeUpdateDoc } from '@/lib/firestore-safe';
-import { AnimatePresence, motion } from 'framer-motion';
 
 export function Dashboard({ user }: { user: User }) {
   const [selectedLeaf, setSelectedLeaf] = useState<LeafType | null>(null);
@@ -304,7 +302,7 @@ export function Dashboard({ user }: { user: User }) {
   }
 
   return (
-    <div className="flex h-screen w-full bg-background font-body overflow-hidden">
+    <div className="flex h-screen w-full bg-background font-body">
       <Sidebar
           stems={gardenWithLeaves}
           selectedStemId={selectedStemId}
@@ -322,35 +320,33 @@ export function Dashboard({ user }: { user: User }) {
       />
       
       <main className="flex-grow h-screen overflow-y-auto">
-        <div className="flex-grow">
-          {selectedStem ? (
-            <Stem 
-              stem={selectedStem}
-              onSelectLeaf={handleSelectLeaf}
-              selectedLeaf={selectedLeaf}
-              onSaveLeaf={handleSaveLeaf}
-              onDeleteLeaf={handleDeleteLeaf}
-              onAddLeaf={handleOpenAddLeaf}
-              onSuggestSkills={handleOpenSuggestSkills}
-              onDeleteStem={handleDeleteStem}
-            />
-          ) : (
-            <div className="flex h-full flex-col items-center justify-center text-center p-8">
-              <h3 className="font-heading text-4xl text-primary">Welcome to your Skill Garden!</h3>
-              <p className="mt-4 max-w-md text-lg text-muted-foreground">
-                Your garden is a place to cultivate new talents. Start by planting a "Stem" — a category for the skills you want to grow.
-              </p>
-              <div className="mt-8 flex gap-4">
-                <Button onClick={() => setIsAddStemOpen(true)} size="lg">
-                  Plant Your First Stem
-                </Button>
-                 <Button onClick={() => setIsSuggestionOpen(true)} size="lg" variant="outline">
-                  Get AI Suggestions
-                </Button>
-              </div>
+        {selectedStem ? (
+          <Stem 
+            stem={selectedStem}
+            onSelectLeaf={handleSelectLeaf}
+            selectedLeaf={selectedLeaf}
+            onSaveLeaf={handleSaveLeaf}
+            onDeleteLeaf={handleDeleteLeaf}
+            onAddLeaf={handleOpenAddLeaf}
+            onSuggestSkills={handleOpenSuggestSkills}
+            onDeleteStem={handleDeleteStem}
+          />
+        ) : (
+          <div className="flex h-full flex-col items-center justify-center text-center p-8">
+            <h3 className="font-heading text-4xl text-primary">Welcome to your Skill Garden!</h3>
+            <p className="mt-4 max-w-md text-lg text-muted-foreground">
+              Your garden is a place to cultivate new talents. Start by planting a "Stem" — a category for the skills you want to grow.
+            </p>
+            <div className="mt-8 flex gap-4">
+              <Button onClick={() => setIsAddStemOpen(true)} size="lg">
+                Plant Your First Stem
+              </Button>
+               <Button onClick={() => setIsSuggestionOpen(true)} size="lg" variant="outline">
+                Get AI Suggestions
+              </Button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </main>
       
       <AddStemDialog

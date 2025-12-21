@@ -1,4 +1,3 @@
-
 'use client';
 
 import { icons } from 'lucide-react';
@@ -10,15 +9,17 @@ import { Button } from '../ui/button';
 import { Edit, Save, X } from 'lucide-react';
 import { Input } from '../ui/input';
 import { IconPicker, ColorPicker } from './icon-picker';
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface StemItemProps {
   stem: Stem & { leaves: Leaf[] };
   isSelected: boolean;
   onClick: () => void;
   onEdit: (updatedStem: Omit<Stem, 'leaves'>) => void;
+  isCollapsed: boolean;
 }
 
-export function StemItem({ stem, isSelected, onClick, onEdit }: StemItemProps) {
+export function StemItem({ stem, isSelected, onClick, onEdit, isCollapsed }: StemItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedStem, setEditedStem] = useState<Omit<Stem, 'leaves'>>(stem);
 
@@ -111,7 +112,7 @@ export function StemItem({ stem, isSelected, onClick, onEdit }: StemItemProps) {
           }
       }}
     >
-      <div className='flex items-start gap-3'>
+      <div className={cn('flex items-start gap-3', isCollapsed && 'justify-center')}>
         <div className={cn(
             "h-8 w-8 rounded-lg flex items-center justify-center transition-colors flex-shrink-0",
             isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground group-hover:bg-accent group-hover:text-accent-foreground'
@@ -119,25 +120,60 @@ export function StemItem({ stem, isSelected, onClick, onEdit }: StemItemProps) {
         style={isSelected ? { backgroundColor: stem.color } : {}}>
           <LucideIcon className="size-5" />
         </div>
-        <div className="flex-grow overflow-hidden">
-          <p className={cn(
-              "font-medium truncate",
-              isSelected ? 'text-primary' : 'text-foreground'
-          )} style={isSelected ? { color: stem.color } : {}}>{stem.name}</p>
-          <p className="text-xs text-muted-foreground">
-              {stem.leaves.length} {stem.leaves.length === 1 ? 'skill' : 'skills'}
-          </p>
-        </div>
-        <Button 
-            size="icon" 
-            variant="ghost" 
-            className="h-7 w-7 rounded-full opacity-0 group-hover:opacity-100 shrink-0"
-            onClick={handleEditClick}
-        >
-            <Edit className="size-4" />
-        </Button>
+        
+        <AnimatePresence>
+          {!isCollapsed && (
+            <motion.div 
+              className="flex-grow overflow-hidden"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <p className={cn(
+                  "font-medium truncate",
+                  isSelected ? 'text-primary' : 'text-foreground'
+              )} style={isSelected ? { color: stem.color } : {}}>{stem.name}</p>
+              <p className="text-xs text-muted-foreground">
+                  {stem.leaves.length} {stem.leaves.length === 1 ? 'skill' : 'skills'}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+        {!isCollapsed && (
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+            >
+                <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    className="h-7 w-7 rounded-full opacity-0 group-hover:opacity-100 shrink-0"
+                    onClick={handleEditClick}
+                >
+                    <Edit className="size-4" />
+                </Button>
+            </motion.div>
+        )}
+        </AnimatePresence>
+
       </div>
-      <AnimatedStemProgress value={mastery} />
+      <AnimatePresence>
+        {!isCollapsed && (
+             <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+            >
+                <AnimatedStemProgress value={mastery} />
+            </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
