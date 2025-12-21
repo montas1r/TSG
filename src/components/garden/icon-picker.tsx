@@ -8,7 +8,14 @@ import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { Input } from '../ui/input';
 
-const iconNames = Object.keys(icons) as (keyof typeof icons)[];
+const curatedIcons = [
+  'Sprout', 'Brain', 'Code', 'Palette', 'Music', 'Dumbbell', 'Camera', 'BookOpen', 
+  'PenTool', 'Target', 'Telescope', 'FlaskConical', 'Heart', 'Briefcase', 'MessageCircle', 
+  'Globe', 'Wrench', 'Mic', 'Film', 'Database', 'Cloud', 'Terminal', 'GitGraph', 'Feather',
+  'Keyboard', 'MousePointer', 'Paintbrush', 'Scaling', 'Medal', 'Rocket'
+] as (keyof typeof icons)[];
+
+const allIconNames = Object.keys(icons) as (keyof typeof icons)[];
 
 interface IconPickerProps {
   value: string;
@@ -22,9 +29,9 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
 
   const LucideIcon = icons[value as keyof typeof icons] || icons['Sprout'];
 
-  const filteredIcons = iconNames.filter((name) =>
-    name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredIcons = search
+    ? allIconNames.filter((name) => name.toLowerCase().includes(search.toLowerCase()))
+    : curatedIcons;
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -39,7 +46,7 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
       <PopoverContent className="w-80 p-2">
         <div className="p-2">
           <Input
-            placeholder="Search icons..."
+            placeholder="Search all icons..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             autoFocus
