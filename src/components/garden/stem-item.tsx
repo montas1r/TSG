@@ -131,7 +131,7 @@ export function StemItem({ stem, isSelected, onClick, onEdit }: StemItemProps) {
         <Button 
             size="icon" 
             variant="ghost" 
-            className="h-7 w-7 rounded-full opacity-0 group-hover:opacity-100 absolute top-2 right-2"
+            className="h-7 w-7 rounded-full opacity-0 group-hover:opacity-100 shrink-0"
             onClick={handleEditClick}
         >
             <Edit className="size-4" />
