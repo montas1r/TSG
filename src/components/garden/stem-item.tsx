@@ -82,13 +82,13 @@ export function StemItem({ stem, isSelected, onClick, onEdit }: StemItemProps) {
                     if (e.key === 'Escape') handleCancel(e as any);
                 }}
             />
-            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleSave}><Save className="size-4 text-primary" /></Button>
-            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleCancel}><X className="size-4 text-muted-foreground" /></Button>
+            <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={handleSave}><Save className="size-4 text-primary" /></Button>
+            <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={handleCancel}><X className="size-4 text-muted-foreground" /></Button>
         </div>
         {/* Color and Icon Pickers */}
-        <div className='flex items-center justify-between gap-2 z-10'>
+        <div className='flex items-center justify-center gap-4 z-10'>
             <IconPicker value={editedStem.icon} onChange={handleIconChange} />
-            <ColorPicker value={editedStem.color} onChange={handleColorChange} />
+            <ColorPicker value={editedStem.color} onChange={handleColorChange} isInline/>
         </div>
       </div>
     );
@@ -141,4 +141,3 @@ export function StemItem({ stem, isSelected, onClick, onEdit }: StemItemProps) {
     </div>
   );
 }
-

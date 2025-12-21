@@ -131,11 +131,11 @@ export function Dashboard({ user }: { user: User }) {
       }
     }
   };
-  
-  const handleSelectLeaf = (leaf: LeafType) => {
-    setSelectedLeaf(leaf);
-  };
 
+  const handleSelectLeaf = useCallback((leaf: LeafType) => {
+    setSelectedLeaf(leaf);
+  }, []);
+  
   const selectedStem = useMemo(() => {
     return gardenWithLeaves.find(stem => stem.id === selectedStemId) || null;
   }, [gardenWithLeaves, selectedStemId]);
@@ -304,24 +304,24 @@ export function Dashboard({ user }: { user: User }) {
   }
 
   return (
-    <div className={"h-screen w-full flex bg-background font-body relative overflow-hidden"}>
-        <Sidebar
-            stems={gardenWithLeaves}
-            selectedStemId={selectedStemId}
-            onSelectStem={setSelectedStemId}
-            onAddStem={() => setIsAddStemOpen(true)}
-            onEditStem={handleEditStem}
-            onGetSuggestions={() => setIsSuggestionOpen(true)}
-            onSearch={setSearchQuery}
-            searchQuery={searchQuery}
-            user={user}
-            searchResults={searchResults}
-            onSearchResultClick={handleSearchResultClick}
-            isSidebarOpen={isSidebarOpen}
-            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-        />
+    <div className="flex h-screen w-full bg-background font-body overflow-hidden">
+      <Sidebar
+          stems={gardenWithLeaves}
+          selectedStemId={selectedStemId}
+          onSelectStem={setSelectedStemId}
+          onAddStem={() => setIsAddStemOpen(true)}
+          onEditStem={handleEditStem}
+          onGetSuggestions={() => setIsSuggestionOpen(true)}
+          onSearch={setSearchQuery}
+          searchQuery={searchQuery}
+          user={user}
+          searchResults={searchResults}
+          onSearchResultClick={handleSearchResultClick}
+          isSidebarOpen={isSidebarOpen}
+          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+      />
       
-      <main className="h-screen overflow-y-auto flex-grow flex flex-col">
+      <main className="flex-grow h-screen overflow-y-auto">
         <div className="flex-grow">
           {selectedStem ? (
             <Stem 
@@ -382,5 +382,3 @@ export function Dashboard({ user }: { user: User }) {
     </div>
   );
 }
-
-    
