@@ -19,12 +19,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { AnimatePresence, motion } from 'framer-motion';
 import { EditStemDialog } from './edit-stem-dialog';
 
@@ -87,23 +81,12 @@ export function Stem({
                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => onSuggestSkills(stem.id)} aria-label={`Get AI skill suggestions for ${stem.name}`}>
                   <Wand2 className="size-5 text-muted-foreground/50 transition-colors group-hover:text-primary" />
               </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                    <MoreVertical className="size-5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
-                    <Edit className="mr-2" />
-                    Edit Stem
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setIsDeleteAlertOpen(true)} className="text-destructive focus:text-destructive focus:bg-destructive/10">
-                    <Trash2 className="mr-2" />
-                    Delete Stem
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setIsEditDialogOpen(true)} aria-label={`Edit ${stem.name}`}>
+                  <Edit className="size-5 text-muted-foreground/50 transition-colors group-hover:text-primary" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-destructive/50 hover:text-destructive hover:bg-destructive/10" onClick={() => setIsDeleteAlertOpen(true)} aria-label={`Delete ${stem.name}`}>
+                  <Trash2 className="size-5" />
+              </Button>
           </div>
         </header>
         
