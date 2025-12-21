@@ -223,17 +223,41 @@ export function Dashboard({ user }: { user: User }) {
   }
 
   const handleDeleteStem = async (stemId: string) => {
-    if (!window.confirm("Are you sure you want to delete this stem and all its leaves? This action cannot be undone.")) return;
-
-    const leavesToDelete = leavesByStem[stemId] || [];
-    const deletePromises = leavesToDelete.map(leaf => deleteDoc(doc(firestore, 'users', user.uid, 'leaves', leaf.id)));
-    await Promise.all(deletePromises);
-
-    const stemRef = doc(firestore, 'users', user.uid, 'stems', stemId);
-    deleteDocumentNonBlocking(stemRef);
-
-    // This logic is now handled by the useEffect that watches `stems`
-  }
+    if (!window.confirm("Are you sure you want to delete this stem and all its skills? This action cannot be undone.")) return;
+  
+    try {
+      // 1. Get all leaves for the stem
+      const leavesToDelete = leavesByStem[stemId] || [];
+  
+      // 2. Create a batch of delete operations for the leaves
+      const deletePromises = leavesToDelete.map(leaf => {
+        const leafRef = doc(firestore, 'users', user.uid, 'leaves', leaf.id);
+        return deleteDoc(leafRef);
+      });
+  
+      // 3. Execute all delete promises
+      await Promise.all(deletePromises);
+  
+      // 4. Once all leaves are deleted, delete the stem itself
+      const stemRef = doc(firestore, 'users', user.uid, 'stems', stemId);
+      await deleteDoc(stemRef);
+  
+      toast({
+        title: "Stem Deleted",
+        description: `The stem and all its skills have been removed.`,
+      });
+  
+      // The useEffect watching `stems` will handle re-selecting a new stem
+  
+    } catch (error) {
+      console.error("Error deleting stem and leaves: ", error);
+      toast({
+        variant: "destructive",
+        title: "Deletion Failed",
+        description: "Could not delete the stem. Please try again.",
+      });
+    }
+  };
   
   const handleAddLeaf = (name: string, stemId: string) => {
     const leafId = uuidv4();
@@ -376,3 +400,5 @@ export function Dashboard({ user }: { user: User }) {
     </div>
   );
 }
+
+    
