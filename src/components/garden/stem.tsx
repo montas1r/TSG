@@ -30,7 +30,6 @@ interface StemProps {
   onAddLeaf: (stemId: string) => void;
   onSuggestSkills: (stemId: string) => void;
   onDeleteStem: (stemId: string) => void;
-  onEditStem: (updatedStem: Omit<StemTypeWithLeaves, 'leaves'>) => void;
 }
 
 export function Stem({ 

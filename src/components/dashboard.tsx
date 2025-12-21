@@ -14,7 +14,7 @@ import type { User } from 'firebase/auth';
 import { collection, doc, query, deleteDoc, orderBy, writeBatch, where, getDocs } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { v4 as uuidv4 } from 'uuid';
-import { StemSelector } from '@/components/garden/stem-selector';
+import { Sidebar } from './garden/sidebar';
 import Fuse from 'fuse.js';
 import { useToast } from '@/hooks/use-toast';
 import { safeSetDoc, safeUpdateDoc } from '@/lib/firestore-safe';
@@ -154,10 +154,6 @@ export function Dashboard({ user }: { user: User }) {
     setSelectedLeaf(null);
   }, [selectedStemId]);
 
-  const handleSelectLeaf = (leaf: LeafType) => {
-    setSelectedLeaf(leaf);
-  };
-
   const handleSaveLeaf = useCallback((updatedLeaf: LeafType) => {
     if (!firestore || !user?.uid) return;
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', updatedLeaf.id);
@@ -196,7 +192,6 @@ export function Dashboard({ user }: { user: User }) {
     if (!firestore || !user) return;
 
     const stemRef = doc(firestore, 'users', user.uid, 'stems', updatedStemData.id);
-    // Exclude properties that shouldn't be changed on edit
     const { id, userId, createdAt, ...dataToUpdate } = updatedStemData;
 
     try {
@@ -221,29 +216,23 @@ export function Dashboard({ user }: { user: User }) {
     try {
       const batch = writeBatch(firestore);
   
-      // Query for all leaves that belong to this stem
       const leavesCollectionRef = collection(firestore, 'users', user.uid, 'leaves');
       const q = query(leavesCollectionRef, where("stemId", "==", stemId));
       const leavesSnapshot = await getDocs(q);
   
-      // Add each leaf to the batch deletion
       leavesSnapshot.forEach((leafDoc) => {
         batch.delete(leafDoc.ref);
       });
   
-      // Add the stem itself to the batch deletion
       const stemRef = doc(firestore, 'users', user.uid, 'stems', stemId);
       batch.delete(stemRef);
   
-      // Commit the batch
       await batch.commit();
   
       toast({
         title: "Stem Deleted",
         description: `The stem and all its skills have been removed.`,
       });
-  
-      // The useEffect hooks will handle re-selecting a new stem
   
     } catch (error) {
       console.error("Error deleting stem and leaves: ", error);
@@ -310,7 +299,7 @@ export function Dashboard({ user }: { user: User }) {
 
   return (
     <div className={"h-screen w-full flex bg-background font-body"}>
-      <StemSelector 
+      <Sidebar
         stems={gardenWithLeaves}
         selectedStemId={selectedStemId}
         onSelectStem={setSelectedStemId}
@@ -335,7 +324,6 @@ export function Dashboard({ user }: { user: User }) {
             onAddLeaf={handleOpenAddLeaf}
             onSuggestSkills={handleOpenSuggestSkills}
             onDeleteStem={handleDeleteStem}
-            onEditStem={handleEditStem}
           />
         ) : (
           <div className="flex h-full flex-col items-center justify-center text-center p-8">

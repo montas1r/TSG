@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { useMemo } from 'react';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 
-interface StemSelectorProps {
+interface SidebarProps {
   stems: (Stem & { leaves: Leaf[] })[];
   selectedStemId: string | null;
   onSelectStem: (id: string) => void;
@@ -37,7 +37,7 @@ const getIconForType = (type: SearchableItem['type']) => {
   }
 };
 
-export function StemSelector({
+export function Sidebar({
   stems,
   selectedStemId,
   onSelectStem,
@@ -49,7 +49,7 @@ export function StemSelector({
   user,
   searchResults,
   onSearchResultClick,
-}: StemSelectorProps) {
+}: SidebarProps) {
 
   const groupedResults = useMemo(() => {
     if (!searchQuery) return null;
