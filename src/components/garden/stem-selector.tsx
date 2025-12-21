@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { Leaf, SearchableItem, Stem } from '@/lib/types';
+import type { Leaf, SearchableItem, Stem, UserStats } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sprout, Wand2, Search, PlusCircle, Book, CheckSquare } from 'lucide-react';
@@ -12,6 +12,7 @@ import type { FuseResult } from 'fuse.js';
 import { Highlight } from '../ui/highlight';
 import { cn } from '@/lib/utils';
 import { useMemo } from 'react';
+import { UserProfileWidget } from './user-profile-widget';
 
 interface StemSelectorProps {
   stems: (Stem & { leaves: Leaf[] })[];
@@ -22,6 +23,7 @@ interface StemSelectorProps {
   onSearch: (query: string) => void;
   searchQuery: string;
   user: User;
+  userStats: UserStats | null;
   searchResults: FuseResult<SearchableItem>[];
   onSearchResultClick: (item: SearchableItem) => void;
 }
@@ -44,6 +46,7 @@ export function StemSelector({
   onSearch,
   searchQuery,
   user,
+  userStats,
   searchResults,
   onSearchResultClick,
 }: StemSelectorProps) {
@@ -136,14 +139,17 @@ export function StemSelector({
       )}
 
       <footer className="shrink-0 pt-4 border-t space-y-2">
-        <Button onClick={onAddStem} variant="ghost" className="w-full justify-start">
-            <PlusCircle className="mr-2" />
-            New Stem
-        </Button>
-        <Button onClick={onGetSuggestions} variant="ghost" className="w-full justify-start">
-          <Wand2 className="mr-2" />
-          Get Suggestions
-        </Button>
+        <div className="space-y-2 mb-2">
+            <Button onClick={onAddStem} variant="ghost" className="w-full justify-start">
+                <PlusCircle className="mr-2" />
+                New Stem
+            </Button>
+            <Button onClick={onGetSuggestions} variant="ghost" className="w-full justify-start">
+              <Wand2 className="mr-2" />
+              Get Suggestions
+            </Button>
+        </div>
+        <UserProfileWidget user={user} userStats={userStats} />
       </footer>
     </aside>
   );

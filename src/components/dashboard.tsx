@@ -291,6 +291,7 @@ export function Dashboard({ user }: { user: User }) {
         onSearch={setSearchQuery}
         searchQuery={searchQuery}
         user={user}
+        userStats={userStats}
         searchResults={searchResults}
         onSearchResultClick={handleSearchResultClick}
       />
