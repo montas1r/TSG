@@ -73,14 +73,6 @@ export function LeafDetails({
     setFormData({ ...leaf, quests: questsWithOrder });
   }, [leaf]);
 
-  useEffect(() => {
-    // Only save if the data is actually different. This prevents infinite loops.
-    if (JSON.stringify(formData) !== JSON.stringify(leaf)) {
-      onSave(sanitizeForFirestore(formData));
-    }
-  }, [formData, onSave]);
-
-
   const masteryLevel = useMemo(() => {
     return calculateMasteryLevel(formData.quests);
   }, [formData.quests]);
@@ -154,7 +146,9 @@ export function LeafDetails({
   }
 
   const handleBlur = () => {
-    // onBlur saving is now handled by the useEffect hook
+    if (JSON.stringify(formData) !== JSON.stringify(leaf)) {
+      onSave(sanitizeForFirestore(formData));
+    }
   };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
