@@ -1,28 +1,104 @@
+
 'use client';
 
 import { icons } from 'lucide-react';
 import { cn, calculateMasteryLevel } from '@/lib/utils';
 import type { Stem, Leaf } from '@/lib/types';
 import { AnimatedStemProgress } from './animated-stem-progress';
+import { useState, useEffect } from 'react';
+import { Button } from '../ui/button';
+import { Edit, Save, X } from 'lucide-react';
+import { Input } from '../ui/input';
+import { IconPicker, ColorPicker } from './icon-picker';
 
 interface StemItemProps {
   stem: Stem & { leaves: Leaf[] };
   isSelected: boolean;
   onClick: () => void;
+  onEdit: (updatedStem: Omit<Stem, 'leaves'>) => void;
 }
 
-export function StemItem({ stem, isSelected, onClick }: StemItemProps) {
+export function StemItem({ stem, isSelected, onClick, onEdit }: StemItemProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedStem, setEditedStem] = useState<Omit<Stem, 'leaves'>>(stem);
+
+  useEffect(() => {
+    // Reset local state if the main stem prop changes (e.g., from parent re-render)
+    setEditedStem(stem);
+  }, [stem]);
+
   const mastery = stem.leaves.length > 0 
     ? stem.leaves.reduce((sum, leaf) => sum + calculateMasteryLevel(leaf.quests), 0) / stem.leaves.length
     : 0;
 
-  const LucideIcon = icons[stem.icon as keyof typeof icons] || icons['Sprout'];
+  const LucideIcon = icons[editedStem.icon as keyof typeof icons] || icons['Sprout'];
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsEditing(true);
+  };
+
+  const handleCancel = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsEditing(false);
+    setEditedStem(stem); // Revert changes
+  };
+
+  const handleSave = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onEdit(editedStem);
+    setIsEditing(false);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditedStem({ ...editedStem, name: e.target.value });
+  };
+  
+  const handleIconChange = (icon: string) => {
+    setEditedStem({ ...editedStem, icon });
+  }
+
+  const handleColorChange = (color: string) => {
+    setEditedStem({ ...editedStem, color });
+  }
+
+
+  if (isEditing) {
+    return (
+      <div className="w-full p-3 rounded-lg bg-accent/10 border border-primary/50 flex flex-col gap-3">
+        {/* Name Input and Actions */}
+        <div className='flex items-center gap-2'>
+            <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: editedStem.color }}>
+                <LucideIcon className="size-5 text-white" />
+            </div>
+            <Input 
+                value={editedStem.name}
+                onChange={handleInputChange}
+                className="h-8 flex-grow"
+                autoFocus
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSave(e as any);
+                    if (e.key === 'Escape') handleCancel(e as any);
+                }}
+            />
+            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleSave}><Save className="size-4 text-primary" /></Button>
+            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleCancel}><X className="size-4 text-muted-foreground" /></Button>
+        </div>
+        {/* Color and Icon Pickers */}
+        <div className='flex items-center gap-2'>
+            <ColorPicker value={editedStem.color} onChange={handleColorChange} isInline />
+            <IconPicker value={editedStem.icon} onChange={handleIconChange} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <button
       onClick={onClick}
       className={cn(
-        'w-full text-left p-3 rounded-lg transition-colors flex flex-col gap-2 group',
+        'w-full text-left p-3 rounded-lg transition-colors flex flex-col gap-2 group relative',
         isSelected ? 'bg-primary/10' : 'hover:bg-accent/5'
       )}
       style={isSelected ? { '--stem-color': stem.color } as React.CSSProperties : {}}
@@ -44,6 +120,14 @@ export function StemItem({ stem, isSelected, onClick }: StemItemProps) {
               {stem.leaves.length} {stem.leaves.length === 1 ? 'skill' : 'skills'}
           </p>
         </div>
+        <Button 
+            size="icon" 
+            variant="ghost" 
+            className="h-7 w-7 rounded-full opacity-0 group-hover:opacity-100 absolute top-2 right-2"
+            onClick={handleEditClick}
+        >
+            <Edit className="size-4" />
+        </Button>
       </div>
       <AnimatedStemProgress value={mastery} />
     </button>

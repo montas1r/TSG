@@ -315,6 +315,7 @@ export function Dashboard({ user }: { user: User }) {
         selectedStemId={selectedStemId}
         onSelectStem={setSelectedStemId}
         onAddStem={() => setIsAddStemOpen(true)}
+        onEditStem={handleEditStem}
         onGetSuggestions={() => setIsSuggestionOpen(true)}
         onSearch={setSearchQuery}
         searchQuery={searchQuery}

@@ -4,7 +4,7 @@
 import { useMemo, useState } from 'react';
 import type { Leaf as LeafType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Wand2, Trash2, MoreVertical, Edit } from 'lucide-react';
+import { PlusCircle, Wand2, Trash2 } from 'lucide-react';
 import { calculateMasteryLevel } from '@/lib/utils';
 import { LeafGrid } from './leaf-grid';
 import type { Stem as StemTypeWithLeaves } from '@/lib/types';
@@ -20,7 +20,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { AnimatePresence, motion } from 'framer-motion';
-import { EditStemDialog } from './edit-stem-dialog';
 
 interface StemProps {
   stem: StemTypeWithLeaves;
@@ -43,11 +42,9 @@ export function Stem({
     onAddLeaf, 
     onSuggestSkills,
     onDeleteStem,
-    onEditStem,
 }: StemProps) {
   const leafList = stem.leaves || [];
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
   const stemMastery = useMemo(() => {
     if (!leafList || leafList.length === 0) return 0;
@@ -80,9 +77,6 @@ export function Stem({
               </Button>
                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => onSuggestSkills(stem.id)} aria-label={`Get AI skill suggestions for ${stem.name}`}>
                   <Wand2 className="size-5 text-muted-foreground/50 transition-colors group-hover:text-primary" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setIsEditDialogOpen(true)} aria-label={`Edit ${stem.name}`}>
-                  <Edit className="size-5 text-muted-foreground/50 transition-colors group-hover:text-primary" />
               </Button>
               <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-destructive/50 hover:text-destructive hover:bg-destructive/10" onClick={() => setIsDeleteAlertOpen(true)} aria-label={`Delete ${stem.name}`}>
                   <Trash2 className="size-5" />
@@ -150,13 +144,6 @@ export function Stem({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <EditStemDialog
-        isOpen={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        stem={stem}
-        onEditStem={onEditStem}
-      />
     </>
   );
 }

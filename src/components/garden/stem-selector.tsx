@@ -19,6 +19,7 @@ interface StemSelectorProps {
   selectedStemId: string | null;
   onSelectStem: (id: string) => void;
   onAddStem: () => void;
+  onEditStem: (updatedStem: Omit<Stem, 'leaves'>) => void;
   onGetSuggestions: () => void;
   onSearch: (query: string) => void;
   searchQuery: string;
@@ -41,6 +42,7 @@ export function StemSelector({
   selectedStemId,
   onSelectStem,
   onAddStem,
+  onEditStem,
   onGetSuggestions,
   onSearch,
   searchQuery,
@@ -139,6 +141,7 @@ export function StemSelector({
                 stem={stem}
                 isSelected={selectedStemId === stem.id}
                 onClick={() => onSelectStem(stem.id)}
+                onEdit={onEditStem}
               />
             ))}
           </div>
