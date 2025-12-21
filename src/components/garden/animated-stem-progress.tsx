@@ -1,3 +1,4 @@
+
 'use client';
 
 import { motion, useReducedMotion } from 'framer-motion';
@@ -9,7 +10,7 @@ interface AnimatedStemProgressProps {
   value: number;
 }
 
-const getGradient = (percentage: number) => {
+const getGradientForPercentage = (percentage: number) => {
   const colors = [
     { stop: 0, color: 'hsl(var(--mastery-0))' },
     { stop: 25, color: 'hsl(var(--mastery-1))' },
@@ -18,20 +19,34 @@ const getGradient = (percentage: number) => {
     { stop: 100, color: 'hsl(var(--mastery-4))' },
   ];
 
-  let startColor = colors[0].color;
-  let endColor = colors[0].color;
+  if (percentage <= 0) return colors[0].color;
+  if (percentage >= 100) return colors[colors.length - 1].color;
 
   for (let i = 0; i < colors.length - 1; i++) {
     if (percentage >= colors[i].stop && percentage <= colors[i + 1].stop) {
       const range = colors[i + 1].stop - colors[i].stop;
       const progressInRange = (percentage - colors[i].stop) / range;
-      startColor = colors[i].color;
-      endColor = colors[i + 1].color;
-      return `linear-gradient(90deg, ${startColor}, ${endColor} ${progressInRange * 100}%)`;
+      
+      const r1 = parseInt(colors[i].color.slice(1, 3), 16);
+      const g1 = parseInt(colors[i].color.slice(3, 5), 16);
+      const b1 = parseInt(colors[i].color.slice(5, 7), 16);
+      
+      const r2 = parseInt(colors[i + 1].color.slice(1, 3), 16);
+      const g2 = parseInt(colors[i + 1].color.slice(3, 5), 16);
+      const b2 = parseInt(colors[i + 1].color.slice(5, 7), 16);
+
+      const r = Math.round(r1 + (r2 - r1) * progressInRange).toString(16).padStart(2, '0');
+      const g = Math.round(g1 + (g2 - g1) * progressInRange).toString(16).padStart(2, '0');
+      const b = Math.round(b1 + (b2 - b1) * progressInRange).toString(16).padStart(2, '0');
+
+      // This is a simplified interpolation and may not be perfectly accurate with HSL colors.
+      // For more accurate color blending, a library would be better, but this avoids that for now.
+      return `linear-gradient(90deg, ${colors[i].color}, ${colors[i+1].color})`;
     }
   }
 
-  return `linear-gradient(90deg, ${colors[colors.length-1].color}, ${colors[colors.length-1].color})`;
+  // Fallback to a full gradient if no specific range is matched.
+  return `linear-gradient(90deg, hsl(var(--mastery-0)), hsl(var(--mastery-1)), hsl(var(--mastery-2)), hsl(var(--mastery-3)), hsl(var(--mastery-4)))`;
 };
 
 
@@ -57,8 +72,7 @@ export function AnimatedStemProgress({ value }: AnimatedStemProgressProps) {
             <motion.div
               className="absolute top-0 left-0 h-full rounded-full"
               style={{
-                background: getGradient(roundedValue),
-                backgroundImage: `linear-gradient(90deg, hsl(var(--mastery-0)), hsl(var(--mastery-1)), hsl(var(--mastery-2)), hsl(var(--mastery-3)), hsl(var(--mastery-4)))`,
+                backgroundImage: getGradientForPercentage(roundedValue),
               }}
               initial={shouldReduceMotion ? false : { width: 0 }}
               animate={{
