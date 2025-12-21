@@ -4,7 +4,7 @@
 import type { Leaf, SearchableItem, Stem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Sprout, Wand2, Search, PlusCircle, Book, CheckSquare } from 'lucide-react';
+import { Sprout, Wand2, Search, PlusCircle, Book, CheckSquare, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { StemItem } from './stem-item';
 import type { User } from 'firebase/auth';
@@ -26,6 +26,8 @@ interface SidebarProps {
   user: User;
   searchResults: FuseResult<SearchableItem>[];
   onSearchResultClick: (item: SearchableItem) => void;
+  isSidebarOpen: boolean;
+  onToggleSidebar: () => void;
 }
 
 const getIconForType = (type: SearchableItem['type']) => {
@@ -49,6 +51,8 @@ export function Sidebar({
   user,
   searchResults,
   onSearchResultClick,
+  isSidebarOpen,
+  onToggleSidebar,
 }: SidebarProps) {
 
   const groupedResults = useMemo(() => {
@@ -73,13 +77,16 @@ export function Sidebar({
   };
 
   return (
-    <aside className="h-full w-72 flex-shrink-0 border-r bg-card/50 p-4 flex flex-col">
+    <aside className="h-full w-72 flex-shrink-0 border-r bg-card/50 p-4 flex flex-col overflow-hidden">
       <header className="shrink-0 pb-4 border-b">
         <div className="flex items-center justify-between">
            <div className="flex items-center gap-3">
              <Sprout className="size-8 text-primary" />
              <h1 className="font-heading text-2xl tracking-tight text-primary">Skill Garden</h1>
            </div>
+            <Button variant="ghost" size="icon" onClick={onToggleSidebar}>
+                {isSidebarOpen ? <PanelLeftClose /> : <PanelLeftOpen />}
+            </Button>
         </div>
         <div className="relative mt-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
@@ -166,11 +173,11 @@ export function Sidebar({
                 {getInitials(user.displayName)}
               </AvatarFallback>
             </Avatar>
-            <div className="w-full">
+            <div className="w-full overflow-hidden">
               <p className="font-medium text-foreground truncate">
                 {user.displayName || 'Anonymous User'}
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground truncate">
                 UID: {user.uid.slice(0,10)}...
               </p>
             </div>

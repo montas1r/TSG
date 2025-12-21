@@ -298,40 +298,42 @@ export function Dashboard({ user }: { user: User }) {
   const handleOpenSuggestSkills = () => {
     setIsSuggestSkillsOpen(true);
   }
+  
+  const sidebarWidth = isSidebarOpen ? 288 : 0;
 
   if (areStemsLoading || areLeavesLoading) {
     return <div className="flex h-screen items-center justify-center"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>
   }
 
   return (
-    <div className={"h-screen w-full flex bg-background font-body"}>
-      <motion.div
-        animate={{ width: isSidebarOpen ? 288 : 0 }}
-        transition={{ duration: 0.3, ease: 'easeInOut' }}
-        className="h-full flex-shrink-0"
-      >
-        <Sidebar
-          stems={gardenWithLeaves}
-          selectedStemId={selectedStemId}
-          onSelectStem={setSelectedStemId}
-          onAddStem={() => setIsAddStemOpen(true)}
-          onEditStem={handleEditStem}
-          onGetSuggestions={() => setIsSuggestionOpen(true)}
-          onSearch={setSearchQuery}
-          searchQuery={searchQuery}
-          user={user}
-          searchResults={searchResults}
-          onSearchResultClick={handleSearchResultClick}
-        />
-      </motion.div>
+    <div className={"h-screen w-full flex bg-background font-body relative overflow-hidden"}>
+        <motion.div
+            animate={{ width: sidebarWidth }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            className="h-full flex-shrink-0"
+        >
+            <Sidebar
+              stems={gardenWithLeaves}
+              selectedStemId={selectedStemId}
+              onSelectStem={setSelectedStemId}
+              onAddStem={() => setIsAddStemOpen(true)}
+              onEditStem={handleEditStem}
+              onGetSuggestions={() => setIsSuggestionOpen(true)}
+              onSearch={setSearchQuery}
+              searchQuery={searchQuery}
+              user={user}
+              searchResults={searchResults}
+              onSearchResultClick={handleSearchResultClick}
+              isSidebarOpen={isSidebarOpen}
+              onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+            />
+        </motion.div>
       
-      <main className="flex-grow h-screen overflow-y-auto flex flex-col">
-        <header className="flex items-center p-2 border-b h-[72px] shrink-0">
-           <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
-                {isSidebarOpen ? <PanelLeftClose /> : <PanelLeftOpen />}
-            </Button>
-        </header>
-
+      <motion.main 
+        className="h-screen overflow-y-auto flex-grow flex flex-col"
+        animate={{ marginLeft: sidebarWidth }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+      >
         <div className="flex-grow">
           {selectedStem ? (
             <Stem 
@@ -361,7 +363,7 @@ export function Dashboard({ user }: { user: User }) {
             </div>
           )}
         </div>
-      </main>
+      </motion.main>
       
       <AddStemDialog
         isOpen={isAddStemOpen}
@@ -392,5 +394,3 @@ export function Dashboard({ user }: { user: User }) {
     </div>
   );
 }
-
-    
