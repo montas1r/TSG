@@ -29,6 +29,7 @@ interface StemProps {
   onDeleteLeaf: (leafId: string) => void;
   onAddLeaf: (stemId: string) => void;
   onSuggestSkills: (stemId: string) => void;
+  onEditStem: (stem: Omit<StemTypeWithLeaves, 'leaves'>) => void;
   onDeleteStem: (stemId: string) => void;
 }
 
@@ -40,6 +41,7 @@ export function Stem({
     onDeleteLeaf,
     onAddLeaf, 
     onSuggestSkills,
+    onEditStem,
     onDeleteStem,
 }: StemProps) {
   const leafList = stem.leaves || [];
@@ -55,6 +57,8 @@ export function Stem({
     onDeleteStem(stem.id);
     setIsDeleteAlertOpen(false);
   };
+
+  const { leaves, ...stemData } = stem;
 
   return (
     <>
@@ -76,6 +80,9 @@ export function Stem({
               </Button>
                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => onSuggestSkills(stem.id)} aria-label={`Get AI skill suggestions for ${stem.name}`}>
                   <Wand2 className="size-5 text-muted-foreground/50 transition-colors group-hover:text-primary" />
+              </Button>
+               <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => onEditStem(stemData)} aria-label={`Edit ${stem.name}`}>
+                  <Edit className="size-5 text-muted-foreground/50 transition-colors group-hover:text-primary" />
               </Button>
               <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-destructive/50 hover:text-destructive hover:bg-destructive/10" onClick={() => setIsDeleteAlertOpen(true)} aria-label={`Delete ${stem.name}`}>
                   <Trash2 className="size-5" />

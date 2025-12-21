@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { Leaf, SearchableItem, Stem } from '@/lib/types';
@@ -19,7 +20,6 @@ interface SidebarProps {
   selectedStemId: string | null;
   onSelectStem: (id: string) => void;
   onAddStem: () => void;
-  onEditStem: (updatedStem: Omit<Stem, 'leaves'>) => void;
   onGetSuggestions: () => void;
   onSearch: (query: string) => void;
   searchQuery: string;
@@ -47,7 +47,6 @@ export function Sidebar({
   selectedStemId,
   onSelectStem,
   onAddStem,
-  onEditStem,
   onGetSuggestions,
   onSearch,
   searchQuery,
@@ -178,7 +177,6 @@ export function Sidebar({
                     stem={stem}
                     isSelected={selectedStemId === stem.id}
                     onClick={() => onSelectStem(stem.id)}
-                    onEdit={onEditStem}
                     isCollapsed={!isSidebarOpen}
                   />
                 ))}

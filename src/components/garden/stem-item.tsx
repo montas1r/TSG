@@ -5,96 +5,22 @@ import { icons } from 'lucide-react';
 import { cn, calculateMasteryLevel } from '@/lib/utils';
 import type { Stem, Leaf } from '@/lib/types';
 import { AnimatedStemProgress } from './animated-stem-progress';
-import { useState, useEffect } from 'react';
-import { Button } from '../ui/button';
-import { Edit, Save, X } from 'lucide-react';
-import { Input } from '../ui/input';
-import { IconPicker, ColorPicker } from './icon-picker';
 import { AnimatePresence, motion } from 'framer-motion';
 
 interface StemItemProps {
   stem: Stem & { leaves: Leaf[] };
   isSelected: boolean;
   onClick: () => void;
-  onEdit: (updatedStem: Omit<Stem, 'leaves'>) => void;
   isCollapsed: boolean;
 }
 
-export function StemItem({ stem, isSelected, onClick, onEdit, isCollapsed }: StemItemProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedStem, setEditedStem] = useState<Omit<Stem, 'leaves'>>(stem);
-
-  useEffect(() => {
-    // Reset local state if the main stem prop changes (e.g., from parent re-render)
-    setEditedStem(stem);
-  }, [stem]);
+export function StemItem({ stem, isSelected, onClick, isCollapsed }: StemItemProps) {
 
   const mastery = stem.leaves.length > 0 
     ? stem.leaves.reduce((sum, leaf) => sum + calculateMasteryLevel(leaf.quests), 0) / stem.leaves.length
     : 0;
 
-  const LucideIcon = icons[editedStem.icon as keyof typeof icons] || icons['Sprout'];
-
-  const handleEditClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsEditing(true);
-  };
-
-  const handleCancel = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsEditing(false);
-    setEditedStem(stem); // Revert changes
-  };
-
-  const handleSave = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onEdit(editedStem);
-    setIsEditing(false);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEditedStem({ ...editedStem, name: e.target.value });
-  };
-  
-  const handleIconChange = (icon: string) => {
-    setEditedStem({ ...editedStem, icon });
-  }
-
-  const handleColorChange = (color: string) => {
-    setEditedStem({ ...editedStem, color });
-  }
-
-
-  if (isEditing) {
-    return (
-      <div className="w-full p-3 rounded-lg bg-accent/10 border border-primary/50 flex flex-col gap-3">
-        {/* Name Input and Actions */}
-        <div className='flex items-center gap-2'>
-            <div className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: editedStem.color }}>
-                <LucideIcon className="size-5 text-white" />
-            </div>
-            <Input 
-                value={editedStem.name}
-                onChange={handleInputChange}
-                className="h-8 flex-grow"
-                autoFocus
-                onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleSave(e as any);
-                    if (e.key === 'Escape') handleCancel(e as any);
-                }}
-            />
-            <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={handleSave}><Save className="size-4 text-primary" /></Button>
-            <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={handleCancel}><X className="size-4 text-muted-foreground" /></Button>
-        </div>
-        {/* Color and Icon Pickers */}
-        <div className='flex items-center justify-center gap-4 z-10'>
-            <IconPicker value={editedStem.icon} onChange={handleIconChange} />
-            <ColorPicker value={editedStem.color} onChange={handleColorChange} isInline/>
-        </div>
-      </div>
-    );
-  }
+  const LucideIcon = icons[stem.icon as keyof typeof icons] || icons['Sprout'];
 
   return (
     <div
@@ -131,19 +57,11 @@ export function StemItem({ stem, isSelected, onClick, onEdit, isCollapsed }: Ste
               exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="flex w-full items-center justify-between gap-2">
+              <div className="flex w-full items-start justify-between gap-2">
                 <p className={cn(
-                    "font-medium truncate",
+                    "font-medium truncate pr-2",
                     isSelected ? 'text-primary' : 'text-foreground'
                 )} style={isSelected ? { color: stem.color } : {}}>{stem.name}</p>
-                 <Button 
-                    size="icon" 
-                    variant="ghost" 
-                    className="h-6 w-6 rounded-full opacity-0 group-hover:opacity-100 shrink-0"
-                    onClick={handleEditClick}
-                >
-                    <Edit className="size-3" />
-                </Button>
               </div>
               <p className="text-xs text-muted-foreground">
                   {stem.leaves.length} {stem.leaves.length === 1 ? 'skill' : 'skills'}

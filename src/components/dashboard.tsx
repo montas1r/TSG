@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
@@ -17,11 +18,15 @@ import { Sidebar } from './garden/sidebar';
 import Fuse from 'fuse.js';
 import { useToast } from '@/hooks/use-toast';
 import { safeSetDoc, safeUpdateDoc } from '@/lib/firestore-safe';
+import { motion } from 'framer-motion';
+import { EditStemDialog } from './garden/edit-stem-dialog';
 
 export function Dashboard({ user }: { user: User }) {
   const [selectedLeaf, setSelectedLeaf] = useState<LeafType | null>(null);
   
   const [isAddStemOpen, setIsAddStemOpen] = useState(false);
+  const [isEditStemOpen, setIsEditStemOpen] = useState(false);
+  const [stemToEdit, setStemToEdit] = useState<Omit<StemType, 'leaves'> | null>(null);
   
   const [isAddLeafOpen, setIsAddLeafOpen] = useState(false);
   const [isSuggestionOpen, setIsSuggestionOpen] = useState(false);
@@ -129,11 +134,11 @@ export function Dashboard({ user }: { user: User }) {
       }
     }
   };
-
+  
   const handleSelectLeaf = useCallback((leaf: LeafType) => {
     setSelectedLeaf(leaf);
   }, []);
-  
+
   const selectedStem = useMemo(() => {
     return gardenWithLeaves.find(stem => stem.id === selectedStemId) || null;
   }, [gardenWithLeaves, selectedStemId]);
@@ -192,6 +197,11 @@ export function Dashboard({ user }: { user: User }) {
     setSelectedStemId(stemId);
   };
   
+  const handleOpenEditStem = (stem: Omit<StemType, 'leaves'>) => {
+    setStemToEdit(stem);
+    setIsEditStemOpen(true);
+  };
+
   const handleEditStem = useCallback(async (updatedStemData: Omit<StemType, 'leaves'>) => {
     if (!firestore || !user) return;
 
@@ -308,7 +318,6 @@ export function Dashboard({ user }: { user: User }) {
           selectedStemId={selectedStemId}
           onSelectStem={setSelectedStemId}
           onAddStem={() => setIsAddStemOpen(true)}
-          onEditStem={handleEditStem}
           onGetSuggestions={() => setIsSuggestionOpen(true)}
           onSearch={setSearchQuery}
           searchQuery={searchQuery}
@@ -329,6 +338,7 @@ export function Dashboard({ user }: { user: User }) {
             onDeleteLeaf={handleDeleteLeaf}
             onAddLeaf={handleOpenAddLeaf}
             onSuggestSkills={handleOpenSuggestSkills}
+            onEditStem={handleOpenEditStem}
             onDeleteStem={handleDeleteStem}
           />
         ) : (
@@ -354,6 +364,15 @@ export function Dashboard({ user }: { user: User }) {
         onOpenChange={setIsAddStemOpen}
         onAddStem={handleAddStem}
       />
+
+      {stemToEdit && (
+        <EditStemDialog
+            isOpen={isEditStemOpen}
+            onOpenChange={setIsEditStemOpen}
+            stem={stemToEdit}
+            onEditStem={handleEditStem}
+        />
+      )}
 
       {selectedStem && <AddLeafDialog
         isOpen={isAddLeafOpen}
