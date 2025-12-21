@@ -65,6 +65,8 @@ export function LeafDetails({
   const firestore = useFirestore();
 
   useEffect(() => {
+    // This effect now ONLY runs when the leaf prop itself changes (i.e., a new leaf is selected).
+    // It resets the internal form state to match the newly selected leaf.
     const questsWithOrder = (leaf.quests || []).map((q, index) => ({
       ...q,
       order: q.order ?? index,
@@ -118,7 +120,10 @@ export function LeafDetails({
   const handleDeleteQuest = (questId: string) => {
     setFormData(prevData => {
         const updatedQuests = prevData.quests.filter(q => q.id !== questId);
-        return { ...prevData, quests: updatedQuests };
+        // This change will be saved on the next blur event.
+        const updatedWithSave = { ...prevData, quests: updatedQuests };
+        onSave(sanitizeForFirestore(updatedWithSave));
+        return updatedWithSave;
     });
   }
 
@@ -140,12 +145,18 @@ export function LeafDetails({
         const newQuestsOrder = arrayMove(prevData.quests, oldIndex, newIndex);
         const updatedQuestsWithOrder = newQuestsOrder.map((q, index) => ({...q, order: index}));
         
-        return { ...prevData, quests: updatedQuestsWithOrder };
+        const finalData = { ...prevData, quests: updatedQuestsWithOrder };
+        // Save on drag end
+        onSave(sanitizeForFirestore(finalData));
+        return finalData;
       });
     }
   }
 
+  // This function is the single source for saving data.
+  // It's called when a user finishes an edit (onBlur).
   const handleBlur = () => {
+    // Only save if there's a meaningful difference.
     if (JSON.stringify(formData) !== JSON.stringify(leaf)) {
       onSave(sanitizeForFirestore(formData));
     }
@@ -157,7 +168,7 @@ export function LeafDetails({
 
   const handleNameSave = () => {
     setIsEditingName(false);
-    handleBlur();
+    handleBlur(); // Use the central save function
   }
 
   const handleSuggestQuests = () => {
@@ -181,7 +192,10 @@ export function LeafDetails({
             }));
 
             const updatedQuests = [...existingQuests, ...newQuests];
-            return { ...prevData, quests: updatedQuests };
+            const finalData = { ...prevData, quests: updatedQuests };
+            // Save after suggestions are added
+            onSave(sanitizeForFirestore(finalData));
+            return finalData;
           });
         }
         toast({
@@ -310,3 +324,5 @@ export function LeafDetails({
     </Card>
   );
 }
+
+    
