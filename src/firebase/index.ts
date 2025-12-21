@@ -7,29 +7,29 @@ import { getFirestore } from 'firebase/firestore'
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
-  if (!getApps().length) {
-    // Important! initializeApp() is called without any arguments because Firebase App Hosting
-    // integrates with the initializeApp() function to provide the environment variables needed to
-    // populate the FirebaseOptions in production. It is critical that we attempt to call initializeApp()
-    // without arguments.
-    let firebaseApp;
-    try {
-      // Attempt to initialize via Firebase App Hosting environment variables
-      firebaseApp = initializeApp();
-    } catch (e) {
-      // Only warn in production because it's normal to use the firebaseConfig to initialize
-      // during development
-      if (process.env.NODE_ENV === "production") {
-        console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
-      }
-      firebaseApp = initializeApp(firebaseConfig);
-    }
+  if (getApps().length) {
+    // If already initialized, return the SDKs with the already initialized App
+    return getSdks(getApp());
+  }
 
+  // When in development, always use the local firebaseConfig object.
+  // In production, Firebase App Hosting provides the necessary environment variables.
+  if (process.env.NODE_ENV === 'development') {
+    const firebaseApp = initializeApp(firebaseConfig);
     return getSdks(firebaseApp);
   }
 
-  // If already initialized, return the SDKs with the already initialized App
-  return getSdks(getApp());
+  // In a production-like environment (or if NODE_ENV is not 'development'),
+  // attempt to initialize from environment variables first.
+  let firebaseApp;
+  try {
+    firebaseApp = initializeApp();
+  } catch (e) {
+    console.warn('Automatic Firebase initialization failed. Falling back to local config.', e);
+    firebaseApp = initializeApp(firebaseConfig);
+  }
+
+  return getSdks(firebaseApp);
 }
 
 export function getSdks(firebaseApp: FirebaseApp) {
