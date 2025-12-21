@@ -157,6 +157,12 @@ export function Dashboard({ user }: { user: User }) {
         const stillExists = allLeavesFlat.some(l => l.id === selectedLeaf.id);
         if (!stillExists) {
             setSelectedLeaf(null);
+        } else {
+            // Also update the selectedLeaf with the latest data from the collection
+            const updatedLeaf = allLeavesFlat.find(l => l.id === selectedLeaf.id);
+            if (updatedLeaf && JSON.stringify(updatedLeaf) !== JSON.stringify(selectedLeaf)) {
+                setSelectedLeaf(updatedLeaf);
+            }
         }
     }
   }, [allLeavesFlat, selectedLeaf]);
@@ -171,7 +177,7 @@ export function Dashboard({ user }: { user: User }) {
     setSelectedLeaf(leaf);
   };
 
-  const handleSaveLeaf = (updatedLeaf: LeafType) => {
+  const handleSaveLeaf = useCallback((updatedLeaf: LeafType) => {
     if (!firestore || !user?.uid) return;
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', updatedLeaf.id);
     const sanitizedLeaf = sanitizeForFirestore(updatedLeaf);
@@ -179,7 +185,7 @@ export function Dashboard({ user }: { user: User }) {
     // The useCollection hook will automatically update the UI.
     // We update the local selectedLeaf state to keep it in sync for immediate feedback.
     setSelectedLeaf(updatedLeaf);
-  };
+  }, [firestore, user?.uid]);
   
   const handleDeleteLeaf = (leafId: string) => {
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', leafId);
