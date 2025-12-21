@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { AddLeafDialog } from '@/components/garden/add-leaf-dialog';
 import { SuggestionDialog } from '@/components/garden/suggestion-dialog';
-import { SuggestSkillsDialog } from '@/components/garden/suggest-skills-dialog'; // New import
+import { SuggestSkillsDialog } from '@/components/garden/suggest-skills-dialog';
 import type { User } from 'firebase/auth';
 import { collection, doc, query, deleteDoc, orderBy } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
@@ -23,6 +23,7 @@ import { EditStemDialog } from '@/components/garden/edit-stem-dialog';
 import Fuse from 'fuse.js';
 import type { UserStats } from '@/lib/types';
 import { sanitizeForFirestore } from '@/lib/utils';
+import { getOrCreateUserStats } from '@/lib/services/gamification-service';
 
 export function Dashboard({ user }: { user: User }) {
   const [selectedLeaf, setSelectedLeaf] = useState<LeafType | null>(null);
@@ -32,7 +33,7 @@ export function Dashboard({ user }: { user: User }) {
 
   const [isAddLeafOpen, setIsAddLeafOpen] = useState(false);
   const [isSuggestionOpen, setIsSuggestionOpen] = useState(false);
-  const [isSuggestSkillsOpen, setIsSuggestSkillsOpen] = useState(false); // New state
+  const [isSuggestSkillsOpen, setIsSuggestSkillsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStemId, setSelectedStemId] = useState<string | null>(null);
 
@@ -40,25 +41,14 @@ export function Dashboard({ user }: { user: User }) {
 
   // Fetch Gamification Stats
   const userStatsRef = useMemoFirebase(() => doc(firestore, 'users', user.uid, 'stats', user.uid), [firestore, user.uid]);
-  const { data: userStats, isLoading: isStatsLoading, error: statsError } = useDoc<UserStats>(userStatsRef);
+  const { data: userStats, isLoading: isStatsLoading } = useDoc<UserStats>(userStatsRef);
 
   // Effect to initialize user stats if they don't exist
   useEffect(() => {
-    // Check if loading is complete, there's no data, and there wasn't a permission error
-    if (!isStatsLoading && !userStats && !statsError) {
-      console.log("No user stats found, creating new document.");
-      const defaultStats: UserStats = {
-        userId: user.uid,
-        totalXP: 0,
-        level: 1,
-        currentStreak: 0,
-        longestStreak: 0,
-        lastActivityDate: new Date().toISOString(),
-      };
-      // userStatsRef is already memoized, safe to use here.
-      setDocumentNonBlocking(userStatsRef, defaultStats, { merge: false });
+    if (!isStatsLoading && !userStats) {
+      getOrCreateUserStats(firestore, user.uid);
     }
-  }, [isStatsLoading, userStats, statsError, user.uid, userStatsRef]);
+  }, [isStatsLoading, userStats, firestore, user.uid]);
 
 
   const stemsQuery = useMemoFirebase(() => query(collection(firestore, 'users', user.uid, 'stems'), orderBy('createdAt', 'desc')), [firestore, user.uid]);
@@ -291,7 +281,7 @@ export function Dashboard({ user }: { user: User }) {
         onSearch={setSearchQuery}
         searchQuery={searchQuery}
         user={user}
-        userStats={userStats}
+        userStats={userStats as UserStats | null}
         searchResults={searchResults}
         onSearchResultClick={handleSearchResultClick}
       />

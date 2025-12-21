@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -37,6 +38,8 @@ import {
 } from '@dnd-kit/sortable';
 import { DraggableQuestItem } from './draggable-quest-item';
 import { useToast } from '@/hooks/use-toast';
+import { awardXPForQuestCompletion } from '@/lib/services/gamification-service';
+import { useFirestore } from '@/firebase';
 
 interface LeafDetailsProps {
   leaf: Leaf;
@@ -59,6 +62,7 @@ export function LeafDetails({
   const [isEditingName, setIsEditingName] = useState(false);
   const [isSuggestingQuests, startQuestSuggestion] = useTransition();
   const { toast } = useToast();
+  const firestore = useFirestore();
 
   // Effect to update internal state when the leaf prop changes from the parent
   useEffect(() => {
@@ -84,6 +88,17 @@ export function LeafDetails({
   }, [formData.quests]);
 
   const handleQuestChange = (questId: string, field: 'completed' | 'text', value: string | boolean) => {
+    const originalQuest = leaf.quests.find(q => q.id === questId);
+
+    // If 'completed' is being set to true and it wasn't true before, award XP
+    if (field === 'completed' && value === true && originalQuest?.completed === false) {
+      awardXPForQuestCompletion(firestore, leaf.userId);
+       toast({
+        title: "Quest Complete!",
+        description: "+10 XP Earned!",
+      });
+    }
+
     setFormData(prevData => {
         const updatedQuests = prevData.quests.map(q => 
             q.id === questId ? { ...q, [field]: value } : q

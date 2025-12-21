@@ -1,5 +1,6 @@
 
 import type { FuseResult } from "fuse.js";
+import { FieldValue } from 'firebase/firestore';
 
 export interface Quest {
   id: string;
@@ -34,7 +35,7 @@ export type Garden = Stem[];
 
 export interface UserStats {
     userId: string;
-    totalXP: number;
+    totalXP: number | FieldValue;
     level: number;
     currentStreak: number;
     longestStreak: number;
