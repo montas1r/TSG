@@ -31,15 +31,15 @@ export function EditStemDialog({ isOpen, onOpenChange, stem, onEditStem }: EditS
   const [color, setColor] = useState(stem.color || '#8b5cf6');
 
   // This effect now correctly resets the dialog's state whenever a new stem is passed in
-  // or when the dialog is reopened.
+  // or when the dialog is reopened, ensuring the pickers always work.
   useEffect(() => {
-    if (isOpen && stem) {
+    if (stem) {
       setName(stem.name);
       setDescription(stem.description || '');
       setIcon(stem.icon || 'Sprout');
       setColor(stem.color || '#8b5cf6');
     }
-  }, [stem, isOpen]);
+  }, [stem]);
 
   const handleSave = () => {
     if (name.trim()) {
