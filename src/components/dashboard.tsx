@@ -137,15 +137,13 @@ export function Dashboard({ user }: { user: User }) {
   }, [gardenWithLeaves, selectedStemId]);
 
   useEffect(() => {
-    if (selectedLeaf && allLeavesFlat) {
-        const firestoreVersion = allLeavesFlat.find(l => l.id === selectedLeaf.id);
-        if (!firestoreVersion) {
-            setSelectedLeaf(null);
-            return;
-        }
-        if (JSON.stringify(firestoreVersion) !== JSON.stringify(selectedLeaf)) {
-            setSelectedLeaf(firestoreVersion);
-        }
+    if (selectedLeaf) {
+      const liveLeaf = allLeavesFlat?.find(l => l.id === selectedLeaf.id);
+      if (liveLeaf && JSON.stringify(liveLeaf) !== JSON.stringify(selectedLeaf)) {
+        setSelectedLeaf(liveLeaf);
+      } else if (!liveLeaf) {
+        setSelectedLeaf(null);
+      }
     }
   }, [allLeavesFlat, selectedLeaf]);
 
@@ -206,7 +204,7 @@ export function Dashboard({ user }: { user: User }) {
   }
 
   const handleDeleteStem = async (stemId: string) => {
-    if (!firestore || !user || !window.confirm("Are you sure you want to delete this stem and all its skills? This action cannot be undone.")) return;
+    if (!firestore || !user) return;
   
     try {
       const batch = writeBatch(firestore);
@@ -233,9 +231,6 @@ export function Dashboard({ user }: { user: User }) {
         description: `The stem and all its skills have been removed.`,
       });
   
-      // UI will update automatically via useCollection listeners.
-      // The useEffect for selectedStemId will select a new stem if the current one was deleted.
-      
     } catch (error) {
       console.error("Error deleting stem and leaves: ", error);
       toast({
