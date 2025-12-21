@@ -64,32 +64,31 @@ export function LeafDetails({
   const [questToAwardXp, setQuestToAwardXp] = useState<string | null>(null);
   const { toast } = useToast();
   const firestore = useFirestore();
+  
+  // This is the SAFE way to sync form data with the incoming prop.
+  // It only runs when a DIFFERENT leaf is selected.
+  useEffect(() => {
+    // Sort quests by order to ensure consistent state
+    const questsWithOrder = (leaf.quests || []).map((q, index) => ({
+      ...q,
+      order: q.order ?? index,
+    })).sort((a, b) => a.order - b.order);
+
+    setFormData({ ...leaf, quests: questsWithOrder });
+  }, [leaf.id]); // Only depends on the ID of the leaf
+
 
   useEffect(() => {
-    // Deep comparison to prevent infinite loops.
-    // This effect now correctly syncs the internal form state ONLY when the incoming `leaf` prop
-    // has meaningfully changed (either a different leaf is selected, or its content has been updated from Firestore).
-    if (JSON.stringify(leaf) !== JSON.stringify(formData)) {
-        const questsWithOrder = (leaf.quests || []).map((q, index) => ({
-            ...q,
-            order: q.order ?? index,
-        }));
-        questsWithOrder.sort((a, b) => a.order - b.order);
-        setFormData({ ...leaf, quests: questsWithOrder });
+    if (questToAwardXp && firestore && leaf.userId) {
+        awardXPForQuestCompletion(firestore, leaf.userId);
+        toast({
+            title: "Quest Complete!",
+            description: "+10 XP Earned!",
+        });
+        // Reset the state to prevent re-awarding
+        setQuestToAwardXp(null);
     }
-  }, [leaf]);
-
-    useEffect(() => {
-        if (questToAwardXp && firestore && leaf.userId) {
-            awardXPForQuestCompletion(firestore, leaf.userId);
-            toast({
-                title: "Quest Complete!",
-                description: "+10 XP Earned!",
-            });
-            // Reset the state to prevent re-awarding
-            setQuestToAwardXp(null);
-        }
-    }, [questToAwardXp, firestore, leaf.userId, toast]);
+  }, [questToAwardXp, firestore, leaf.userId, toast]);
 
 
   const masteryLevel = useMemo(() => {

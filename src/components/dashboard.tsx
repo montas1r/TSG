@@ -21,7 +21,6 @@ import { StemSelector } from '@/components/garden/stem-selector';
 import { EditStemDialog } from '@/components/garden/edit-stem-dialog';
 import Fuse from 'fuse.js';
 import type { UserStats } from '@/lib/types';
-import { sanitizeForFirestore } from '@/lib/utils';
 import { getOrCreateUserStats } from '@/lib/services/gamification-service';
 import { useToast } from '@/hooks/use-toast';
 import { safeSetDoc } from '@/lib/firestore-safe';
@@ -62,6 +61,10 @@ export function Dashboard({ user }: { user: User }) {
   useEffect(() => {
     if (!selectedStemId && stems && stems.length > 0) {
       setSelectedStemId(stems[0].id);
+    }
+     // If the selected stem is deleted, select the first available stem
+    if (selectedStemId && stems && !stems.some(s => s.id === selectedStemId)) {
+      setSelectedStemId(stems.length > 0 ? stems[0].id : null);
     }
   }, [stems, selectedStemId]);
 
@@ -150,20 +153,26 @@ export function Dashboard({ user }: { user: User }) {
     return gardenWithLeaves.find(stem => stem.id === selectedStemId) || null;
   }, [gardenWithLeaves, selectedStemId]);
 
+  // This is the SAFE way to keep the selectedLeaf state in sync with Firestore data.
+  // It only updates the state if the data has meaningfully changed.
   useEffect(() => {
     if (selectedLeaf && allLeavesFlat) {
-        const stillExists = allLeavesFlat.some(l => l.id === selectedLeaf.id);
-        if (!stillExists) {
+        const firestoreVersion = allLeavesFlat.find(l => l.id === selectedLeaf.id);
+        
+        // If leaf was deleted from Firestore
+        if (!firestoreVersion) {
             setSelectedLeaf(null);
-        } else {
-            const updatedLeaf = allLeavesFlat.find(l => l.id === selectedLeaf.id);
-            if (updatedLeaf && JSON.stringify(updatedLeaf) !== JSON.stringify(selectedLeaf)) {
-                setSelectedLeaf(updatedLeaf);
-            }
+            return;
+        }
+
+        // If leaf data has changed in Firestore, update the local state
+        if (JSON.stringify(firestoreVersion) !== JSON.stringify(selectedLeaf)) {
+            setSelectedLeaf(firestoreVersion);
         }
     }
   }, [allLeavesFlat, selectedLeaf]);
 
+  // When the selected stem changes, clear the selected leaf.
   useEffect(() => {
     setSelectedLeaf(null);
   }, [selectedStemId]);
@@ -178,6 +187,7 @@ export function Dashboard({ user }: { user: User }) {
     if (!firestore || !user?.uid) return;
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', updatedLeaf.id);
     safeSetDoc(leafRef, updatedLeaf, { merge: true });
+    // Toast is now handled in the blur event in LeafDetails for better UX
   }, [firestore, user?.uid]);
   
   const handleDeleteLeaf = (leafId: string) => {
@@ -222,10 +232,7 @@ export function Dashboard({ user }: { user: User }) {
     const stemRef = doc(firestore, 'users', user.uid, 'stems', stemId);
     deleteDocumentNonBlocking(stemRef);
 
-    if(selectedStemId === stemId) {
-      const remainingStems = stems?.filter(s => s.id !== stemId);
-      setSelectedStemId(remainingStems && remainingStems.length > 0 ? remainingStems[0].id : null);
-    }
+    // This logic is now handled by the useEffect that watches `stems`
   }
   
   const handleAddLeaf = (name: string, stemId: string) => {
