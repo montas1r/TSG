@@ -55,8 +55,12 @@ export function AddStemDialog({ isOpen, onOpenChange, onAddStem }: AddStemDialog
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="flex items-center gap-4">
-            <IconPicker value={icon} onChange={setIcon} />
-            <ColorPicker value={color} onChange={setColor} />
+            <div className="z-10">
+              <IconPicker value={icon} onChange={setIcon} />
+            </div>
+            <div className="z-10">
+              <ColorPicker value={color} onChange={setColor} />
+            </div>
             <div className="flex-grow space-y-2">
               <Label htmlFor="stem-name">Stem Name</Label>
               <Input

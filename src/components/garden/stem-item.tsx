@@ -68,7 +68,7 @@ export function StemItem({ stem, isSelected, onClick, onEdit }: StemItemProps) {
       <div className="w-full p-3 rounded-lg bg-accent/10 border border-primary/50 flex flex-col gap-3">
         {/* Name Input and Actions */}
         <div className='flex items-center gap-2'>
-            <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: editedStem.color }}>
+            <div className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: editedStem.color }}>
                 <LucideIcon className="size-5 text-white" />
             </div>
             <Input 
@@ -86,9 +86,11 @@ export function StemItem({ stem, isSelected, onClick, onEdit }: StemItemProps) {
             <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleCancel}><X className="size-4 text-muted-foreground" /></Button>
         </div>
         {/* Color and Icon Pickers */}
-        <div className='flex items-center gap-2'>
+        <div className='flex items-center justify-between gap-2 z-10'>
             <ColorPicker value={editedStem.color} onChange={handleColorChange} isInline />
-            <IconPicker value={editedStem.icon} onChange={handleIconChange} />
+        </div>
+        <div className="z-10">
+           <IconPicker value={editedStem.icon} onChange={handleIconChange} />
         </div>
       </div>
     );
@@ -111,9 +113,9 @@ export function StemItem({ stem, isSelected, onClick, onEdit }: StemItemProps) {
           }
       }}
     >
-      <div className='flex items-center gap-3'>
+      <div className='flex items-start gap-3'>
         <div className={cn(
-            "h-8 w-8 rounded-lg flex items-center justify-center transition-colors",
+            "h-8 w-8 rounded-lg flex items-center justify-center transition-colors flex-shrink-0",
             isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground group-hover:bg-accent group-hover:text-accent-foreground'
         )}
         style={isSelected ? { backgroundColor: stem.color } : {}}>
