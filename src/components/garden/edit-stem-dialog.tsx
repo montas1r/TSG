@@ -33,7 +33,7 @@ export function EditStemDialog({ isOpen, onOpenChange, stem, onEditStem }: EditS
   // This effect now correctly resets the dialog's state whenever a new stem is passed in
   // or when the dialog is reopened.
   useEffect(() => {
-    if (stem) {
+    if (isOpen && stem) {
       setName(stem.name);
       setDescription(stem.description || '');
       setIcon(stem.icon || 'Sprout');

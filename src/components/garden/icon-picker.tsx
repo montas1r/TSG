@@ -116,7 +116,7 @@ export function ColorPicker({ value, onChange, className }: ColorPickerProps) {
                                 setIsOpen(false);
                             }}
                             className={cn(
-                                'h-8 w-8 rounded-md transition-transform hover:scale-110',
+                                'h-8 w-8 rounded-md transition-transform hover:scale-110 focus-ring',
                                 value === color && 'ring-2 ring-ring ring-offset-2 ring-offset-background'
                             )}
                             style={{ backgroundColor: color }}
