@@ -64,7 +64,6 @@ export function LeafDetails({
   const { toast } = useToast();
   const firestore = useFirestore();
 
-  // Effect to update internal state when the leaf prop changes from the parent
   useEffect(() => {
     const questsWithOrder = (leaf.quests || []).map((q, index) => ({
       ...q,
@@ -74,14 +73,21 @@ export function LeafDetails({
     setFormData({ ...leaf, quests: questsWithOrder });
   }, [leaf]);
 
+  useEffect(() => {
+    // Only save if the data is actually different. This prevents infinite loops.
+    if (JSON.stringify(formData) !== JSON.stringify(leaf)) {
+      onSave(sanitizeForFirestore(formData));
+    }
+  }, [formData, onSave]);
+
+
   const masteryLevel = useMemo(() => {
     return calculateMasteryLevel(formData.quests);
   }, [formData.quests]);
 
   const handleQuestChange = (questId: string, field: 'completed' | 'text', value: string | boolean) => {
-    const originalQuest = leaf.quests.find(q => q.id === questId);
+    const originalQuest = formData.quests.find(q => q.id === questId);
 
-    // If 'completed' is being set to true and it wasn't true before, award XP
     if (field === 'completed' && value === true && originalQuest?.completed === false) {
       awardXPForQuestCompletion(firestore, leaf.userId);
        toast({
@@ -96,14 +102,11 @@ export function LeafDetails({
         );
         const newMasteryLevel = calculateMasteryLevel(updatedQuests);
         
-        const newFormData = {
+        return {
           ...prevData,
           quests: updatedQuests,
           masteryLevel: newMasteryLevel
         };
-        
-        onSave(sanitizeForFirestore(newFormData));
-        return newFormData;
     });
   };
 
@@ -116,18 +119,14 @@ export function LeafDetails({
             order: prevData.quests.length > 0 ? Math.max(...prevData.quests.map(q => q.order)) + 1 : 0,
         };
         const updatedQuests = [...(prevData.quests || []), newQuest];
-        const newFormData = { ...prevData, quests: updatedQuests };
-        onSave(sanitizeForFirestore(newFormData));
-        return newFormData;
+        return { ...prevData, quests: updatedQuests };
     });
   }
 
   const handleDeleteQuest = (questId: string) => {
     setFormData(prevData => {
         const updatedQuests = prevData.quests.filter(q => q.id !== questId);
-        const newFormData = { ...prevData, quests: updatedQuests };
-        onSave(sanitizeForFirestore(newFormData));
-        return newFormData;
+        return { ...prevData, quests: updatedQuests };
     });
   }
 
@@ -149,18 +148,13 @@ export function LeafDetails({
         const newQuestsOrder = arrayMove(prevData.quests, oldIndex, newIndex);
         const updatedQuestsWithOrder = newQuestsOrder.map((q, index) => ({...q, order: index}));
         
-        const newFormData = { ...prevData, quests: updatedQuestsWithOrder };
-        onSave(sanitizeForFirestore(newFormData));
-        return newFormData;
+        return { ...prevData, quests: updatedQuestsWithOrder };
       });
     }
   }
 
   const handleBlur = () => {
-    // Only save if something has actually changed
-    if (JSON.stringify(formData) !== JSON.stringify(leaf)) {
-      onSave(sanitizeForFirestore(formData));
-    }
+    // onBlur saving is now handled by the useEffect hook
   };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -169,7 +163,7 @@ export function LeafDetails({
 
   const handleNameSave = () => {
     setIsEditingName(false);
-    handleBlur(); // Trigger save on name save
+    handleBlur();
   }
 
   const handleSuggestQuests = () => {
@@ -193,9 +187,7 @@ export function LeafDetails({
             }));
 
             const updatedQuests = [...existingQuests, ...newQuests];
-            const newFormData = { ...prevData, quests: updatedQuests };
-            onSave(sanitizeForFirestore(newFormData));
-            return newFormData;
+            return { ...prevData, quests: updatedQuests };
           });
         }
         toast({
