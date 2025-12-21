@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { Leaf, Quest } from '@/lib/types';
-import { useState, useEffect, useMemo, useTransition } from 'react';
+import { useState, useEffect, useMemo, useTransition, useCallback } from 'react';
 import { Flower2, Link as LinkIcon, Trash2, PlusCircle, Pencil, Wand2, Loader2 } from 'lucide-react';
 import { calculateMasteryLevel } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
@@ -38,7 +38,8 @@ import {
 } from '@dnd-kit/sortable';
 import { DraggableQuestItem } from './draggable-quest-item';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore } from '@/firebase';
+import { useDebouncedCallback } from 'use-debounce';
+
 
 interface LeafDetailsProps {
   leaf: Leaf;
@@ -62,9 +63,12 @@ export function LeafDetails({
   const [isSuggestingQuests, startQuestSuggestion] = useTransition();
   const { toast } = useToast();
   
+  // Debounce the onSave callback
+  const debouncedSave = useDebouncedCallback((data: Leaf) => {
+    onSave(data);
+  }, 500); // 500ms delay
+
   useEffect(() => {
-    // This is the correct way to sync the form's state with incoming props.
-    // It triggers ONLY when the leaf prop changes, resetting the form.
     const questsWithOrder = (leaf.quests || []).map((q, index) => ({
       ...q,
       order: q.order ?? index,
@@ -73,44 +77,56 @@ export function LeafDetails({
     setFormData({ ...leaf, quests: questsWithOrder });
   }, [leaf]);
 
+  // This effect listens for changes in formData and calls the debounced save function.
+  useEffect(() => {
+    // We don't save if the form data is the same as the initial prop to avoid writes on component load.
+    // A deep comparison is needed here.
+    if (JSON.stringify(formData) !== JSON.stringify(leaf)) {
+      debouncedSave(formData);
+    }
+    // We cancel any pending saves when the component unmounts
+    return () => debouncedSave.cancel();
+  }, [formData, leaf, debouncedSave]);
+
 
   const masteryLevel = useMemo(() => {
     return calculateMasteryLevel(formData.quests);
   }, [formData.quests]);
 
-  const handleQuestChange = (questId: string, field: 'completed' | 'text', value: string | boolean) => {
+  const handleLocalChange = (newFormData: Partial<Leaf>) => {
     setFormData(prevData => {
-        const updatedQuests = prevData.quests.map(q => 
-            q.id === questId ? { ...q, [field]: value } : q
-        );
-        const newMasteryLevel = calculateMasteryLevel(updatedQuests);
-        
-        return {
-          ...prevData,
-          quests: updatedQuests,
-          masteryLevel: newMasteryLevel
-        };
+      const updatedData = { ...prevData, ...newFormData };
+      
+      // If quests changed, recalculate mastery
+      if (newFormData.quests) {
+        updatedData.masteryLevel = calculateMasteryLevel(newFormData.quests);
+      }
+      
+      return updatedData;
     });
   };
 
+  const handleQuestChange = (questId: string, field: 'completed' | 'text', value: string | boolean) => {
+    const updatedQuests = formData.quests.map(q => 
+        q.id === questId ? { ...q, [field]: value } : q
+    );
+    handleLocalChange({ quests: updatedQuests });
+  };
+
   const handleAddQuest = () => {
-    setFormData(prevData => {
-        const newQuest: Quest = {
-            id: uuidv4(),
-            text: '',
-            completed: false,
-            order: prevData.quests.length > 0 ? Math.max(...prevData.quests.map(q => q.order)) + 1 : 0,
-        };
-        const updatedQuests = [...(prevData.quests || []), newQuest];
-        return { ...prevData, quests: updatedQuests };
-    });
+    const newQuest: Quest = {
+        id: uuidv4(),
+        text: '',
+        completed: false,
+        order: formData.quests.length > 0 ? Math.max(...formData.quests.map(q => q.order)) + 1 : 0,
+    };
+    const updatedQuests = [...(formData.quests || []), newQuest];
+    handleLocalChange({ quests: updatedQuests });
   }
 
   const handleDeleteQuest = (questId: string) => {
-    setFormData(prevData => ({
-        ...prevData,
-        quests: prevData.quests.filter(q => q.id !== questId)
-    }));
+    const updatedQuests = formData.quests.filter(q => q.id !== questId);
+    handleLocalChange({ quests: updatedQuests });
   }
 
   const sensors = useSensors(
@@ -124,32 +140,23 @@ export function LeafDetails({
     const {active, over} = event;
     
     if (active.id !== over?.id && over) {
-      setFormData(prevData => {
-        const oldIndex = prevData.quests.findIndex((q) => q.id === active.id);
-        const newIndex = prevData.quests.findIndex((q) => q.id === over.id);
-        
-        const newQuestsOrder = arrayMove(prevData.quests, oldIndex, newIndex);
-        const updatedQuestsWithOrder = newQuestsOrder.map((q, index) => ({...q, order: index}));
-        
-        return { ...prevData, quests: updatedQuestsWithOrder };
-      });
+      const oldIndex = formData.quests.findIndex((q) => q.id === active.id);
+      const newIndex = formData.quests.findIndex((q) => q.id === over.id);
+      
+      const newQuestsOrder = arrayMove(formData.quests, oldIndex, newIndex);
+      const updatedQuestsWithOrder = newQuestsOrder.map((q, index) => ({...q, order: index}));
+      
+      handleLocalChange({ quests: updatedQuestsWithOrder });
     }
   }
 
-  const handleBlur = () => {
-    // Deep comparison to avoid unnecessary saves
-    if (JSON.stringify(formData) !== JSON.stringify(leaf)) {
-      onSave(formData);
-    }
-  };
-
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({...prev, name: e.target.value}));
+    handleLocalChange({ name: e.target.value });
   }
 
   const handleNameSave = () => {
     setIsEditingName(false);
-    handleBlur(); // Use the central save function
+    // Autosave will handle the update, no explicit save needed
   }
 
   const handleSuggestQuests = () => {
@@ -161,20 +168,18 @@ export function LeafDetails({
         });
 
         if (suggestedTexts && suggestedTexts.length > 0) {
-          setFormData(prevData => {
-            const existingQuests = prevData.quests || [];
-            const lastOrder = existingQuests.length > 0 ? Math.max(...existingQuests.map(q => q.order)) : -1;
-            
-            const newQuests: Quest[] = suggestedTexts.map((text, index) => ({
-              id: uuidv4(),
-              text,
-              completed: false,
-              order: lastOrder + 1 + index,
-            }));
+          const existingQuests = formData.quests || [];
+          const lastOrder = existingQuests.length > 0 ? Math.max(...existingQuests.map(q => q.order)) : -1;
+          
+          const newQuests: Quest[] = suggestedTexts.map((text, index) => ({
+            id: uuidv4(),
+            text,
+            completed: false,
+            order: lastOrder + 1 + index,
+          }));
 
-            const updatedQuests = [...existingQuests, ...newQuests];
-            return { ...prevData, quests: updatedQuests };
-          });
+          const updatedQuests = [...existingQuests, ...newQuests];
+          handleLocalChange({ quests: updatedQuests });
         }
         toast({
           title: "Quests Suggested!",
@@ -250,7 +255,7 @@ export function LeafDetails({
                                 onTextChange={handleQuestChange}
                                 onCompletedChange={handleQuestChange}
                                 onDelete={handleDeleteQuest}
-                                onBlur={handleBlur}
+                                onBlur={() => {}} 
                             />
                         ))}
                     </div>
@@ -276,8 +281,7 @@ export function LeafDetails({
             <Textarea
               id="notes"
               value={formData.notes || ''}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              onBlur={handleBlur}
+              onChange={(e) => handleLocalChange({ notes: e.target.value })}
               placeholder="What have you learned? What are your thoughts?"
               className="min-h-[150px] text-base"
             />
@@ -291,8 +295,7 @@ export function LeafDetails({
               id="link"
               type="url"
               value={formData.link || ''}
-              onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-              onBlur={handleBlur}
+              onChange={(e) => handleLocalChange({ link: e.target.value })}
               placeholder="https://example.com"
               className="text-base"
             />
@@ -302,5 +305,3 @@ export function LeafDetails({
     </Card>
   );
 }
-
-    

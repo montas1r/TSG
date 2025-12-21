@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useSortable } from '@dnd-kit/sortable';
@@ -76,5 +77,3 @@ export function DraggableQuestItem({ quest, onTextChange, onCompletedChange, onD
     </div>
   );
 }
-
-    

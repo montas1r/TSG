@@ -140,6 +140,8 @@ export function Dashboard({ user }: { user: User }) {
       const liveLeaf = allLeavesFlat?.find(l => l.id === selectedLeaf.id);
       
       // If the live version exists and is different from the current one, update it.
+      // A simple string comparison is not robust for objects, but it's a quick check.
+      // A more robust solution might involve a deep-compare library if needed.
       if (liveLeaf && JSON.stringify(liveLeaf) !== JSON.stringify(selectedLeaf)) {
         setSelectedLeaf(liveLeaf);
       } else if (!liveLeaf) {
@@ -153,8 +155,6 @@ export function Dashboard({ user }: { user: User }) {
   useEffect(() => {
     setSelectedLeaf(null);
   }, [selectedStemId]);
-
-
 
   const handleSelectLeaf = (leaf: LeafType) => {
     setSelectedLeaf(leaf);
@@ -200,23 +200,29 @@ export function Dashboard({ user }: { user: User }) {
     try {
       const batch = writeBatch(firestore);
   
+      // Query for all leaves that belong to this stem
       const leavesCollectionRef = collection(firestore, 'users', user.uid, 'leaves');
       const q = query(leavesCollectionRef, where("stemId", "==", stemId));
       const leavesSnapshot = await getDocs(q);
   
+      // Add each leaf to the batch deletion
       leavesSnapshot.forEach((leafDoc) => {
         batch.delete(leafDoc.ref);
       });
   
+      // Add the stem itself to the batch deletion
       const stemRef = doc(firestore, 'users', user.uid, 'stems', stemId);
       batch.delete(stemRef);
   
+      // Commit the batch
       await batch.commit();
   
       toast({
         title: "Stem Deleted",
         description: `The stem and all its skills have been removed.`,
       });
+  
+      // The useEffect hooks will handle re-selecting a new stem
   
     } catch (error) {
       console.error("Error deleting stem and leaves: ", error);
@@ -356,6 +362,3 @@ export function Dashboard({ user }: { user: User }) {
     </div>
   );
 }
-
-    
-    
