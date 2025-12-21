@@ -1,56 +1,61 @@
+
 'use client';
 
 import type { Leaf as LeafType } from '@/lib/types';
 import { cn, calculateMasteryLevel } from '@/lib/utils';
-import { Leaf as LeafIcon } from 'lucide-react';
 import { Highlight } from '@/components/ui/highlight';
+import { Progress } from '../ui/progress';
+import { CheckCircle2 } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 
 interface LeafProps {
   leaf: LeafType;
   onClick: () => void;
   searchQuery?: string;
+  isSelected?: boolean;
 }
 
-export function Leaf({ leaf, onClick, searchQuery = '' }: LeafProps) {
+export function Leaf({ leaf, onClick, searchQuery = '', isSelected }: LeafProps) {
 
   const masteryLevel = calculateMasteryLevel(leaf.quests);
-
-  const getMasteryColor = () => {
-    const level = masteryLevel;
-    
-    // Using the new theme's mastery colors from globals.css
-    if (level <= 1) return 'hsl(var(--mastery-0))';
-    if (level <= 25) return 'hsl(var(--mastery-1))';
-    if (level <= 50) return 'hsl(var(--mastery-2))';
-    if (level <= 75) return 'hsl(var(--mastery-3))';
-    return 'hsl(var(--mastery-4))';
-  };
-
-  const isMastered = masteryLevel > 80;
+  const isMastered = masteryLevel === 100;
 
   return (
-    <button
+    <Card
       onClick={onClick}
       className={cn(
-        'group relative flex w-full aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-lg p-2 transition-all hover:bg-accent/10',
-        isMastered && 'animate-pulse' // Using pulse for mastered skills now
+        'group cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1',
+        isSelected ? 'ring-2 ring-primary shadow-lg' : 'bg-card'
       )}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if(e.key === 'Enter') onClick() }}
       aria-label={`View details for ${leaf.name}`}
     >
-      <div className="relative flex h-12 w-12 items-center justify-center">
-        <LeafIcon
-          className={cn(
-            'size-10 text-primary-foreground transition-colors duration-500',
-          )}
-          style={{
-            fill: getMasteryColor(),
-            stroke: isMastered ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))'
-          }}
-        />
-      </div>
-      <p className="w-full truncate text-center text-sm text-muted-foreground group-hover:text-foreground">
-        <Highlight text={leaf.name} query={searchQuery} />
-      </p>
-    </button>
+      <CardHeader className="p-4">
+        <CardTitle className="text-base font-semibold tracking-tight">
+           <Highlight text={leaf.name} query={searchQuery} />
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-4 pt-0">
+          <div className="flex items-center gap-3">
+             <Progress value={masteryLevel} className="h-2 w-full" />
+             {isMastered ? (
+                <CheckCircle2 className="size-5 text-green-500 shrink-0"/>
+             ) : (
+                <span className="text-xs font-mono text-muted-foreground shrink-0 tabular-nums">
+                    {masteryLevel}%
+                </span>
+             )}
+          </div>
+           {leaf.quests && leaf.quests.length > 0 && (
+             <p className="text-xs text-muted-foreground mt-2">
+                {leaf.quests.filter(q => q.completed).length} / {leaf.quests.length} quests
+             </p>
+           )}
+      </CardContent>
+    </Card>
   );
 }
+
+    

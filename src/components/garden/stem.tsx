@@ -4,9 +4,8 @@
 import { useMemo, useState } from 'react';
 import type { Leaf as LeafType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Wand2, Edit, Trash2 } from 'lucide-react';
+import { PlusCircle, Wand2, MoreHorizontal } from 'lucide-react';
 import { calculateMasteryLevel } from '@/lib/utils';
-import { LeafGrid } from './leaf-grid';
 import type { Stem as StemTypeWithLeaves } from '@/lib/types';
 import { LeafDetails } from './leaf-details-sheet';
 import {
@@ -19,12 +18,21 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { AnimatePresence, motion } from 'framer-motion';
+import { ScrollArea } from '../ui/scroll-area';
+import { Leaf } from './leaf';
 
 interface StemProps {
   stem: StemTypeWithLeaves;
   selectedLeaf: LeafType | null;
-  onSelectLeaf: (leaf: LeafType) => void;
+  onSelectLeaf: (leaf: LeafType | null) => void;
   onSaveLeaf: (leaf: LeafType) => void;
   onDeleteLeaf: (leafId: string) => void;
   onAddLeaf: (stemId: string) => void;
@@ -62,12 +70,11 @@ export function Stem({
 
   return (
     <>
-      <div className="relative h-full flex flex-col p-6 rounded-lg overflow-hidden">
-        
+      <div className="flex flex-col h-full">
         {/* Stem Header */}
-        <header className="relative z-10 flex items-center justify-between pb-4 border-b">
+        <header className="flex items-center justify-between p-4 border-b shrink-0">
           <div className="flex-grow">
-              <h2 className="font-heading text-3xl text-foreground/80 truncate">
+              <h2 className="font-heading text-2xl text-foreground truncate">
                   {stem.name}
               </h2>
               <p className="text-sm text-muted-foreground mt-1 truncate">
@@ -75,62 +82,80 @@ export function Stem({
               </p>
           </div>
           <div className="flex items-center gap-1 shrink-0">
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => onAddLeaf(stem.id)} aria-label={`Add new skill to ${stem.name}`}>
-                  <PlusCircle className="size-5 text-muted-foreground/50 transition-colors group-hover:text-primary" />
+              <Button variant="ghost" size="sm" onClick={() => onAddLeaf(stem.id)} aria-label={`Add new skill to ${stem.name}`}>
+                  <PlusCircle className="size-4 mr-2" /> New Skill
               </Button>
-               <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => onSuggestSkills(stem.id)} aria-label={`Get AI skill suggestions for ${stem.name}`}>
-                  <Wand2 className="size-5 text-muted-foreground/50 transition-colors group-hover:text-primary" />
-              </Button>
-               <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => onEditStem(stemData)} aria-label={`Edit ${stem.name}`}>
-                  <Edit className="size-5 text-muted-foreground/50 transition-colors group-hover:text-primary" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-destructive/50 hover:text-destructive hover:bg-destructive/10" onClick={() => setIsDeleteAlertOpen(true)} aria-label={`Delete ${stem.name}`}>
-                  <Trash2 className="size-5" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <MoreHorizontal className="size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => onSuggestSkills(stem.id)}>
+                    <Wand2 className="mr-2" />
+                    Suggest Skills
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onEditStem(stemData)}>
+                    Edit Stem
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    className="text-destructive focus:text-destructive"
+                    onClick={() => setIsDeleteAlertOpen(true)}
+                  >
+                    Delete Stem
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
           </div>
         </header>
         
-        <div className="relative mt-4 bg-muted/20 border border-dashed rounded-lg p-4">
-          {leafList.length > 0 ? (
-              <LeafGrid 
-                leaves={leafList}
-                onSelectLeaf={onSelectLeaf}
-              />
-          ) : (
-              <div className="flex-grow flex flex-col items-center justify-center text-center text-muted-foreground p-8">
-                <p className="font-heading text-xl">This stem is empty.</p>
-                <p className="mb-4">Plant your first skill to get started.</p>
-                <div className="flex items-center gap-4">
-                  <Button onClick={() => onAddLeaf(stem.id)}>
-                      <PlusCircle className="mr-2" /> Plant a Skill
-                  </Button>
-                  <Button variant="outline" onClick={() => onSuggestSkills(stem.id)}>
-                      <Wand2 className="mr-2" /> Get Suggestions
-                  </Button>
+        {/* Main Content Area */}
+        <div className="flex-grow flex overflow-hidden">
+            <ScrollArea className="flex-grow h-full">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
+                    {leafList.length > 0 ? (
+                        leafList.map(leaf => (
+                            <Leaf 
+                                key={leaf.id}
+                                leaf={leaf}
+                                onClick={() => onSelectLeaf(leaf)}
+                                isSelected={selectedLeaf?.id === leaf.id}
+                            />
+                        ))
+                    ) : (
+                        <div className="col-span-full flex-grow flex flex-col items-center justify-center text-center text-muted-foreground p-8 bg-background/50 rounded-lg">
+                            <p className="font-heading text-xl">This stem is empty.</p>
+                            <p className="mb-4">Plant your first skill to get started.</p>
+                            <Button onClick={() => onAddLeaf(stem.id)}>
+                                <PlusCircle className="mr-2" /> Plant a Skill
+                            </Button>
+                        </div>
+                    )}
                 </div>
-              </div>
-          )}
-        </div>
-
-        <div className="flex-grow mt-6">
-          <AnimatePresence>
-              {selectedLeaf && (
-                   <motion.div
-                      key={selectedLeaf.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.3 }}
-                   >
-                      <LeafDetails 
-                          leaf={selectedLeaf}
-                          onSave={onSaveLeaf}
-                          onDelete={() => onDeleteLeaf(selectedLeaf.id)}
-                          stemName={stem.name}
-                      />
-                  </motion.div>
-              )}
-          </AnimatePresence>
+            </ScrollArea>
+            
+            <AnimatePresence>
+                {selectedLeaf && (
+                     <motion.div
+                        key={selectedLeaf.id}
+                        initial={{ width: 0, opacity: 0 }}
+                        animate={{ width: 450, opacity: 1 }}
+                        exit={{ width: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                        className="bg-background border-l shrink-0 h-full overflow-hidden"
+                     >
+                        <LeafDetails 
+                            leaf={selectedLeaf}
+                            onSave={onSaveLeaf}
+                            onDelete={() => onDeleteLeaf(selectedLeaf.id)}
+                            onClose={() => onSelectLeaf(null)}
+                            stemName={stem.name}
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
 
       </div>
@@ -153,3 +178,5 @@ export function Stem({
     </>
   );
 }
+
+    

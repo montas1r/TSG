@@ -7,19 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { Leaf, Quest } from '@/lib/types';
 import { useState, useEffect, useMemo, useTransition } from 'react';
-import { Trash2, PlusCircle, Pencil, Wand2, Loader2 } from 'lucide-react';
+import { Trash2, PlusCircle, Pencil, Wand2, Loader2, X } from 'lucide-react';
 import { calculateMasteryLevel } from '@/lib/utils';
-import { Highlight } from '@/components/ui/highlight';
 import { v4 as uuidv4 } from 'uuid';
 import { suggestQuests } from '@/ai/flows/suggest-quests';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import {
     DndContext,
     closestCenter,
@@ -38,13 +29,15 @@ import {
 import { DraggableQuestItem } from './draggable-quest-item';
 import { useToast } from '@/hooks/use-toast';
 import { useDebouncedCallback } from 'use-debounce';
+import { ScrollArea } from '../ui/scroll-area';
+import { Progress } from '../ui/progress';
 
 
 interface LeafDetailsProps {
   leaf: Leaf;
   onSave: (updatedLeaf: Leaf) => void;
   onDelete: () => void;
-  searchQuery?: string;
+  onClose: () => void;
   className?: string;
   stemName?: string;
 }
@@ -53,7 +46,7 @@ export function LeafDetails({
   leaf,
   onSave,
   onDelete,
-  searchQuery = '',
+  onClose,
   className,
   stemName,
 }: LeafDetailsProps) {
@@ -79,7 +72,6 @@ export function LeafDetails({
   // This effect listens for changes in formData and calls the debounced save function.
   useEffect(() => {
     // We don't save if the form data is the same as the initial prop to avoid writes on component load.
-    // A deep comparison is needed here.
     if (JSON.stringify(formData) !== JSON.stringify(leaf)) {
       debouncedSave(formData);
     }
@@ -197,89 +189,102 @@ export function LeafDetails({
   };
 
   return (
-    <Card className={className}>
-      <CardHeader className="flex flex-row items-start justify-between">
-        <div className="flex-grow space-y-1.5">
-           {isEditingName ? (
-              <Input
-                value={formData.name}
-                onChange={handleNameChange}
-                onBlur={handleNameSave}
-                onKeyDown={(e) => e.key === 'Enter' && handleNameSave()}
-                autoFocus
-                className="text-2xl font-semibold h-auto p-0 border-none focus-visible:ring-0"
-              />
-           ) : (
-             <CardTitle className="font-heading text-2xl flex items-center gap-2">
-                <Highlight text={formData.name} query={searchQuery} />
-                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => setIsEditingName(true)}>
-                    <Pencil className="size-4" />
-                </Button>
-            </CardTitle>
-           )}
-          <CardDescription>Nurture your skill. Add quests and notes to track your progress.</CardDescription>
-        </div>
-         <Button variant="ghost" size="icon" onClick={onDelete} className="text-destructive hover:text-destructive-foreground hover:bg-destructive/90">
-            <Trash2 className="size-5" />
-        </Button>
-      </CardHeader>
-      <CardContent className="grid md:grid-cols-2 gap-6">
-        <div className="space-y-6">
-          <div className="space-y-4 rounded-lg border p-4">
-              <div className="flex justify-between items-center">
-                <h3 className="font-heading text-lg">Quests ({formData.quests.filter(q => q.completed).length}/{formData.quests.length})</h3>
-                <Button variant="ghost" size="sm" onClick={handleSuggestQuests} disabled={isSuggestingQuests}>
-                    {isSuggestingQuests ? (
-                        <Loader2 className="size-4 animate-spin mr-2" />
-                    ) : (
-                        <Wand2 className="size-4 mr-2" />
-                    )}
-                  Suggest Quests
-                </Button>
-              </div>
-              <DndContext 
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext 
-                  items={formData.quests.map(q => q.id)}
-                  strategy={verticalListSortingStrategy}
-                >
-                    <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-                        {formData.quests.map((quest) => (
-                            <DraggableQuestItem
-                                key={quest.id}
-                                quest={quest}
-                                onTextChange={handleQuestChange}
-                                onCompletedChange={handleQuestChange}
-                                onDelete={handleDeleteQuest}
-                                onBlur={() => {}} 
-                            />
-                        ))}
-                    </div>
-                </SortableContext>
-              </DndContext>
-              <Button variant="outline" size="sm" className="mt-4 w-full gap-2" onClick={handleAddQuest}>
-                  <PlusCircle className="size-4" />
-                  Add Quest
-              </Button>
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes & Reflections</Label>
-            <Textarea
-              id="notes"
-              value={formData.notes || ''}
-              onChange={(e) => handleLocalChange({ notes: e.target.value })}
-              placeholder="What have you learned? What are your thoughts?"
-              className="min-h-[150px] text-base"
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="p-4 border-b flex items-center justify-between shrink-0">
+         {isEditingName ? (
+            <Input
+              value={formData.name}
+              onChange={handleNameChange}
+              onBlur={handleNameSave}
+              onKeyDown={(e) => e.key === 'Enter' && handleNameSave()}
+              autoFocus
+              className="text-lg font-semibold h-auto p-0 border-none focus-visible:ring-0"
             />
-          </div>
+         ) : (
+           <h3 className="font-heading text-lg flex items-center gap-2">
+              {formData.name}
+              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => setIsEditingName(true)}>
+                  <Pencil className="size-4" />
+              </Button>
+          </h3>
+         )}
+        <div>
+          <Button variant="ghost" size="icon" onClick={onDelete} className="text-muted-foreground hover:text-destructive hover:bg-destructive/10">
+              <Trash2 className="size-4" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={onClose} className="text-muted-foreground">
+            <X className="size-4" />
+          </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+      
+      <ScrollArea className="flex-grow">
+          <div className="p-4 space-y-6">
+            
+              {/* Mastery */}
+              <div className="space-y-2">
+                <Label>Mastery</Label>
+                <Progress value={masteryLevel} />
+              </div>
+
+              {/* Quests */}
+              <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h4 className="font-medium text-sm">Quests ({formData.quests.filter(q => q.completed).length}/{formData.quests.length})</h4>
+                    <Button variant="ghost" size="sm" onClick={handleSuggestQuests} disabled={isSuggestingQuests}>
+                        {isSuggestingQuests ? (
+                            <Loader2 className="size-4 animate-spin mr-2" />
+                        ) : (
+                            <Wand2 className="size-4 mr-2" />
+                        )}
+                      Suggest
+                    </Button>
+                  </div>
+                  <DndContext 
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext 
+                      items={formData.quests.map(q => q.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                        <div className="space-y-3">
+                            {formData.quests.map((quest) => (
+                                <DraggableQuestItem
+                                    key={quest.id}
+                                    quest={quest}
+                                    onTextChange={handleQuestChange}
+                                    onCompletedChange={handleQuestChange}
+                                    onDelete={handleDeleteQuest}
+                                    onBlur={() => {}} 
+                                />
+                            ))}
+                        </div>
+                    </SortableContext>
+                  </DndContext>
+                  <Button variant="outline" size="sm" className="w-full gap-2" onClick={handleAddQuest}>
+                      <PlusCircle className="size-4" />
+                      Add Quest
+                  </Button>
+              </div>
+
+              {/* Notes */}
+              <div className="space-y-2">
+                <Label htmlFor="notes">Notes & Reflections</Label>
+                <Textarea
+                  id="notes"
+                  value={formData.notes || ''}
+                  onChange={(e) => handleLocalChange({ notes: e.target.value })}
+                  placeholder="What have you learned? What are your thoughts?"
+                  className="min-h-[150px] text-base"
+                />
+              </div>
+          </div>
+      </ScrollArea>
+    </div>
   );
 }
+
+    

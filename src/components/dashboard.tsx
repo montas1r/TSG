@@ -18,7 +18,6 @@ import { Sidebar } from './garden/sidebar';
 import Fuse from 'fuse.js';
 import { useToast } from '@/hooks/use-toast';
 import { safeSetDoc, safeUpdateDoc } from '@/lib/firestore-safe';
-import { motion } from 'framer-motion';
 import { EditStemDialog } from './garden/edit-stem-dialog';
 
 export function Dashboard({ user }: { user: User }) {
@@ -41,7 +40,7 @@ export function Dashboard({ user }: { user: User }) {
   const stemsQuery = useMemoFirebase(() => query(collection(firestore, 'users', user.uid, 'stems'), orderBy('createdAt', 'desc')), [firestore, user.uid]);
   const { data: stems, isLoading: areStemsLoading } = useCollection<Omit<StemType, 'leaves'>>(stemsQuery);
   
-  const allLeavesQuery = useMemoFirebase(() => query(collection(firestore, `users/${user.uid}/leaves`)), [firestore, user.uid]);
+  const allLeavesQuery = useMemoFirebase(() => query(collection(firestore, `users/${user.uid}/leaves`), orderBy('name')), [firestore, user.uid]);
   const { data: allLeavesFlat, isLoading: areLeavesLoading } = useCollection<LeafType>(allLeavesQuery);
   
   useEffect(() => {
@@ -135,7 +134,7 @@ export function Dashboard({ user }: { user: User }) {
     }
   };
   
-  const handleSelectLeaf = useCallback((leaf: LeafType) => {
+  const handleSelectLeaf = useCallback((leaf: LeafType | null) => {
     setSelectedLeaf(leaf);
   }, []);
 
@@ -312,7 +311,7 @@ export function Dashboard({ user }: { user: User }) {
   }
 
   return (
-    <div className="flex h-screen w-full bg-background font-body">
+    <div className="flex h-screen w-full bg-muted/30 font-body">
       <Sidebar
           stems={gardenWithLeaves}
           selectedStemId={selectedStemId}
@@ -328,9 +327,10 @@ export function Dashboard({ user }: { user: User }) {
           onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
       />
       
-      <main className="flex-grow h-screen overflow-y-auto">
+      <main className="flex-grow h-screen flex flex-col">
         {selectedStem ? (
           <Stem 
+            key={selectedStem.id}
             stem={selectedStem}
             onSelectLeaf={handleSelectLeaf}
             selectedLeaf={selectedLeaf}
@@ -342,7 +342,7 @@ export function Dashboard({ user }: { user: User }) {
             onDeleteStem={handleDeleteStem}
           />
         ) : (
-          <div className="flex h-full flex-col items-center justify-center text-center p-8">
+          <div className="flex-grow flex flex-col items-center justify-center text-center p-8">
             <h3 className="font-heading text-4xl text-primary">Welcome to your Skill Garden!</h3>
             <p className="mt-4 max-w-md text-lg text-muted-foreground">
               Your garden is a place to cultivate new talents. Start by planting a "Stem" — a category for the skills you want to grow.
@@ -397,3 +397,5 @@ export function Dashboard({ user }: { user: User }) {
     </div>
   );
 }
+
+    

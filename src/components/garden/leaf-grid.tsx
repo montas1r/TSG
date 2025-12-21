@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { Leaf as LeafType } from '@/lib/types';
@@ -16,6 +17,8 @@ interface LeafGridProps {
   searchQuery?: string;
 }
 
+// THIS COMPONENT IS NO LONGER USED in favor of the Kanban-style board.
+// It is kept for reference or potential future use.
 export function LeafGrid({ leaves, onSelectLeaf, searchQuery = '' }: LeafGridProps) {
   return (
     <Carousel
@@ -41,3 +44,5 @@ export function LeafGrid({ leaves, onSelectLeaf, searchQuery = '' }: LeafGridPro
     </Carousel>
   );
 }
+
+    
