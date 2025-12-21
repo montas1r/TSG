@@ -136,10 +136,14 @@ export function Dashboard({ user }: { user: User }) {
 
   useEffect(() => {
     if (selectedLeaf) {
+      // Find the "live" version of the selected leaf from the collection
       const liveLeaf = allLeavesFlat?.find(l => l.id === selectedLeaf.id);
+      
+      // If the live version exists and is different from the current one, update it.
       if (liveLeaf && JSON.stringify(liveLeaf) !== JSON.stringify(selectedLeaf)) {
         setSelectedLeaf(liveLeaf);
       } else if (!liveLeaf) {
+        // If the leaf was deleted from the collection (e.g. by another client), deselect it.
         setSelectedLeaf(null);
       }
     }
@@ -353,4 +357,5 @@ export function Dashboard({ user }: { user: User }) {
   );
 }
 
+    
     

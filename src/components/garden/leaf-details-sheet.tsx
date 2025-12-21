@@ -61,18 +61,16 @@ export function LeafDetails({
   const [isEditingName, setIsEditingName] = useState(false);
   const [isSuggestingQuests, startQuestSuggestion] = useTransition();
   const { toast } = useToast();
-  const firestore = useFirestore();
   
   useEffect(() => {
+    // This is the correct way to sync the form's state with incoming props.
+    // It triggers ONLY when the leaf prop changes, resetting the form.
     const questsWithOrder = (leaf.quests || []).map((q, index) => ({
       ...q,
       order: q.order ?? index,
     })).sort((a, b) => a.order - b.order);
 
-    // Deep comparison to prevent loops
-    if (JSON.stringify(leaf) !== JSON.stringify(formData)) {
-        setFormData({ ...leaf, quests: questsWithOrder });
-    }
+    setFormData({ ...leaf, quests: questsWithOrder });
   }, [leaf]);
 
 
@@ -304,3 +302,5 @@ export function LeafDetails({
     </Card>
   );
 }
+
+    
