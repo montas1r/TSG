@@ -33,16 +33,6 @@ export interface Stem {
 
 export type Garden = Stem[];
 
-export interface UserStats {
-    userId: string;
-    totalXP: number | FieldValue;
-    level: number;
-    currentStreak: number;
-    longestStreak: number;
-    lastActivityDate: string; 
-}
-
-
 // --- Searchable Types ---
 
 export type SearchableStem = Omit<Stem, 'leaves'> & {

@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { Leaf, SearchableItem, Stem, UserStats } from '@/lib/types';
+import type { Leaf, SearchableItem, Stem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sprout, Wand2, Search, PlusCircle, Book, CheckSquare } from 'lucide-react';
@@ -12,7 +12,7 @@ import type { FuseResult } from 'fuse.js';
 import { Highlight } from '../ui/highlight';
 import { cn } from '@/lib/utils';
 import { useMemo } from 'react';
-import { UserProfileWidget } from './user-profile-widget';
+import { Avatar, AvatarFallback } from '../ui/avatar';
 
 interface StemSelectorProps {
   stems: (Stem & { leaves: Leaf[] })[];
@@ -23,7 +23,6 @@ interface StemSelectorProps {
   onSearch: (query: string) => void;
   searchQuery: string;
   user: User;
-  userStats: UserStats | null;
   searchResults: FuseResult<SearchableItem>[];
   onSearchResultClick: (item: SearchableItem) => void;
 }
@@ -46,7 +45,6 @@ export function StemSelector({
   onSearch,
   searchQuery,
   user,
-  userStats,
   searchResults,
   onSearchResultClick,
 }: StemSelectorProps) {
@@ -62,6 +60,15 @@ export function StemSelector({
       return acc;
     }, {} as Record<SearchableItem['type'], FuseResult<SearchableItem>[]>);
   }, [searchResults, searchQuery]);
+
+  const getInitials = (name: string | null) => {
+    if (!name) return 'A'; // Anonymous
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .slice(0, 2)
+      .join('');
+  };
 
   return (
     <aside className="h-full w-72 flex-shrink-0 border-r bg-card/50 p-4 flex flex-col">
@@ -149,7 +156,23 @@ export function StemSelector({
               Get Suggestions
             </Button>
         </div>
-        <UserProfileWidget user={user} userStats={userStats} />
+        <div className="p-3 rounded-lg bg-muted/50 border">
+          <div className="flex items-center gap-3">
+            <Avatar>
+              <AvatarFallback className='font-heading bg-primary/20 text-primary'>
+                {getInitials(user.displayName)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="w-full">
+              <p className="font-medium text-foreground truncate">
+                {user.displayName || 'Anonymous User'}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                UID: {user.uid.slice(0,10)}...
+              </p>
+            </div>
+          </div>
+        </div>
       </footer>
     </aside>
   );

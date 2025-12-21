@@ -141,16 +141,5 @@ service cloud.firestore {
       allow update: if isExistingOwner(userId) && isImmutableLeaf();
       allow delete: if isExistingOwner(userId);
     }
-
-    /**
-     * @description Secures user stats documents.
-     * @path /users/{userId}/stats/{statsId}
-     */
-    match /users/{userId}/stats/{statsId} {
-        allow get: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update: if isOwner(userId);
-        allow delete: if false; // Stats should not be deletable by clients
-    }
   }
 }

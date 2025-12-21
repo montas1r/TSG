@@ -38,7 +38,6 @@ import {
 } from '@dnd-kit/sortable';
 import { DraggableQuestItem } from './draggable-quest-item';
 import { useToast } from '@/hooks/use-toast';
-import { awardXPForQuestCompletion } from '@/lib/services/gamification-service';
 import { useFirestore } from '@/firebase';
 
 interface LeafDetailsProps {
@@ -61,7 +60,6 @@ export function LeafDetails({
   const [formData, setFormData] = useState<Leaf>(leaf);
   const [isEditingName, setIsEditingName] = useState(false);
   const [isSuggestingQuests, startQuestSuggestion] = useTransition();
-  const [questToAwardXp, setQuestToAwardXp] = useState<string | null>(null);
   const { toast } = useToast();
   const firestore = useFirestore();
   
@@ -78,31 +76,11 @@ export function LeafDetails({
   }, [leaf.id]); // Only depends on the ID of the leaf
 
 
-  useEffect(() => {
-    if (questToAwardXp && firestore && leaf.userId) {
-        awardXPForQuestCompletion(firestore, leaf.userId);
-        toast({
-            title: "Quest Complete!",
-            description: "+10 XP Earned!",
-        });
-        // Reset the state to prevent re-awarding
-        setQuestToAwardXp(null);
-    }
-  }, [questToAwardXp, firestore, leaf.userId, toast]);
-
-
   const masteryLevel = useMemo(() => {
     return calculateMasteryLevel(formData.quests);
   }, [formData.quests]);
 
   const handleQuestChange = (questId: string, field: 'completed' | 'text', value: string | boolean) => {
-    const originalQuest = formData.quests.find(q => q.id === questId);
-    const questJustCompleted = field === 'completed' && value === true && originalQuest?.completed === false;
-
-    if (questJustCompleted) {
-        setQuestToAwardXp(questId);
-    }
-    
     setFormData(prevData => {
         const updatedQuests = prevData.quests.map(q => 
             q.id === questId ? { ...q, [field]: value } : q

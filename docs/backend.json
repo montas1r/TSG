@@ -139,20 +139,6 @@
             "order": { "type": "number" }
         },
         "required": ["id", "text", "completed", "order"]
-    },
-    "UserStats": {
-      "title": "UserStats",
-      "type": "object",
-      "description": "Stores gamification and statistical data for a user.",
-      "properties": {
-        "userId": { "type": "string", "description": "The user's unique ID." },
-        "totalXP": { "type": "number", "description": "Total experience points earned." },
-        "level": { "type": "number", "description": "Current user level." },
-        "currentStreak": { "type": "number", "description": "Current daily activity streak in days." },
-        "longestStreak": { "type": "number", "description": "Longest all-time daily activity streak." },
-        "lastActivityDate": { "type": "string", "format": "date-time", "description": "Timestamp of the last recorded activity." }
-      },
-      "required": ["userId", "totalXP", "level", "currentStreak", "longestStreak", "lastActivityDate"]
     }
   },
   "auth": {
@@ -216,18 +202,6 @@
               "name": "leafId",
               "description": "The unique identifier of the leaf."
             }
-          ]
-        }
-      },
-       {
-        "path": "/users/{userId}/stats/{statsId}",
-        "definition": {
-          "entityName": "UserStats",
-          "schema": { "$ref": "#/backend/entities/UserStats" },
-          "description": "Stores user-specific gamification stats. Only the owner can read/write.",
-          "params": [
-            { "name": "userId", "description": "The user's unique identifier." },
-            { "name": "statsId", "description": "Should be the same as userId for a 1:1 relationship." }
           ]
         }
       }

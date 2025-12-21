@@ -11,17 +11,12 @@ import { AddLeafDialog } from '@/components/garden/add-leaf-dialog';
 import { SuggestionDialog } from '@/components/garden/suggestion-dialog';
 import { SuggestSkillsDialog } from '@/components/garden/suggest-skills-dialog';
 import type { User } from 'firebase/auth';
-import { collection, doc, query, deleteDoc, orderBy } from 'firebase/firestore';
-import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
-import {
-  deleteDocumentNonBlocking,
-} from '@/firebase/non-blocking-updates';
+import { collection, doc, query, deleteDoc, orderBy, writeBatch } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { v4 as uuidv4 } from 'uuid';
 import { StemSelector } from '@/components/garden/stem-selector';
 import { EditStemDialog } from '@/components/garden/edit-stem-dialog';
 import Fuse from 'fuse.js';
-import type { UserStats } from '@/lib/types';
-import { getOrCreateUserStats } from '@/lib/services/gamification-service';
 import { useToast } from '@/hooks/use-toast';
 import { safeSetDoc } from '@/lib/firestore-safe';
 
@@ -39,18 +34,6 @@ export function Dashboard({ user }: { user: User }) {
   const { toast } = useToast();
 
   const firestore = useFirestore();
-
-  // Fetch Gamification Stats
-  const userStatsRef = useMemoFirebase(() => doc(firestore, 'users', user.uid, 'stats', user.uid), [firestore, user.uid]);
-  const { data: userStats, isLoading: isStatsLoading } = useDoc<UserStats>(userStatsRef);
-
-  // Effect to initialize user stats if they don't exist
-  useEffect(() => {
-    if (!isStatsLoading && !userStats) {
-      getOrCreateUserStats(firestore, user.uid);
-    }
-  }, [isStatsLoading, userStats, firestore, user.uid]);
-
 
   const stemsQuery = useMemoFirebase(() => query(collection(firestore, 'users', user.uid, 'stems'), orderBy('createdAt', 'desc')), [firestore, user.uid]);
   const { data: stems, isLoading: areStemsLoading } = useCollection<Omit<StemType, 'leaves'>>(stemsQuery);
@@ -192,7 +175,7 @@ export function Dashboard({ user }: { user: User }) {
   
   const handleDeleteLeaf = (leafId: string) => {
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', leafId);
-    deleteDocumentNonBlocking(leafRef);
+    deleteDoc(leafRef);
     setSelectedLeaf(null);
   };
 
@@ -230,17 +213,18 @@ export function Dashboard({ user }: { user: User }) {
       const leavesToDelete = leavesByStem[stemId] || [];
   
       // 2. Create a batch of delete operations for the leaves
-      const deletePromises = leavesToDelete.map(leaf => {
+      const batch = writeBatch(firestore);
+      leavesToDelete.forEach(leaf => {
         const leafRef = doc(firestore, 'users', user.uid, 'leaves', leaf.id);
-        return deleteDoc(leafRef);
+        batch.delete(leafRef);
       });
   
-      // 3. Execute all delete promises
-      await Promise.all(deletePromises);
-  
-      // 4. Once all leaves are deleted, delete the stem itself
+      // 3. Delete the stem itself in the same batch
       const stemRef = doc(firestore, 'users', user.uid, 'stems', stemId);
-      await deleteDoc(stemRef);
+      batch.delete(stemRef);
+  
+      // 4. Commit the batch
+      await batch.commit();
   
       toast({
         title: "Stem Deleted",
@@ -307,7 +291,7 @@ export function Dashboard({ user }: { user: User }) {
     setIsSuggestSkillsOpen(true);
   }
 
-  if (areStemsLoading || areLeavesLoading || isStatsLoading) {
+  if (areStemsLoading || areLeavesLoading) {
     return <div className="flex h-screen items-center justify-center"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>
   }
 
@@ -322,7 +306,6 @@ export function Dashboard({ user }: { user: User }) {
         onSearch={setSearchQuery}
         searchQuery={searchQuery}
         user={user}
-        userStats={userStats as UserStats | null}
         searchResults={searchResults}
         onSearchResultClick={handleSearchResultClick}
       />
