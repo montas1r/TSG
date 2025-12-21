@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
@@ -42,10 +43,14 @@ export function Dashboard({ user }: { user: User }) {
   const { data: allLeavesFlat, isLoading: areLeavesLoading } = useCollection<LeafType>(allLeavesQuery);
   
   useEffect(() => {
+    // If there's no selected stem, and stems are available, select the first one.
     if (!selectedStemId && stems && stems.length > 0) {
       setSelectedStemId(stems[0].id);
+      return;
     }
-     // If the selected stem is deleted, select the first available stem
+  
+    // If a stem is selected, but it no longer exists in the `stems` list (e.g., it was deleted),
+    // then update the selection to a valid one.
     if (selectedStemId && stems && !stems.some(s => s.id === selectedStemId)) {
       setSelectedStemId(stems.length > 0 ? stems[0].id : null);
     }
@@ -404,3 +409,5 @@ export function Dashboard({ user }: { user: User }) {
     </div>
   );
 }
+
+    
