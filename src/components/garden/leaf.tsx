@@ -4,8 +4,7 @@
 import type { Leaf as LeafType } from '@/lib/types';
 import { cn, calculateMasteryLevel } from '@/lib/utils';
 import { Highlight } from '@/components/ui/highlight';
-import { CheckCircle2, BookOpen } from 'lucide-react';
-import { Card } from '../ui/card';
+import { CheckCircle2, BookOpen, Leaf as LeafIcon } from 'lucide-react';
 
 interface LeafProps {
   leaf: LeafType;
@@ -33,7 +32,7 @@ export function Leaf({ leaf, onClick, searchQuery = '', isSelected }: LeafProps)
     <div
       onClick={onClick}
       className={cn(
-        'group cursor-pointer transition-all duration-200 rounded-lg overflow-hidden h-full flex flex-col',
+        'group cursor-pointer transition-all duration-200 rounded-lg overflow-hidden h-full flex flex-col relative',
         'hover:shadow-xl hover:-translate-y-1 ',
         isSelected ? 'ring-2 ring-primary shadow-xl -translate-y-1' : 'shadow-md'
       )}
@@ -43,7 +42,13 @@ export function Leaf({ leaf, onClick, searchQuery = '', isSelected }: LeafProps)
       onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') onClick() }}
       aria-label={`View details for ${leaf.name}`}
     >
-      <div className="flex-grow p-4 flex flex-col justify-between" style={{ backgroundColor: 'var(--leaf-bg)', color: 'var(--leaf-text)'}}>
+      {/* Background Leaf Icon */}
+      <LeafIcon 
+        className="absolute -right-4 -bottom-4 text-black/10 size-24 -rotate-12"
+        strokeWidth={1.5}
+      />
+      
+      <div className="flex-grow p-4 flex flex-col justify-between z-10" style={{ backgroundColor: 'var(--leaf-bg)', color: 'var(--leaf-text)'}}>
           <h3 className="font-semibold tracking-tight leading-snug">
              <Highlight text={leaf.name} query={searchQuery} />
           </h3>
@@ -57,7 +62,7 @@ export function Leaf({ leaf, onClick, searchQuery = '', isSelected }: LeafProps)
           </div>
       </div>
       <div 
-        className="h-2 w-full bg-black/10 relative overflow-hidden"
+        className="h-2 w-full bg-black/10 relative overflow-hidden z-10"
       >
         <div 
           className="absolute top-0 left-0 h-full bg-white/30 transition-all duration-500" 
