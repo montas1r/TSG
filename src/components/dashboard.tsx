@@ -11,7 +11,7 @@ import { AddLeafDialog } from '@/components/garden/add-leaf-dialog';
 import { SuggestionDialog } from '@/components/garden/suggestion-dialog';
 import { SuggestSkillsDialog } from '@/components/garden/suggest-skills-dialog';
 import type { User } from 'firebase/auth';
-import { collection, doc, query, deleteDoc, orderBy, writeBatch, where, getDocs, updateDoc } from 'firebase/firestore';
+import { collection, doc, query, deleteDoc, orderBy, writeBatch, where, getDocs } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { v4 as uuidv4 } from 'uuid';
 import { StemSelector } from '@/components/garden/stem-selector';
@@ -135,19 +135,17 @@ export function Dashboard({ user }: { user: User }) {
   }, [gardenWithLeaves, selectedStemId]);
 
   useEffect(() => {
-    if (selectedLeaf) {
-      // Find the "live" version of the selected leaf from the collection
-      const liveLeaf = allLeavesFlat?.find(l => l.id === selectedLeaf.id);
-      
-      // If the live version exists and is different from the current one, update it.
-      // A simple string comparison is not robust for objects, but it's a quick check.
-      // A more robust solution might involve a deep-compare library if needed.
-      if (liveLeaf && JSON.stringify(liveLeaf) !== JSON.stringify(selectedLeaf)) {
+    // When the selected leaf is updated from the server, find the new version
+    const liveLeaf = selectedLeaf && allLeavesFlat?.find(l => l.id === selectedLeaf.id);
+    if (liveLeaf) {
+      // If the server data is different from the local state, update the local state.
+      // This is a simple check; for complex objects, a deep-equality check might be better.
+      if (JSON.stringify(liveLeaf) !== JSON.stringify(selectedLeaf)) {
         setSelectedLeaf(liveLeaf);
-      } else if (!liveLeaf) {
-        // If the leaf was deleted from the collection (e.g. by another client), deselect it.
-        setSelectedLeaf(null);
       }
+    } else if (selectedLeaf) {
+      // If the selected leaf no longer exists on the server (e.g., deleted), deselect it.
+      setSelectedLeaf(null);
     }
   }, [allLeavesFlat, selectedLeaf]);
 
@@ -198,6 +196,7 @@ export function Dashboard({ user }: { user: User }) {
     if (!firestore || !user) return;
 
     const stemRef = doc(firestore, 'users', user.uid, 'stems', updatedStemData.id);
+    // Exclude properties that shouldn't be changed on edit
     const { id, userId, createdAt, ...dataToUpdate } = updatedStemData;
 
     try {
