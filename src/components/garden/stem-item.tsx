@@ -1,3 +1,4 @@
+
 'use client';
 
 import { icons } from 'lucide-react';
@@ -130,37 +131,26 @@ export function StemItem({ stem, isSelected, onClick, onEdit, isCollapsed }: Ste
               exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <p className={cn(
-                  "font-medium truncate",
-                  isSelected ? 'text-primary' : 'text-foreground'
-              )} style={isSelected ? { color: stem.color } : {}}>{stem.name}</p>
+              <div className="flex items-center gap-1">
+                <p className={cn(
+                    "font-medium truncate",
+                    isSelected ? 'text-primary' : 'text-foreground'
+                )} style={isSelected ? { color: stem.color } : {}}>{stem.name}</p>
+                 <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    className="h-6 w-6 rounded-full opacity-0 group-hover:opacity-100 shrink-0"
+                    onClick={handleEditClick}
+                >
+                    <Edit className="size-3" />
+                </Button>
+              </div>
               <p className="text-xs text-muted-foreground">
                   {stem.leaves.length} {stem.leaves.length === 1 ? 'skill' : 'skills'}
               </p>
             </motion.div>
           )}
         </AnimatePresence>
-
-        <AnimatePresence>
-        {!isCollapsed && (
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-            >
-                <Button 
-                    size="icon" 
-                    variant="ghost" 
-                    className="h-7 w-7 rounded-full opacity-0 group-hover:opacity-100 shrink-0"
-                    onClick={handleEditClick}
-                >
-                    <Edit className="size-4" />
-                </Button>
-            </motion.div>
-        )}
-        </AnimatePresence>
-
       </div>
       <AnimatePresence>
         {!isCollapsed && (
