@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button';
 import { useState, useEffect, useTransition } from 'react';
 import type { Stem } from '@/lib/types';
 import { Loader2, Wand2, PlusCircle, Sparkles } from 'lucide-react';
-import { suggestSkillsForStem } from '@/ai/flows/suggest-skills-for-stem';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 
@@ -34,11 +33,22 @@ export function SuggestSkillsDialog({ isOpen, onOpenChange, onAddSkills, stem }:
     startSuggestion(async () => {
       try {
         const existingSkills = stem.leaves.map(l => l.name);
-        const result = await suggestSkillsForStem({
-          stemName: stem.name,
-          existingSkills: existingSkills,
+        const response = await fetch('/api/ai/suggest', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                type: 'skillsForStem',
+                payload: {
+                    stemName: stem.name,
+                    existingSkills,
+                },
+            }),
         });
-        setSuggestions(result);
+        if (!response.ok) {
+            throw new Error('Failed to fetch suggestions');
+        }
+        const data = await response.json();
+        setSuggestions(data.suggestions || []);
       } catch (error) {
         console.error("Failed to get skill suggestions:", error);
       }
@@ -49,7 +59,6 @@ export function SuggestSkillsDialog({ isOpen, onOpenChange, onAddSkills, stem }:
     if (isOpen) {
       handleGetSuggestions();
     } else {
-      // Reset state when dialog closes
       setSuggestions([]);
       setSelectedSkills({});
     }

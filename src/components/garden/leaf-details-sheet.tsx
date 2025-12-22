@@ -9,7 +9,6 @@ import { useState, useEffect, useMemo, useTransition } from 'react';
 import { Trash2, PlusCircle, Pencil, Wand2, Loader2, X, GripVertical } from 'lucide-react';
 import { calculateMasteryLevel } from '@/lib/utils';
 import { v4 as uuidv4 } from 'uuid';
-import { suggestQuests } from '@/ai/flows/suggest-quests';
 import {
     DndContext,
     closestCenter,
@@ -150,32 +149,8 @@ export function LeafDetails({
   }
 
   const handleSuggestQuests = () => {
-    startQuestSuggestion(async () => {
-      try {
-        const suggestedTexts = await suggestQuests({
-          skillName: formData.name,
-          stemName: stemName,
-        });
-
-        if (suggestedTexts && suggestedTexts.length > 0) {
-          const existingQuests = formData.quests || [];
-          const lastOrder = existingQuests.length > 0 ? Math.max(...existingQuests.map(q => q.order)) : -1;
-          
-          const newQuests: Quest[] = suggestedTexts.map((text, index) => ({
-            id: uuidv4(),
-            text,
-            completed: false,
-            order: lastOrder + 1 + index,
-          }));
-
-          const updatedQuests = [...existingQuests, ...newQuests];
-          handleLocalChange({ quests: updatedQuests });
-        }
-
-      } catch (error) {
-        console.error("Failed to suggest quests:", error);
-      }
-    });
+    // This feature is temporarily disabled as we refactor the AI integration.
+    console.log("Quest suggestion feature to be re-implemented.");
   };
 
   return (

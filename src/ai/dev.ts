@@ -1,7 +1,0 @@
-'use server';
-import { config } from 'dotenv';
-config();
-
-import '@/ai/flows/suggest-related-skills.ts';
-import '@/ai/flows/suggest-quests.ts';
-import '@/ai/flows/suggest-skills-for-stem.ts';

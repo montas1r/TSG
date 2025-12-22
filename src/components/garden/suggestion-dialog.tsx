@@ -11,10 +11,14 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
-import { suggestRelatedSkills, SuggestRelatedSkillsOutput } from '@/ai/flows/suggest-related-skills';
 import { Loader2, Sparkles, Wand2, PlusCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+
+interface SkillBundle {
+    stem: string;
+    leaves: string[];
+}
 
 interface SuggestionDialogProps {
   isOpen: boolean;
@@ -25,14 +29,25 @@ interface SuggestionDialogProps {
 
 export function SuggestionDialog({ isOpen, onOpenChange, currentSkills, onAddSkillBundle }: SuggestionDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [suggestions, setSuggestions] = useState<SuggestRelatedSkillsOutput>([]);
+  const [suggestions, setSuggestions] = useState<SkillBundle[]>([]);
 
   const handleGetSuggestions = async () => {
     setIsLoading(true);
     setSuggestions([]);
     try {
-      const result = await suggestRelatedSkills(currentSkills);
-      setSuggestions(result);
+        const response = await fetch('/api/ai/suggest', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                type: 'relatedSkillBundles',
+                payload: { currentSkills },
+            }),
+        });
+        if (!response.ok) {
+            throw new Error('Failed to fetch suggestions');
+        }
+        const data = await response.json();
+        setSuggestions(data.suggestions || []);
     } catch (error) {
       console.error('Failed to get skill suggestions:', error);
     } finally {
@@ -45,11 +60,11 @@ export function SuggestionDialog({ isOpen, onOpenChange, currentSkills, onAddSki
     onOpenChange(false);
   }
 
-  // Fetch suggestions when the dialog opens
   useEffect(() => {
     if (isOpen) {
       handleGetSuggestions();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   return (
