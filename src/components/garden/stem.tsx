@@ -63,7 +63,6 @@ export function Stem({
 
   const handleDeleteConfirm = () => {
     onDeleteStem(stem.id);
-    setIsDeleteAlertOpen(false);
   };
 
   const { leaves, ...stemData } = stem;
@@ -117,7 +116,7 @@ export function Stem({
         {/* Main Content Area */}
         <div className="flex-grow flex overflow-hidden">
             <ScrollArea className="flex-grow h-full">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 p-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 p-4">
                     {leafList.length > 0 ? (
                         leafList.map(leaf => (
                             <Leaf 
