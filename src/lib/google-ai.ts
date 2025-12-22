@@ -6,18 +6,13 @@ import { HfInference } from '@huggingface/inference';
 // but for API routes (server-side), it should be fine.
 const hf = new HfInference(process.env.HUGGINGFACE_API_TOKEN);
 
-export async function suggestSkillsForStem(stemName: string, existingSkills: string[] = []): Promise<{ name: string; description: string }[]> {
-  const prompt = `
-You are an expert learning coach. For the skill category "${stemName}", suggest a list of 4-6 specific, actionable skills.
-${existingSkills.length > 0 ? `The user already has these skills: ${existingSkills.join(', ')}. Suggest skills that complement or build upon these.` : ''}
+export async function suggestSkillsForStem(stemName: string, existingSkills: string[] = []): Promise<string[]> {
+  const prompt = `You are a learning assistant. For the skill category "${stemName}", suggest a list of 4-6 specific, actionable skills (Leaves).
+${existingSkills.length > 0 ? `The user already has these skills, so suggest skills that complement them: ${existingSkills.join(', ')}.` : ''}
+Vary the difficulty if possible.
 
-Provide a very short, one-sentence description for each skill. Vary the difficulty from beginner to advanced if possible.
-
-Return ONLY a valid JSON array of objects, like this:
-[
-  { "name": "Skill Name", "description": "A brief, one-sentence description." },
-  { "name": "Another Skill", "description": "Another one-sentence description." }
-]
+Return ONLY a valid JSON array of strings, where each string is a skill name.
+Example: ["Skill Name 1", "Skill Name 2", "Skill Name 3"]
 
 JSON array:`;
 
@@ -43,34 +38,29 @@ JSON array:`;
   } catch (error) {
     console.error('HuggingFace skill suggestion error:', error);
     return [
-        { name: `Basics of ${stemName}`, description: "Learn the foundational concepts." },
-        { name: `Advanced ${stemName}`, description: "Explore expert-level techniques." },
-        { name: `Build a ${stemName} project`, description: "Apply your skills in a real project." },
+        `Basics of ${stemName}`,
+        `Advanced ${stemName}`,
+        `Build a ${stemName} project`,
     ];
   }
 }
 
-export async function suggestRelatedSkillBundles(currentSkills: string[] = []): Promise<{ stem: string; description: string; leaves: { name: string; description: string }[] }[]> {
+export async function suggestRelatedSkillBundles(currentSkills: string[] = []): Promise<{ stem: string; leaves: string[] }[]> {
    const prompt = `
-You are a creative and encouraging learning coach. Your goal is to inspire a user by suggesting new skill categories (Stems).
+You are an AI skill-assistant. Your task is to generate a diverse list of skill categories (Stems) for a user, along with a few beginner skills (Leaves) for each.
 
-Based on the user's current skills, suggest 5 unique and diverse Stems. For each Stem, provide a short, one-sentence description and a list of 4-5 engaging, beginner-friendly skills (Leaves) with their own one-sentence descriptions.
+Rules:
+1.  Generate **at least 5 unique Stems**.
+2.  Vary topics across domains: technical, creative, professional, personal growth.
+3.  For each Stem, provide a list of 3-4 beginner-friendly and actionable Leaves.
+4.  If the user has existing skills, suggest related but distinct new Stems. User's current skills are: ${currentSkills.join(', ')}.
+5.  Respond **only** with a valid, clean JSON array of objects. Do not add any other text, markdown, or explanations.
 
-${currentSkills.length > 0
-    ? `The user's current skills are: ${currentSkills.join(', ')}.`
-    : 'The user is new. Please provide a welcoming and diverse set of 5 starting Stems covering topics like technology, creativity, wellness, and practical life skills.'
-}
-
-Return ONLY a valid JSON array of objects. Do not use markdown.
-Example:
+JSON format:
 [
   {
     "stem": "Stem Name",
-    "description": "A short, one-sentence description of the Stem.",
-    "leaves": [
-      { "name": "Leaf 1", "description": "A short description for Leaf 1." },
-      { "name": "Leaf 2", "description": "A short description for Leaf 2." }
-    ]
+    "leaves": ["Leaf Name 1", "Leaf Name 2", "Leaf Name 3"]
   }
 ]
 
@@ -98,16 +88,8 @@ JSON array:`;
   } catch (error) {
     console.error('HuggingFace bundle suggestion error:', error);
      return [
-      { stem: "Creative Arts", description: "Unleash your inner artist.", leaves: [
-        { name: "Drawing Basics", description: "Learn the fundamentals of sketching." },
-        { name: "Digital Painting", description: "Create art on your computer or tablet." },
-        { name: "Creative Writing", description: "Write compelling stories and poems." }
-      ]},
-      { stem: "Wellness", description: "Improve your mental and physical health.", leaves: [
-        { name: "Mindfulness Meditation", description: "Learn to focus and reduce stress." },
-        { name: "Yoga for Beginners", description: "Improve flexibility and strength." },
-        { name: "Healthy Cooking", description: "Prepare delicious and nutritious meals." }
-      ]},
+      { stem: "Creative Arts", leaves: ["Drawing Basics", "Digital Painting", "Creative Writing"]},
+      { stem: "Wellness", leaves: ["Mindfulness Meditation", "Yoga for Beginners", "Healthy Cooking"]},
     ];
   }
 }
