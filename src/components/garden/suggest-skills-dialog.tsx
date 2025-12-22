@@ -16,6 +16,11 @@ import { Loader2, Wand2, PlusCircle, Sparkles } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 
+interface SkillSuggestion {
+    name: string;
+    description?: string;
+}
+
 interface SuggestSkillsDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
@@ -25,7 +30,7 @@ interface SuggestSkillsDialogProps {
 
 export function SuggestSkillsDialog({ isOpen, onOpenChange, onAddSkills, stem }: SuggestSkillsDialogProps) {
   const [isSuggesting, startSuggestion] = useTransition();
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<SkillSuggestion[]>([]);
   const [selectedSkills, setSelectedSkills] = useState<Record<string, boolean>>({});
 
   const handleGetSuggestions = () => {
@@ -59,16 +64,17 @@ export function SuggestSkillsDialog({ isOpen, onOpenChange, onAddSkills, stem }:
     if (isOpen) {
       handleGetSuggestions();
     } else {
+      // Reset state when dialog closes
       setSuggestions([]);
       setSelectedSkills({});
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, stem]);
+  }, [isOpen]);
 
-  const handleCheckboxChange = (skill: string, checked: boolean) => {
+  const handleCheckboxChange = (skillName: string, checked: boolean) => {
     setSelectedSkills(prev => ({
       ...prev,
-      [skill]: checked,
+      [skillName]: checked,
     }));
   };
 
@@ -84,7 +90,7 @@ export function SuggestSkillsDialog({ isOpen, onOpenChange, onAddSkills, stem }:
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="font-heading flex items-center gap-2">
             <Sparkles className="text-primary"/>
@@ -101,17 +107,23 @@ export function SuggestSkillsDialog({ isOpen, onOpenChange, onAddSkills, stem }:
                 AI is thinking...
             </div>
           ) : suggestions.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-96 overflow-y-auto pr-4">
                 {suggestions.map((suggestion, i) => (
-                    <div key={i} className="flex items-center space-x-3 rounded-md border p-3 hover:bg-accent/50 transition-colors">
+                    <div key={i} className="flex items-start space-x-3 rounded-md border p-3 hover:bg-accent/50 transition-colors has-[:checked]:bg-accent/10">
                         <Checkbox 
                             id={`skill-suggestion-${i}`}
-                            checked={!!selectedSkills[suggestion]}
-                            onCheckedChange={(checked) => handleCheckboxChange(suggestion, !!checked)}
+                            checked={!!selectedSkills[suggestion.name]}
+                            onCheckedChange={(checked) => handleCheckboxChange(suggestion.name, !!checked)}
+                            className="mt-1"
                         />
-                        <Label htmlFor={`skill-suggestion-${i}`} className="flex-1 cursor-pointer text-sm font-medium">
-                            {suggestion}
-                        </Label>
+                        <div className="flex-1">
+                            <Label htmlFor={`skill-suggestion-${i}`} className="cursor-pointer text-sm font-medium leading-tight">
+                                {suggestion.name}
+                            </Label>
+                            {suggestion.description && (
+                                <p className="text-xs text-muted-foreground mt-1">{suggestion.description}</p>
+                            )}
+                        </div>
                     </div>
                 ))}
             </div>
@@ -136,5 +148,3 @@ export function SuggestSkillsDialog({ isOpen, onOpenChange, onAddSkills, stem }:
     </Dialog>
   );
 }
-
-    
