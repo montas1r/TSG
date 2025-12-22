@@ -32,7 +32,7 @@ export function EditStemDialog({ isOpen, onOpenChange, stem, onEditStem }: EditS
       setName(stem.name);
       setDescription(stem.description || '');
     }
-  }, [stem]);
+  }, [stem, isOpen]);
 
   const handleSave = () => {
     if (name.trim()) {

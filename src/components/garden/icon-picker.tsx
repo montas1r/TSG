@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { Input } from '../ui/input';
 
-const curatedIcons = [
+export const curatedIcons = [
   'Sprout', 'Brain', 'Code', 'Palette', 'Music', 'Dumbbell', 'Camera', 'BookOpen', 
   'PenTool', 'Target', 'Telescope', 'FlaskConical', 'Heart', 'Briefcase', 'MessageCircle', 
   'Globe', 'Wrench', 'Mic', 'Film', 'Database', 'Cloud', 'Terminal', 'GitGraph', 'Feather',
