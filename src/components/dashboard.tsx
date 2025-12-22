@@ -218,27 +218,44 @@ export function Dashboard({ user }: { user: User }) {
     }
   }, [firestore, user]);
 
-  const handleDeleteStem = async (stemId: string) => {
-    if (!firestore || !user) return;
+  const handleDeleteStem = async (stemIdToDelete: string) => {
+    if (!firestore || !user || !stems) return;
   
     try {
+      // --- Batch delete logic ---
       const batch = writeBatch(firestore);
-  
-      const leavesCollectionRef = collection(firestore, 'users', user.uid, 'leaves');
-      const q = query(leavesCollectionRef, where("stemId", "==", stemId));
-      const leavesSnapshot = await getDocs(q);
-  
+      const leavesQuery = query(collection(firestore, 'users', user.uid, 'leaves'), where("stemId", "==", stemIdToDelete));
+      const leavesSnapshot = await getDocs(leavesQuery);
       leavesSnapshot.forEach((leafDoc) => {
         batch.delete(leafDoc.ref);
       });
-  
-      const stemRef = doc(firestore, 'users', user.uid, 'stems', stemId);
+      const stemRef = doc(firestore, 'users', user.uid, 'stems', stemIdToDelete);
       batch.delete(stemRef);
-  
       await batch.commit();
+      // --- End batch delete ---
+  
+      // --- State update logic ---
+      // Check if the deleted stem was the currently selected one
+      if (selectedStemId === stemIdToDelete) {
+        // Find the index of the deleted stem in the current list
+        const deletedIndex = stems.findIndex(s => s.id === stemIdToDelete);
+        
+        // Filter out the deleted stem to get the new list
+        const remainingStems = stems.filter(s => s.id !== stemIdToDelete);
+        
+        if (remainingStems.length > 0) {
+          // If there are stems left, select the one that was next, or the previous one, or the first one.
+          const newIndex = Math.max(0, Math.min(deletedIndex, remainingStems.length - 1));
+          setSelectedStemId(remainingStems[newIndex].id);
+        } else {
+          // If no stems are left, set selection to null
+          setSelectedStemId(null);
+        }
+      }
+      // If a different stem was deleted, no need to change the selection.
   
     } catch (error) {
-      console.error("Error deleting stem and leaves: ", error);
+      console.error("Error deleting stem and associated leaves: ", error);
     }
   };
   
