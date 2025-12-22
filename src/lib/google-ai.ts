@@ -10,13 +10,13 @@ export async function suggestSkillsForStem(stemName: string, existingSkills: str
   const prompt = `
 You are a helpful learning coach. Your goal is to help a user expand their skills within a specific category.
 
-Given the category (stem): "${stemName}"
+Given the skill category (Stem): "${stemName}"
 And the skills the user already has: ${existingSkills.join(', ')}
 
-Suggest a list of 5 related, beginner-to-intermediate level skills they could learn next.
+Suggest a list of 5-6 related, specific, and actionable skills (Leaves) they could learn next. Vary the difficulty from beginner to advanced if possible.
 
-Return ONLY a valid JSON array of strings, where each string is a new skill suggestion. Do not include any text outside of the JSON array.
-Example: ["Skill 1", "Skill 2", "Skill 3"]
+Return ONLY a valid JSON array of strings, where each string is a new skill suggestion. Do not include any other text, just the array.
+Example: ["Skill 1", "Skill 2", "Skill 3", "Skill 4", "Skill 5"]
 
 JSON array:`;
 
@@ -25,7 +25,7 @@ JSON array:`;
       model: 'mistralai/Mistral-7B-Instruct-v0.2',
       inputs: prompt,
       parameters: {
-        max_new_tokens: 250,
+        max_new_tokens: 350,
         temperature: 0.7,
         return_full_text: false,
       }
@@ -127,12 +127,4 @@ JSON array:`;
     }
     
     return JSON.parse(jsonMatch[0]);
-  } catch (error) {
-    console.error('HuggingFace quest generation error:', error);
-    return [
-      `Complete introductory tutorial for ${skillName}`,
-      `Build a small project using ${skillName}`,
-      `Practice ${skillName} for 30 minutes daily`,
-    ];
-  }
-}
+  } catch (error)
