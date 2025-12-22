@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { Leaf, Quest } from '@/lib/types';
 import { useState, useEffect, useMemo, useTransition } from 'react';
-import { Trash2, PlusCircle, Pencil, Wand2, Loader2, X, GripVertical } from 'lucide-react';
+import { Trash2, PlusCircle, Pencil, Wand2, Loader2 } from 'lucide-react';
 import { calculateMasteryLevel } from '@/lib/utils';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -34,7 +34,6 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
-  SheetFooter,
 } from '@/components/ui/sheet';
 
 
@@ -149,8 +148,38 @@ export function LeafDetails({
   }
 
   const handleSuggestQuests = () => {
-    // This feature is temporarily disabled as we refactor the AI integration.
-    console.log("Quest suggestion feature to be re-implemented.");
+    startQuestSuggestion(async () => {
+      try {
+        const existingQuests = formData.quests.filter(q => q.completed).map(q => q.text);
+        const response = await fetch('/api/ai/suggest', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                type: 'questsForSkill',
+                payload: {
+                    skillName: formData.name,
+                    existingQuests,
+                },
+            }),
+        });
+        if (!response.ok) {
+            throw new Error('Failed to fetch quest suggestions');
+        }
+        const data = await response.json();
+        if (data.suggestions && Array.isArray(data.suggestions)) {
+          const newQuests: Quest[] = data.suggestions.map((text: string) => ({
+            id: uuidv4(),
+            text,
+            completed: false,
+            order: formData.quests.length + (formData.quests.filter(q => !q.completed).length)
+          }));
+          const updatedQuests = [...formData.quests, ...newQuests];
+          handleLocalChange({ quests: updatedQuests });
+        }
+      } catch (error) {
+        console.error("Failed to get quest suggestions:", error);
+      }
+    });
   };
 
   return (
