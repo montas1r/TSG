@@ -17,8 +17,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { Sidebar } from './sidebar';
 import Fuse from 'fuse.js';
 import { safeSetDoc } from '@/lib/firestore-safe';
-import { EditStemDialog } from './garden/edit-stem-dialog';
-import { colorPalette, curatedIcons } from './garden/icon-picker';
+import { EditStemDialog } from './edit-stem-dialog';
+import { colorPalette, curatedIcons } from '@/lib/icon-colors';
 
 export function Dashboard({ user }: { user: User }) {
   const [selectedLeaf, setSelectedLeaf] = useState<LeafType | null>(null);
@@ -208,57 +208,65 @@ export function Dashboard({ user }: { user: User }) {
 
   const handleEditStem = useCallback(async (updatedStemData: Omit<StemType, 'leaves'>) => {
     if (!firestore || !user) return;
-
+  
+    // We only allow name and description to be edited.
+    const { name, description } = updatedStemData;
     const stemRef = doc(firestore, 'users', user.uid, 'stems', updatedStemData.id);
-    const { id, userId, createdAt, icon, color, ...dataToUpdate } = updatedStemData;
     
     try {
-      await updateDoc(stemRef, dataToUpdate);
+      await updateDoc(stemRef, { name, description });
     } catch (error) {
       console.error("Error updating stem: ", error);
     }
   }, [firestore, user]);
 
-  const handleDeleteStem = async (stemIdToDelete: string) => {
+  const handleDeleteStem = useCallback(async (stemIdToDelete: string) => {
     if (!firestore || !user || !stems) return;
   
+    // --- State update logic ---
+    // Check if the deleted stem was the currently selected one
+    if (selectedStemId === stemIdToDelete) {
+      // Find the index of the deleted stem in the current list
+      const deletedIndex = stems.findIndex(s => s.id === stemIdToDelete);
+      
+      // Filter out the deleted stem to get the new list
+      const remainingStems = stems.filter(s => s.id !== stemIdToDelete);
+      
+      if (remainingStems.length > 0) {
+        // If there are stems left, select the one that was next, or the previous one, or the first one.
+        const newIndex = Math.max(0, Math.min(deletedIndex, remainingStems.length - 1));
+        setSelectedStemId(remainingStems[newIndex].id);
+      } else {
+        // If no stems are left, set selection to null
+        setSelectedStemId(null);
+      }
+    }
+    // If a different stem was deleted, no need to change the selection.
+  
+    // --- Firestore deletion logic ---
     try {
-      // --- Batch delete logic ---
       const batch = writeBatch(firestore);
+      
+      // Query for leaves to delete
       const leavesQuery = query(collection(firestore, 'users', user.uid, 'leaves'), where("stemId", "==", stemIdToDelete));
       const leavesSnapshot = await getDocs(leavesQuery);
+      
+      // Add leaf deletions to the batch
       leavesSnapshot.forEach((leafDoc) => {
         batch.delete(leafDoc.ref);
       });
+      
+      // Add stem deletion to the batch
       const stemRef = doc(firestore, 'users', user.uid, 'stems', stemIdToDelete);
       batch.delete(stemRef);
+      
+      // Commit the batch
       await batch.commit();
-      // --- End batch delete ---
-  
-      // --- State update logic ---
-      // Check if the deleted stem was the currently selected one
-      if (selectedStemId === stemIdToDelete) {
-        // Find the index of the deleted stem in the current list
-        const deletedIndex = stems.findIndex(s => s.id === stemIdToDelete);
-        
-        // Filter out the deleted stem to get the new list
-        const remainingStems = stems.filter(s => s.id !== stemIdToDelete);
-        
-        if (remainingStems.length > 0) {
-          // If there are stems left, select the one that was next, or the previous one, or the first one.
-          const newIndex = Math.max(0, Math.min(deletedIndex, remainingStems.length - 1));
-          setSelectedStemId(remainingStems[newIndex].id);
-        } else {
-          // If no stems are left, set selection to null
-          setSelectedStemId(null);
-        }
-      }
-      // If a different stem was deleted, no need to change the selection.
   
     } catch (error) {
       console.error("Error deleting stem and associated leaves: ", error);
     }
-  };
+  }, [firestore, user, stems, selectedStemId]);
   
   const handleAddLeaf = (name: string, stemId: string) => {
     if (!firestore || !user) return;

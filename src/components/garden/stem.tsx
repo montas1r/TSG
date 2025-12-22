@@ -4,7 +4,7 @@
 import { useMemo, useState } from 'react';
 import type { Leaf as LeafType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Wand2, MoreHorizontal, Pencil, Edit } from 'lucide-react';
+import { PlusCircle, Wand2, MoreHorizontal, Pencil, Edit, Trash2 } from 'lucide-react';
 import { calculateMasteryLevel } from '@/lib/utils';
 import type { Stem as StemTypeWithLeaves } from '@/lib/types';
 import { LeafDetails } from './leaf-details-sheet';
@@ -67,6 +67,11 @@ export function Stem({
   }, [leafList]);
 
   const handleDeleteConfirm = () => {
+    // 1. Close the dialog
+    setIsDeleteAlertOpen(false);
+    // 2. Close the sheet if it's open
+    onSelectLeaf(null);
+    // 3. Call the delete function passed from parent
     onDeleteStem(stem.id);
   };
 
@@ -109,6 +114,7 @@ export function Stem({
                     className="text-destructive focus:text-destructive"
                     onClick={() => setIsDeleteAlertOpen(true)}
                   >
+                    <Trash2 className="mr-2 h-4 w-4" />
                     Delete Stem
                   </DropdownMenuItem>
                 </DropdownMenuContent>

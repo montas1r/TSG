@@ -71,7 +71,7 @@ export function AddStemDialog({ isOpen, onOpenChange, onAddStem }: AddStemDialog
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleAdd}>Plant Stem</Button>
+          <Button onClick={handleAdd} disabled={!name.trim()}>Plant Stem</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
