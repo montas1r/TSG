@@ -128,7 +128,7 @@ export function Stem({
                 >
                     <CarouselContent className="-ml-4 py-4">
                         {leafList.map(leaf => (
-                            <CarouselItem key={leaf.id} className="basis-auto pl-4">
+                            <CarouselItem key={leaf.id} className="basis-1/8 pl-4">
                                 <Leaf 
                                     leaf={leaf}
                                     onClick={() => onSelectLeaf(leaf)}
