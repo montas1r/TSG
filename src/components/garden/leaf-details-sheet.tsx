@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { Leaf, Quest } from '@/lib/types';
 import { useState, useEffect, useMemo, useTransition } from 'react';
-import { Trash2, PlusCircle, Pencil, Wand2, Loader2, X } from 'lucide-react';
+import { Trash2, PlusCircle, Pencil, Wand2, Loader2, X, GripVertical } from 'lucide-react';
 import { calculateMasteryLevel } from '@/lib/utils';
 import { v4 as uuidv4 } from 'uuid';
 import { suggestQuests } from '@/ai/flows/suggest-quests';
@@ -30,14 +29,22 @@ import { DraggableQuestItem } from './draggable-quest-item';
 import { useDebouncedCallback } from 'use-debounce';
 import { ScrollArea } from '../ui/scroll-area';
 import { Progress } from '../ui/progress';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from '@/components/ui/sheet';
 
 
 interface LeafDetailsProps {
   leaf: Leaf;
   onSave: (updatedLeaf: Leaf) => void;
   onDelete: () => void;
-  onClose: () => void;
-  className?: string;
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
   stemName?: string;
 }
 
@@ -45,18 +52,17 @@ export function LeafDetails({
   leaf,
   onSave,
   onDelete,
-  onClose,
-  className,
+  isOpen,
+  onOpenChange,
   stemName,
 }: LeafDetailsProps) {
   const [formData, setFormData] = useState<Leaf>(leaf);
   const [isEditingName, setIsEditingName] = useState(false);
   const [isSuggestingQuests, startQuestSuggestion] = useTransition();
   
-  // Debounce the onSave callback
   const debouncedSave = useDebouncedCallback((data: Leaf) => {
     onSave(data);
-  }, 500); // 500ms delay
+  }, 500);
 
   useEffect(() => {
     const questsWithOrder = (leaf.quests || []).map((q, index) => ({
@@ -67,13 +73,10 @@ export function LeafDetails({
     setFormData({ ...leaf, quests: questsWithOrder });
   }, [leaf]);
 
-  // This effect listens for changes in formData and calls the debounced save function.
   useEffect(() => {
-    // We don't save if the form data is the same as the initial prop to avoid writes on component load.
     if (JSON.stringify(formData) !== JSON.stringify(leaf)) {
       debouncedSave(formData);
     }
-    // We cancel any pending saves when the component unmounts
     return () => debouncedSave.cancel();
   }, [formData, leaf, debouncedSave]);
 
@@ -86,7 +89,6 @@ export function LeafDetails({
     setFormData(prevData => {
       const updatedData = { ...prevData, ...newFormData };
       
-      // If quests changed, recalculate mastery
       if (newFormData.quests) {
         updatedData.masteryLevel = calculateMasteryLevel(newFormData.quests);
       }
@@ -145,7 +147,6 @@ export function LeafDetails({
 
   const handleNameSave = () => {
     setIsEditingName(false);
-    // Autosave will handle the update, no explicit save needed
   }
 
   const handleSuggestQuests = () => {
@@ -178,102 +179,95 @@ export function LeafDetails({
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="p-4 border-b flex items-center justify-between shrink-0">
-         {isEditingName ? (
-            <Input
-              value={formData.name}
-              onChange={handleNameChange}
-              onBlur={handleNameSave}
-              onKeyDown={(e) => e.key === 'Enter' && handleNameSave()}
-              autoFocus
-              className="text-lg font-semibold h-auto p-0 border-none focus-visible:ring-0"
-            />
-         ) : (
-           <h3 className="font-heading text-lg flex items-center gap-2">
-              {formData.name}
-              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => setIsEditingName(true)}>
-                  <Pencil className="size-4" />
-              </Button>
-          </h3>
-         )}
-        <div>
-          <Button variant="ghost" size="icon" onClick={onDelete} className="text-muted-foreground hover:text-destructive hover:bg-destructive/10">
-              <Trash2 className="size-4" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={onClose} className="text-muted-foreground">
-            <X className="size-4" />
-          </Button>
-        </div>
-      </div>
-      
-      <ScrollArea className="flex-grow">
-          <div className="p-4 space-y-6">
-            
-              {/* Mastery */}
-              <div className="space-y-2">
-                <Label>Mastery</Label>
-                <Progress value={masteryLevel} />
-              </div>
-
-              {/* Quests */}
-              <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-medium text-sm">Quests ({formData.quests.filter(q => q.completed).length}/{formData.quests.length})</h4>
-                    <Button variant="ghost" size="sm" onClick={handleSuggestQuests} disabled={isSuggestingQuests}>
-                        {isSuggestingQuests ? (
-                            <Loader2 className="size-4 animate-spin mr-2" />
-                        ) : (
-                            <Wand2 className="size-4 mr-2" />
-                        )}
-                      Suggest
-                    </Button>
-                  </div>
-                  <DndContext 
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleDragEnd}
-                  >
-                    <SortableContext 
-                      items={formData.quests.map(q => q.id)}
-                      strategy={verticalListSortingStrategy}
-                    >
-                        <div className="space-y-3">
-                            {formData.quests.map((quest) => (
-                                <DraggableQuestItem
-                                    key={quest.id}
-                                    quest={quest}
-                                    onTextChange={handleQuestChange}
-                                    onCompletedChange={handleQuestChange}
-                                    onDelete={handleDeleteQuest}
-                                    onBlur={() => {}} 
-                                />
-                            ))}
-                        </div>
-                    </SortableContext>
-                  </DndContext>
-                  <Button variant="outline" size="sm" className="w-full gap-2" onClick={handleAddQuest}>
-                      <PlusCircle className="size-4" />
-                      Add Quest
-                  </Button>
-              </div>
-
-              {/* Notes */}
-              <div className="space-y-2">
-                <Label htmlFor="notes">Notes & Reflections</Label>
-                <Textarea
-                  id="notes"
-                  value={formData.notes || ''}
-                  onChange={(e) => handleLocalChange({ notes: e.target.value })}
-                  placeholder="What have you learned? What are your thoughts?"
-                  className="min-h-[150px] text-base"
+    <Sheet open={isOpen} onOpenChange={onOpenChange}>
+      <SheetContent side="bottom" className="h-[90vh] flex flex-col">
+        <SheetHeader className="px-4 text-left">
+          <div className="flex justify-between items-center">
+            {isEditingName ? (
+                <Input
+                  value={formData.name}
+                  onChange={handleNameChange}
+                  onBlur={handleNameSave}
+                  onKeyDown={(e) => e.key === 'Enter' && handleNameSave()}
+                  autoFocus
+                  className="text-lg font-semibold h-auto p-0 border-none focus-visible:ring-0"
                 />
-              </div>
+            ) : (
+              <SheetTitle className="font-heading text-lg flex items-center gap-2">
+                  {formData.name}
+                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => setIsEditingName(true)}>
+                      <Pencil className="size-4" />
+                  </Button>
+              </SheetTitle>
+            )}
+            <Button variant="ghost" size="icon" onClick={onDelete} className="text-muted-foreground hover:text-destructive hover:bg-destructive/10">
+                <Trash2 className="size-4" />
+            </Button>
           </div>
-      </ScrollArea>
-    </div>
+          <SheetDescription>
+            Mastery: {masteryLevel}%
+          </SheetDescription>
+          <Progress value={masteryLevel} />
+        </SheetHeader>
+        
+        <ScrollArea className="flex-grow mt-4">
+            <div className="px-4 space-y-6 pb-6">
+                {/* Quests */}
+                <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-medium text-sm">Quests ({formData.quests.filter(q => q.completed).length}/{formData.quests.length})</h4>
+                      <Button variant="ghost" size="sm" onClick={handleSuggestQuests} disabled={isSuggestingQuests}>
+                          {isSuggestingQuests ? (
+                              <Loader2 className="size-4 animate-spin mr-2" />
+                          ) : (
+                              <Wand2 className="size-4 mr-2" />
+                          )}
+                        Suggest
+                      </Button>
+                    </div>
+                    <DndContext 
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <SortableContext 
+                        items={formData.quests.map(q => q.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                          <div className="space-y-3">
+                              {formData.quests.map((quest) => (
+                                  <DraggableQuestItem
+                                      key={quest.id}
+                                      quest={quest}
+                                      onTextChange={handleQuestChange}
+                                      onCompletedChange={handleQuestChange}
+                                      onDelete={handleDeleteQuest}
+                                      onBlur={() => {}} 
+                                  />
+                              ))}
+                          </div>
+                      </SortableContext>
+                    </DndContext>
+                    <Button variant="outline" size="sm" className="w-full gap-2" onClick={handleAddQuest}>
+                        <PlusCircle className="size-4" />
+                        Add Quest
+                    </Button>
+                </div>
+
+                {/* Notes */}
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Notes & Reflections</Label>
+                  <Textarea
+                    id="notes"
+                    value={formData.notes || ''}
+                    onChange={(e) => handleLocalChange({ notes: e.target.value })}
+                    placeholder="What have you learned? What are your thoughts?"
+                    className="min-h-[150px] text-base"
+                  />
+                </div>
+            </div>
+        </ScrollArea>
+      </SheetContent>
+    </Sheet>
   );
 }
-
-    

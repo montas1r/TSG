@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo, useState } from 'react';
@@ -25,9 +24,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { AnimatePresence, motion } from 'framer-motion';
-import { ScrollArea } from '../ui/scroll-area';
 import { Leaf } from './leaf';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui/carousel';
 
 interface StemProps {
   stem: StemTypeWithLeaves;
@@ -64,8 +68,6 @@ export function Stem({
   const handleDeleteConfirm = () => {
     onDeleteStem(stem.id);
   };
-
-  const { leaves, ...stemData } = stem;
 
   return (
     <>
@@ -114,54 +116,53 @@ export function Stem({
         </header>
         
         {/* Main Content Area */}
-        <div className="flex-grow flex overflow-hidden">
-            <ScrollArea className="flex-grow h-full">
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 p-4">
-                    {leafList.length > 0 ? (
-                        leafList.map(leaf => (
-                            <div key={leaf.id} className="aspect-[4/5]">
+        <div className="flex-grow flex flex-col justify-center items-center overflow-hidden p-6">
+            {leafList.length > 0 ? (
+                <Carousel
+                    opts={{
+                        align: 'start',
+                        dragFree: true,
+                    }}
+                    className="w-full max-w-6xl"
+                >
+                    <CarouselContent className="-ml-4 py-4">
+                        {leafList.map(leaf => (
+                            <CarouselItem key={leaf.id} className="basis-auto pl-4">
                                 <Leaf 
                                     leaf={leaf}
                                     onClick={() => onSelectLeaf(leaf)}
                                     isSelected={selectedLeaf?.id === leaf.id}
                                 />
-                            </div>
-                        ))
-                    ) : (
-                        <div className="col-span-full flex-grow flex flex-col items-center justify-center text-center text-muted-foreground p-8 bg-background/50 rounded-lg">
-                            <p className="font-heading text-xl">This stem is empty.</p>
-                            <p className="mb-4">Plant your first skill to get started.</p>
-                            <Button onClick={onAddLeaf}>
-                                <PlusCircle className="mr-2" /> Plant a Skill
-                            </Button>
-                        </div>
-                    )}
+                            </CarouselItem>
+                        ))}
+                    </CarouselContent>
+                    <CarouselPrevious className="absolute left-[-50px] top-1/2 -translate-y-1/2" />
+                    <CarouselNext className="absolute right-[-50px] top-1/2 -translate-y-1/2" />
+                </Carousel>
+            ) : (
+                <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-8">
+                    <p className="font-heading text-xl">This stem is empty.</p>
+                    <p className="mb-4">Plant your first skill to get started.</p>
+                    <Button onClick={onAddLeaf}>
+                        <PlusCircle className="mr-2" /> Plant a Skill
+                    </Button>
                 </div>
-            </ScrollArea>
-            
-            <AnimatePresence>
-                {selectedLeaf && (
-                     <motion.div
-                        key={selectedLeaf.id}
-                        initial={{ width: 0, opacity: 0 }}
-                        animate={{ width: 450, opacity: 1 }}
-                        exit={{ width: 0, opacity: 0 }}
-                        transition={{ duration: 0.3, ease: 'easeInOut' }}
-                        className="bg-background border-l shrink-0 h-full overflow-hidden"
-                     >
-                        <LeafDetails 
-                            leaf={selectedLeaf}
-                            onSave={onSaveLeaf}
-                            onDelete={() => onDeleteLeaf(selectedLeaf.id)}
-                            onClose={() => onSelectLeaf(null)}
-                            stemName={stem.name}
-                        />
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            )}
         </div>
-
       </div>
+
+      {selectedLeaf && (
+         <LeafDetails 
+            key={selectedLeaf.id}
+            leaf={selectedLeaf}
+            onSave={onSaveLeaf}
+            onDelete={() => onDeleteLeaf(selectedLeaf.id)}
+            isOpen={!!selectedLeaf}
+            onOpenChange={(open) => { if (!open) onSelectLeaf(null); }}
+            stemName={stem.name}
+        />
+      )}
+
       <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -181,4 +182,3 @@ export function Stem({
     </>
   );
 }
-
