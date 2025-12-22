@@ -14,10 +14,20 @@ interface LeafProps {
 }
 
 const getMasteryColor = (mastery: number): string => {
-  if (mastery < 25) return 'hsl(var(--mastery-1))';
-  if (mastery < 50) return 'hsl(var(--mastery-2))';
-  if (mastery < 75) return 'hsl(var(--mastery-3))';
-  return 'hsl(var(--mastery-4))';
+  if (mastery <= 0) return 'hsl(var(--muted-foreground) / 0.5)';
+  if (mastery >= 100) return 'hsl(var(--mastery-4))';
+
+  // Define HSL color stops
+  const startColor = { h: 215, s: 16, l: 47 }; // Muted Foreground
+  const endColor = { h: 145, s: 70, l: 30 };   // Mastery-4 Green
+
+  // Calculate interpolated HSL values
+  const percentage = mastery / 100;
+  const h = startColor.h + (endColor.h - startColor.h) * percentage;
+  const s = startColor.s + (endColor.s - startColor.s) * percentage;
+  const l = startColor.l + (endColor.l - startColor.l) * percentage;
+  
+  return `hsl(${h}, ${s}%, ${l}%)`;
 };
 
 export function Leaf({ leaf, onClick, searchQuery = '', isSelected }: LeafProps) {
@@ -43,7 +53,11 @@ export function Leaf({ leaf, onClick, searchQuery = '', isSelected }: LeafProps)
                   'size-16 transition-all duration-300 group-hover:scale-110',
                   isSelected && 'scale-110'
               )}
-              style={{ color, fill: isSelected ? `${color}33` : `${color}1A`}}
+              style={{ 
+                  color, 
+                  fill: isSelected ? `${color}4D` : `${color}26`,
+                  transition: 'color 300ms ease-in-out, fill 300ms ease-in-out'
+              }}
           />
       </div>
       <p className="w-24 text-center text-xs font-medium text-foreground truncate">
