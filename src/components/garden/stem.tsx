@@ -116,7 +116,7 @@ export function Stem({
         </header>
         
         {/* Main Content Area */}
-        <div className="flex-grow flex flex-col justify-center items-center overflow-hidden p-6">
+        <div className="flex-grow flex flex-col justify-start items-center overflow-hidden p-6 pt-12">
             {leafList.length > 0 ? (
                 <Carousel
                     opts={{
@@ -140,7 +140,7 @@ export function Stem({
                     <CarouselNext className="absolute right-[-50px] top-1/2 -translate-y-1/2" />
                 </Carousel>
             ) : (
-                <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-8">
+                <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-8 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
                     <p className="font-heading text-xl">This stem is empty.</p>
                     <p className="mb-4">Plant your first skill to get started.</p>
                     <Button onClick={onAddLeaf}>
