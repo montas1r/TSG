@@ -19,6 +19,7 @@ import Fuse from 'fuse.js';
 import { safeSetDoc, safeUpdateDoc } from '@/lib/firestore-safe';
 import { EditStemDialog } from './garden/edit-stem-dialog';
 import { curatedIcons, colorPalette } from '@/lib/icon-colors';
+import { ConfirmationToast } from '@/components/ui/confirmation-toast';
 
 export function Dashboard({ user }: { user: User }) {
   const [selectedLeaf, setSelectedLeaf] = useState<LeafType | null>(null);
@@ -32,6 +33,19 @@ export function Dashboard({ user }: { user: User }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStemId, setSelectedStemId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  
+  // State for the new confirmation toast
+  const [confirmationState, setConfirmationState] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    onConfirm: (() => void) | null;
+  }>({
+    isOpen: false,
+    title: '',
+    description: '',
+    onConfirm: null,
+  });
 
   const firestore = useFirestore();
 
@@ -220,42 +234,52 @@ export function Dashboard({ user }: { user: User }) {
     }
   }, [firestore, user]);
 
-  const handleDeleteStem = useCallback(async (stemIdToDelete: string) => {
-    if (!firestore || !user || !stems) return;
+  const requestDeleteStem = useCallback((stemToDelete: StemType) => {
+    setConfirmationState({
+      isOpen: true,
+      title: `Delete "${stemToDelete.name}"?`,
+      description: 'This will delete the stem and all its skills. This is irreversible.',
+      onConfirm: () => {
+        if (!firestore || !user || !stems) return;
 
-    // --- State update logic ---
-    if (selectedStemId === stemIdToDelete) {
-      const currentIndex = stems.findIndex(s => s.id === stemIdToDelete);
-      const newIndex = currentIndex > 0 ? currentIndex - 1 : (stems.length > 1 ? 0 : -1);
-
-      if (newIndex !== -1) {
-        const remainingStems = stems.filter(s => s.id !== stemIdToDelete);
-        setSelectedStemId(remainingStems[newIndex].id);
-      } else {
-        setSelectedStemId(null);
-      }
-    }
-  
-    // --- Firestore deletion logic ---
-    try {
-      const batch = writeBatch(firestore);
+        // --- State update logic ---
+        if (selectedStemId === stemToDelete.id) {
+          const currentIndex = stems.findIndex(s => s.id === stemToDelete.id);
+          const remainingStems = stems.filter(s => s.id !== stemToDelete.id);
+          if (remainingStems.length > 0) {
+            const newIndex = Math.max(0, currentIndex -1);
+            setSelectedStemId(remainingStems[newIndex].id);
+          } else {
+            setSelectedStemId(null);
+          }
+        }
       
-      const leavesQuery = query(collection(firestore, 'users', user.uid, 'leaves'), where("stemId", "==", stemIdToDelete));
-      const leavesSnapshot = await getDocs(leavesQuery);
-      
-      leavesSnapshot.forEach((leafDoc) => {
-        batch.delete(leafDoc.ref);
-      });
-      
-      const stemRef = doc(firestore, 'users', user.uid, 'stems', stemIdToDelete);
-      batch.delete(stemRef);
-      
-      await batch.commit();
-  
-    } catch (error) {
-      console.error("Error deleting stem and associated leaves: ", error);
-    }
+        // --- Firestore deletion logic ---
+        const deleteStemAndLeaves = async () => {
+            try {
+            const batch = writeBatch(firestore);
+            
+            const leavesQuery = query(collection(firestore, 'users', user.uid, 'leaves'), where("stemId", "==", stemToDelete.id));
+            const leavesSnapshot = await getDocs(leavesQuery);
+            
+            leavesSnapshot.forEach((leafDoc) => {
+                batch.delete(leafDoc.ref);
+            });
+            
+            const stemRef = doc(firestore, 'users', user.uid, 'stems', stemToDelete.id);
+            batch.delete(stemRef);
+            
+            await batch.commit();
+        
+            } catch (error) {
+            console.error("Error deleting stem and associated leaves: ", error);
+            }
+        }
+        deleteStemAndLeaves();
+      },
+    });
   }, [firestore, user, stems, selectedStemId]);
+
   
   const handleAddLeaf = (name: string, stemId: string) => {
     if (!firestore || !user) return;
@@ -312,6 +336,18 @@ export function Dashboard({ user }: { user: User }) {
 
   return (
     <div className="h-screen w-full bg-muted/30 font-body">
+        
+      <ConfirmationToast
+        isOpen={confirmationState.isOpen}
+        title={confirmationState.title}
+        description={confirmationState.description}
+        onConfirm={() => {
+            confirmationState.onConfirm?.();
+            setConfirmationState({ isOpen: false, title: '', description: '', onConfirm: null });
+        }}
+        onCancel={() => setConfirmationState({ isOpen: false, title: '', description: '', onConfirm: null })}
+      />
+
       <div className="h-full w-full flex max-w-screen-2xl mx-auto">
         <Sidebar
             stems={gardenWithLeaves}
@@ -340,7 +376,7 @@ export function Dashboard({ user }: { user: User }) {
               onAddLeaf={handleOpenAddLeaf}
               onSuggestSkills={handleOpenSuggestSkills}
               onEditStem={handleOpenEditStem}
-              onDeleteStem={handleDeleteStem}
+              onRequestDeleteStem={requestDeleteStem}
             />
           ) : (
             <div className="flex-grow flex flex-col items-center justify-center text-center p-8">

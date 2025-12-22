@@ -1,23 +1,13 @@
 
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import type { Leaf as LeafType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Wand2, MoreHorizontal, Pencil, Edit, Trash2 } from 'lucide-react';
 import { calculateMasteryLevel } from '@/lib/utils';
 import type { Stem as StemTypeWithLeaves } from '@/lib/types';
 import { LeafDetails } from './leaf-details-sheet';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,7 +33,7 @@ interface StemProps {
   onAddLeaf: () => void;
   onSuggestSkills: () => void;
   onEditStem: () => void;
-  onDeleteStem: (stemId: string) => void;
+  onRequestDeleteStem: (stem: StemTypeWithLeaves) => void;
 }
 
 export function Stem({ 
@@ -55,10 +45,9 @@ export function Stem({
     onAddLeaf, 
     onSuggestSkills,
     onEditStem,
-    onDeleteStem,
+    onRequestDeleteStem,
 }: StemProps) {
   const leafList = stem.leaves || [];
-  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   
   const stemMastery = useMemo(() => {
     if (!leafList || leafList.length === 0) return 0;
@@ -66,14 +55,15 @@ export function Stem({
     return totalMastery / leafList.length;
   }, [leafList]);
 
-  const handleDeleteConfirm = () => {
-    // 1. Close the dialog
-    setIsDeleteAlertOpen(false);
-    // 2. Close the sheet if it's open
-    onSelectLeaf(null);
-    // 3. Call the delete function passed from parent
-    onDeleteStem(stem.id);
+  const handleDeleteRequest = () => {
+    // 1. Close the sheet if it's open for a leaf within this stem.
+    if (selectedLeaf && selectedLeaf.stemId === stem.id) {
+        onSelectLeaf(null);
+    }
+    // 2. Call the delete request function passed from parent.
+    onRequestDeleteStem(stem);
   };
+
 
   return (
     <>
@@ -112,7 +102,7 @@ export function Stem({
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
                     className="text-destructive focus:text-destructive"
-                    onClick={() => setIsDeleteAlertOpen(true)}
+                    onClick={handleDeleteRequest}
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
                     Delete Stem
@@ -169,23 +159,6 @@ export function Stem({
             stemName={stem.name}
         />
       )}
-
-      <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete the "{stem.name}" stem and all of its skills. This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
