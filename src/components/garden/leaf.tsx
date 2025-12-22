@@ -5,6 +5,7 @@ import type { Leaf as LeafType } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Highlight } from '@/components/ui/highlight';
 import { Leaf as LeafIcon } from 'lucide-react';
+import { HSL, parseToHsl, toColorString } from 'polished';
 
 interface LeafProps {
   leaf: LeafType;
@@ -14,20 +15,32 @@ interface LeafProps {
 }
 
 const getMasteryColor = (mastery: number): string => {
-  if (mastery <= 0) return 'hsl(var(--muted-foreground) / 0.5)';
-  if (mastery >= 100) return 'hsl(var(--mastery-4))';
+    const p = mastery / 100;
 
-  // Define HSL color stops
-  const startColor = { h: 215, s: 16, l: 47 }; // Muted Foreground
-  const endColor = { h: 145, s: 70, l: 30 };   // Mastery-4 Green
+    // Define HSL color stops based on your hex codes
+    const stops: HSL[] = [
+        parseToHsl('#D1D5DB'), // 0% gray-300
+        parseToHsl('#FBBF24'), // 25% amber-400
+        parseToHsl('#F59E0B'), // 50% amber-500
+        parseToHsl('#10B981'), // 75% green-500
+        parseToHsl('#34D399'), // 100% green-400
+    ];
 
-  // Calculate interpolated HSL values
-  const percentage = mastery / 100;
-  const h = startColor.h + (endColor.h - startColor.h) * percentage;
-  const s = startColor.s + (endColor.s - startColor.s) * percentage;
-  const l = startColor.l + (endColor.l - startColor.l) * percentage;
-  
-  return `hsl(${h}, ${s}%, ${l}%)`;
+    if (p <= 0) return toColorString(stops[0]);
+    if (p >= 1) return toColorString(stops[4]);
+
+    const numStops = stops.length - 1;
+    const stopIndex = Math.floor(p * numStops);
+    const localP = (p * numStops) % 1;
+
+    const startColor = stops[stopIndex];
+    const endColor = stops[stopIndex + 1];
+
+    const h = startColor.hue + (endColor.hue - startColor.hue) * localP;
+    const s = startColor.saturation + (endColor.saturation - startColor.saturation) * localP;
+    const l = startColor.lightness + (endColor.lightness - startColor.lightness) * localP;
+
+    return toColorString({ hue: h, saturation: s, lightness: l });
 };
 
 export function Leaf({ leaf, onClick, searchQuery = '', isSelected }: LeafProps) {
