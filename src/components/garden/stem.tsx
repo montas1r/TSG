@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo, useState } from 'react';
@@ -136,8 +137,8 @@ export function Stem({
                             </CarouselItem>
                         ))}
                     </CarouselContent>
-                    <CarouselPrevious className="absolute left-[-50px] top-1/2 -translate-y-1/2" />
-                    <CarouselNext className="absolute right-[-50px] top-1/2 -translate-y-1/2" />
+                    <CarouselPrevious className="absolute left-[-20px] top-1/2 -translate-y-1/2" />
+                    <CarouselNext className="absolute right-[-20px] top-1/2 -translate-y-1/2" />
                 </Carousel>
             ) : (
                 <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-8 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
