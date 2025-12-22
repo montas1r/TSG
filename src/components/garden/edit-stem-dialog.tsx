@@ -14,7 +14,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useState, useEffect } from 'react';
 import { Textarea } from '../ui/textarea';
-import { IconPicker, ColorPicker } from './icon-picker';
 import type { Stem } from '@/lib/types';
 
 interface EditStemDialogProps {
@@ -27,15 +26,11 @@ interface EditStemDialogProps {
 export function EditStemDialog({ isOpen, onOpenChange, stem, onEditStem }: EditStemDialogProps) {
   const [name, setName] = useState(stem.name);
   const [description, setDescription] = useState(stem.description || '');
-  const [icon, setIcon] = useState(stem.icon || 'Sprout');
-  const [color, setColor] = useState(stem.color || '#8b5cf6');
 
   useEffect(() => {
     if (stem) {
       setName(stem.name);
       setDescription(stem.description || '');
-      setIcon(stem.icon || 'Sprout');
-      setColor(stem.color || '#8b5cf6');
     }
   }, [stem]);
 
@@ -45,8 +40,6 @@ export function EditStemDialog({ isOpen, onOpenChange, stem, onEditStem }: EditS
         ...stem,
         name: name.trim(),
         description: description.trim(),
-        icon,
-        color,
       });
       onOpenChange(false);
     }
@@ -62,10 +55,7 @@ export function EditStemDialog({ isOpen, onOpenChange, stem, onEditStem }: EditS
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          <div className="flex items-center gap-4">
-            <IconPicker value={icon} onChange={setIcon} />
-            <ColorPicker value={color} onChange={setColor} />
-            <div className="flex-grow space-y-2">
+          <div className="space-y-2">
               <Label htmlFor="stem-name-edit">Stem Name</Label>
               <Input
                 id="stem-name-edit"
@@ -74,7 +64,6 @@ export function EditStemDialog({ isOpen, onOpenChange, stem, onEditStem }: EditS
                 placeholder="e.g., Creative Writing"
                 autoFocus
               />
-            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="stem-description-edit">Description (Optional)</Label>
