@@ -313,7 +313,7 @@ export function Dashboard({ user }: { user: User }) {
             onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         />
         
-        <main className="flex-grow h-screen flex flex-col">
+        <main className="flex-grow h-screen flex flex-col overflow-hidden">
           {selectedStem ? (
             <Stem 
               key={selectedStem.id}
