@@ -119,12 +119,13 @@ export function Stem({
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 p-4">
                     {leafList.length > 0 ? (
                         leafList.map(leaf => (
-                            <Leaf 
-                                key={leaf.id}
-                                leaf={leaf}
-                                onClick={() => onSelectLeaf(leaf)}
-                                isSelected={selectedLeaf?.id === leaf.id}
-                            />
+                            <div key={leaf.id} className="aspect-[4/5]">
+                                <Leaf 
+                                    leaf={leaf}
+                                    onClick={() => onSelectLeaf(leaf)}
+                                    isSelected={selectedLeaf?.id === leaf.id}
+                                />
+                            </div>
                         ))
                     ) : (
                         <div className="col-span-full flex-grow flex flex-col items-center justify-center text-center text-muted-foreground p-8 bg-background/50 rounded-lg">
@@ -180,3 +181,4 @@ export function Stem({
     </>
   );
 }
+
