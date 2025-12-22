@@ -15,18 +15,19 @@ export async function suggestSkillsForStem(stemName: string, existingSkills: str
   const prompt = `You are an AI learning assistant. Your task is to generate a list of 8-12 unique skills (Leaves) for a given category (Stem).
 
 Input Stem: "${stemName}"
-${existingSkills.length > 0 ? `The user already has these skills, so avoid suggesting them again: ${existingSkills.join(', ')}.` : ''}
+${existingSkills.length > 0 ? `The user already has these skills, so you MUST avoid suggesting them again: ${existingSkills.join(', ')}.` : ''}
 
 Rules:
-1. Generate 8-12 unique skills.
+1. Generate 8-12 unique skills. Do not repeat skills from the "avoid" list.
 2. Skills must be specific, actionable, and relevant to the Stem.
-3. Provide a short description for each skill.
-4. Vary the complexity (beginner, intermediate, advanced).
-5. Respond strictly in a valid JSON array of objects.
+3. Provide a short, one-sentence description for each skill.
+4. Vary the complexity (e.g., beginner, intermediate, advanced).
+5. Respond strictly in a valid JSON array of objects. Do not add any other text, markdown, or explanations before or after the JSON.
 
-JSON format:
+JSON format example:
 [
-  { "name": "Skill Name", "description": "A short, actionable description." }
+  { "name": "Skill Name 1", "description": "A short, actionable description." },
+  { "name": "Skill Name 2", "description": "Another short, actionable description." }
 ]
 
 JSON array:`;
@@ -61,21 +62,20 @@ JSON array:`;
 }
 
 export async function suggestRelatedSkillBundles(currentSkills: string[] = []): Promise<{ stem: string; leaves: string[] }[]> {
-   const prompt = `You are an AI skill-assistant. Your task is to generate a diverse list of skill categories (Stems).
+   const prompt = `You are an AI skill-discovery assistant. Your task is to generate a diverse list of 10 unique skill categories (Stems), each bundled with 4-5 beginner-level skills (Leaves).
 
 Rules:
-1. Generate at least 10 unique Stems.
-2. Ensure no repetition within the list.
-3. For each Stem, provide a unique name and a short, one-sentence description.
-4. Cover a wide variety of domains: technical, creative, professional, personal growth, wellness, digital skills, hobbies.
-5. Randomize the order of the list.
-6. If the user has existing skills, suggest related but distinct new Stems. User's current skills are: ${currentSkills.join(', ')}.
-7. Respond strictly in a valid JSON array of objects. Do not add any other text, markdown, or explanations.
+1. Generate exactly 10 unique "Stem" bundles.
+2. For each Stem, provide a unique name and 4-5 relevant beginner "Leaf" skills.
+3. Cover a wide variety of domains: technical, creative, professional, personal growth, wellness, digital skills, hobbies.
+4. Randomize the order of the list to ensure variety on each request.
+5. If the user has existing skills, suggest related but distinct new Stems. User's current skills are: ${currentSkills.join(', ')}. Do NOT suggest stems that are too similar to these.
+6. Respond strictly in a valid JSON array of objects. Do not add any other text, markdown, or explanations before or after the JSON.
 
-JSON format:
+JSON format example:
 [
-  { "name": "Web Development", "description": "Learn to build websites and web apps.", "leaves": ["HTML & CSS", "JavaScript Basics", "Intro to React", "Building a Backend API"] },
-  { "name": "Digital Illustration", "description": "Create artwork using digital tools.", "leaves": ["Drawing Fundamentals", "Color Theory", "Using Procreate/Photoshop", "Character Design"] }
+  { "stem": "Web Development", "leaves": ["HTML & CSS", "JavaScript Basics", "Intro to React", "Building a Backend API"] },
+  { "stem": "Digital Illustration", "leaves": ["Drawing Fundamentals", "Color Theory", "Using Procreate/Photoshop", "Character Design"] }
 ]
 
 JSON array:`;
@@ -115,16 +115,17 @@ export async function generateQuests(
   const prompt = `You are a learning assistant. Your task is to generate a list of 5-8 small, actionable tasks (Quests) for a given skill.
 
 Input Skill: "${skillName}"
-${existingQuests.length > 0 ? `The user has already completed these quests, so suggest the next logical steps: ${existingQuests.join(', ')}.` : ''}
+${existingQuests.length > 0 ? `The user has already completed these quests, so you MUST suggest the next logical steps and NOT repeat these: ${existingQuests.join(', ')}.` : ''}
 
 Rules:
 1. Generate 5-8 unique Quests.
 2. Quests must be short, actionable, and incremental.
-3. Include a variety of tasks: practice exercises, reading, small projects.
+3. Include a variety of task types: practice exercises, reading articles, watching videos, building small projects, etc.
 4. Randomize wording to increase variety.
+5. Return ONLY a valid JSON array of strings. Do not add any other text, markdown, or explanations.
 
-Return ONLY a valid JSON array of strings.
-Example: ["Read the official documentation", "Build a simple counter component", "Follow a video tutorial"]
+JSON array example:
+["Read the official documentation for useState", "Build a simple counter component", "Follow a video tutorial on useEffect"]
 
 JSON array:`;
 
