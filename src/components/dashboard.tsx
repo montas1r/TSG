@@ -16,8 +16,9 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { v4 as uuidv4 } from 'uuid';
 import { Sidebar } from './garden/sidebar';
 import Fuse from 'fuse.js';
-import { safeSetDoc } from '@/lib/firestore-safe';
+import { safeSetDoc, safeUpdateDoc } from '@/lib/firestore-safe';
 import { EditStemDialog } from './garden/edit-stem-dialog';
+import { curatedIcons, colorPalette } from '@/lib/icon-colors';
 
 export function Dashboard({ user }: { user: User }) {
   const [selectedLeaf, setSelectedLeaf] = useState<LeafType | null>(null);
@@ -182,20 +183,20 @@ export function Dashboard({ user }: { user: User }) {
     setSelectedLeaf(null);
   }, [firestore, user?.uid]);
 
-  const handleAddStem = (name: string, description: string, icon: string, color: string) => {
+  const handleAddStem = (name: string, description: string) => {
     if (!firestore || !user) return;
     const stemId = uuidv4();
     const newStem: Omit<StemType, 'leaves'> = {
       name,
       description,
-      icon,
-      color,
+      icon: curatedIcons[Math.floor(Math.random() * curatedIcons.length)],
+      color: colorPalette[Math.floor(Math.random() * colorPalette.length)],
       userId: user.uid,
       id: stemId,
       createdAt: new Date().toISOString()
     };
     const stemRef = doc(firestore, 'users', user.uid, 'stems', stemId);
-    safeSetDoc(stemRef, newStem, { merge: false });
+    safeSetDoc(stemRef, newStem);
     setSelectedStemId(stemId);
   };
   
@@ -207,57 +208,54 @@ export function Dashboard({ user }: { user: User }) {
 
   const handleEditStem = useCallback(async (updatedStemData: Omit<StemType, 'leaves'>) => {
     if (!firestore || !user) return;
-
+  
+    // We only allow name and description to be edited.
+    const { name, description } = updatedStemData;
     const stemRef = doc(firestore, 'users', user.uid, 'stems', updatedStemData.id);
-    const { id, userId, createdAt, ...dataToUpdate } = updatedStemData;
     
     try {
-      await updateDoc(stemRef, dataToUpdate);
+      await safeUpdateDoc(stemRef, { name, description });
     } catch (error) {
       console.error("Error updating stem: ", error);
     }
   }, [firestore, user]);
 
-  const handleDeleteStem = async (stemIdToDelete: string) => {
+  const handleDeleteStem = useCallback(async (stemIdToDelete: string) => {
     if (!firestore || !user || !stems) return;
+
+    // --- State update logic ---
+    if (selectedStemId === stemIdToDelete) {
+      const currentIndex = stems.findIndex(s => s.id === stemIdToDelete);
+      const newIndex = currentIndex > 0 ? currentIndex - 1 : (stems.length > 1 ? 0 : -1);
+
+      if (newIndex !== -1) {
+        const remainingStems = stems.filter(s => s.id !== stemIdToDelete);
+        setSelectedStemId(remainingStems[newIndex].id);
+      } else {
+        setSelectedStemId(null);
+      }
+    }
   
+    // --- Firestore deletion logic ---
     try {
-      // --- Batch delete logic ---
       const batch = writeBatch(firestore);
+      
       const leavesQuery = query(collection(firestore, 'users', user.uid, 'leaves'), where("stemId", "==", stemIdToDelete));
       const leavesSnapshot = await getDocs(leavesQuery);
+      
       leavesSnapshot.forEach((leafDoc) => {
         batch.delete(leafDoc.ref);
       });
+      
       const stemRef = doc(firestore, 'users', user.uid, 'stems', stemIdToDelete);
       batch.delete(stemRef);
+      
       await batch.commit();
-      // --- End batch delete ---
-  
-      // --- State update logic ---
-      // Check if the deleted stem was the currently selected one
-      if (selectedStemId === stemIdToDelete) {
-        // Find the index of the deleted stem in the current list
-        const deletedIndex = stems.findIndex(s => s.id === stemIdToDelete);
-        
-        // Filter out the deleted stem to get the new list
-        const remainingStems = stems.filter(s => s.id !== stemIdToDelete);
-        
-        if (remainingStems.length > 0) {
-          // If there are stems left, select the one that was next, or the previous one, or the first one.
-          const newIndex = Math.max(0, Math.min(deletedIndex, remainingStems.length - 1));
-          setSelectedStemId(remainingStems[newIndex].id);
-        } else {
-          // If no stems are left, set selection to null
-          setSelectedStemId(null);
-        }
-      }
-      // If a different stem was deleted, no need to change the selection.
   
     } catch (error) {
       console.error("Error deleting stem and associated leaves: ", error);
     }
-  };
+  }, [firestore, user, stems, selectedStemId]);
   
   const handleAddLeaf = (name: string, stemId: string) => {
     if (!firestore || !user) return;
@@ -272,7 +270,7 @@ export function Dashboard({ user }: { user: User }) {
         quests: []
     };
     const leafRef = doc(firestore, 'users', user.uid, 'leaves', leafId);
-    safeSetDoc(leafRef, newLeaf, { merge: false });
+    safeSetDoc(leafRef, newLeaf);
   };
   
   const handleAddMultipleLeaves = (names: string[], stemId: string) => {
@@ -292,7 +290,7 @@ export function Dashboard({ user }: { user: User }) {
       description: 'AI-suggested skills'
     };
     const stemRef = doc(firestore, 'users', user.uid, 'stems', stemId);
-    safeSetDoc(stemRef, newStem, { merge: false });
+    safeSetDoc(stemRef, newStem);
 
     leafNames.forEach(leafName => {
         handleAddLeaf(leafName, stemId);
@@ -401,5 +399,3 @@ export function Dashboard({ user }: { user: User }) {
     </div>
   );
 }
-
-    
