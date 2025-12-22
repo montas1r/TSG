@@ -61,22 +61,21 @@ JSON array:`;
 }
 
 export async function suggestRelatedSkillBundles(currentSkills: string[] = []): Promise<{ stem: string; leaves: string[] }[]> {
-   const prompt = `
-You are an AI skill-assistant. Your task is to generate a diverse list of 10-15 unique skill categories (Stems), each with a list of 4-5 beginner skills (Leaves).
+   const prompt = `You are an AI skill-assistant. Your task is to generate a diverse list of skill categories (Stems).
 
 Rules:
-1.  Generate **10-15 unique Stems**.
-2.  Cover a wide variety of domains: technical, creative, professional, personal growth, hobbies.
-3.  For each Stem, provide a list of 4-5 specific, beginner-friendly skills.
-4.  If the user has existing skills, suggest related but distinct new Stems. User's current skills are: ${currentSkills.join(', ')}.
-5.  Respond **only** with a valid, clean JSON array of objects. Do not add any other text, markdown, or explanations.
+1. Generate at least 10 unique Stems.
+2. Ensure no repetition within the list.
+3. For each Stem, provide a unique name and a short, one-sentence description.
+4. Cover a wide variety of domains: technical, creative, professional, personal growth, wellness, digital skills, hobbies.
+5. Randomize the order of the list.
+6. If the user has existing skills, suggest related but distinct new Stems. User's current skills are: ${currentSkills.join(', ')}.
+7. Respond strictly in a valid JSON array of objects. Do not add any other text, markdown, or explanations.
 
 JSON format:
 [
-  {
-    "stem": "Stem Name",
-    "leaves": ["Leaf Name 1", "Leaf Name 2", "Leaf Name 3", "Leaf Name 4"]
-  }
+  { "name": "Web Development", "description": "Learn to build websites and web apps.", "leaves": ["HTML & CSS", "JavaScript Basics", "Intro to React", "Building a Backend API"] },
+  { "name": "Digital Illustration", "description": "Create artwork using digital tools.", "leaves": ["Drawing Fundamentals", "Color Theory", "Using Procreate/Photoshop", "Character Design"] }
 ]
 
 JSON array:`;
