@@ -41,16 +41,16 @@ export function Dashboard({ user }: { user: User }) {
   const { data: allLeavesFlat, isLoading: areLeavesLoading } = useCollection<LeafType>(allLeavesQuery);
   
   useEffect(() => {
-    // If there's no selected stem, and stems are available, select the first one.
     if (!selectedStemId && stems && stems.length > 0) {
       setSelectedStemId(stems[0].id);
       return;
     }
   
-    // If a stem is selected, but it no longer exists in the `stems` list (e.g., it was deleted),
-    // then update the selection to a valid one.
     if (selectedStemId && stems && !stems.some(s => s.id === selectedStemId)) {
-      setSelectedStemId(stems.length > 0 ? stems[0].id : null);
+      const newSelectedStemId = stems.length > 0 ? stems[0].id : null;
+      if (selectedStemId !== newSelectedStemId) {
+        setSelectedStemId(newSelectedStemId);
+      }
     }
   }, [stems, selectedStemId]);
 
@@ -209,11 +209,9 @@ export function Dashboard({ user }: { user: User }) {
     if (!firestore || !user) return;
 
     const stemRef = doc(firestore, 'users', user.uid, 'stems', updatedStemData.id);
-    // Destructure to remove fields that should not be updated directly or are immutable
     const { id, userId, createdAt, ...dataToUpdate } = updatedStemData;
     
     try {
-      // Using updateDoc to only change specified fields
       await updateDoc(stemRef, dataToUpdate);
     } catch (error) {
       console.error("Error updating stem: ", error);
@@ -298,53 +296,55 @@ export function Dashboard({ user }: { user: User }) {
   }
 
   return (
-    <div className="flex h-screen w-full bg-muted/30 font-body">
-      <Sidebar
-          stems={gardenWithLeaves}
-          selectedStemId={selectedStemId}
-          onSelectStem={setSelectedStemId}
-          onAddStem={() => setIsAddStemOpen(true)}
-          onGetSuggestions={() => setIsSuggestionOpen(true)}
-          onSearch={setSearchQuery}
-          searchQuery={searchQuery}
-          user={user}
-          searchResults={searchResults}
-          onSearchResultClick={handleSearchResultClick}
-          isSidebarOpen={isSidebarOpen}
-          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-      />
-      
-      <main className="flex-grow h-screen flex flex-col">
-        {selectedStem ? (
-          <Stem 
-            key={selectedStem.id}
-            stem={selectedStem}
-            onSelectLeaf={handleSelectLeaf}
-            selectedLeaf={selectedLeaf}
-            onSaveLeaf={handleSaveLeaf}
-            onDeleteLeaf={handleDeleteLeaf}
-            onAddLeaf={handleOpenAddLeaf}
-            onSuggestSkills={handleOpenSuggestSkills}
-            onEditStem={handleOpenEditStem}
-            onDeleteStem={handleDeleteStem}
-          />
-        ) : (
-          <div className="flex-grow flex flex-col items-center justify-center text-center p-8">
-            <h3 className="font-heading text-4xl text-primary">Welcome to your Skill Garden!</h3>
-            <p className="mt-4 max-w-md text-lg text-muted-foreground">
-              Your garden is a place to cultivate new talents. Start by planting a "Stem" — a category for the skills you want to grow.
-            </p>
-            <div className="mt-8 flex gap-4">
-              <Button onClick={() => setIsAddStemOpen(true)} size="lg">
-                Plant Your First Stem
-              </Button>
-               <Button onClick={() => setIsSuggestionOpen(true)} size="lg" variant="outline">
-                Get AI Suggestions
-              </Button>
+    <div className="h-screen w-full bg-muted/30 font-body">
+      <div className="h-full w-full flex max-w-screen-2xl mx-auto">
+        <Sidebar
+            stems={gardenWithLeaves}
+            selectedStemId={selectedStemId}
+            onSelectStem={setSelectedStemId}
+            onAddStem={() => setIsAddStemOpen(true)}
+            onGetSuggestions={() => setIsSuggestionOpen(true)}
+            onSearch={setSearchQuery}
+            searchQuery={searchQuery}
+            user={user}
+            searchResults={searchResults}
+            onSearchResultClick={handleSearchResultClick}
+            isSidebarOpen={isSidebarOpen}
+            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        />
+        
+        <main className="flex-grow h-screen flex flex-col">
+          {selectedStem ? (
+            <Stem 
+              key={selectedStem.id}
+              stem={selectedStem}
+              onSelectLeaf={handleSelectLeaf}
+              selectedLeaf={selectedLeaf}
+              onSaveLeaf={handleSaveLeaf}
+              onDeleteLeaf={handleDeleteLeaf}
+              onAddLeaf={handleOpenAddLeaf}
+              onSuggestSkills={handleOpenSuggestSkills}
+              onEditStem={handleOpenEditStem}
+              onDeleteStem={handleDeleteStem}
+            />
+          ) : (
+            <div className="flex-grow flex flex-col items-center justify-center text-center p-8">
+              <h3 className="font-heading text-4xl text-primary">Welcome to your Skill Garden!</h3>
+              <p className="mt-4 max-w-md text-lg text-muted-foreground">
+                Your garden is a place to cultivate new talents. Start by planting a "Stem" — a category for the skills you want to grow.
+              </p>
+              <div className="mt-8 flex gap-4">
+                <Button onClick={() => setIsAddStemOpen(true)} size="lg">
+                  Plant Your First Stem
+                </Button>
+                 <Button onClick={() => setIsSuggestionOpen(true)} size="lg" variant="outline">
+                  Get AI Suggestions
+                </Button>
+              </div>
             </div>
-          </div>
-        )}
-      </main>
+          )}
+        </main>
+      </div>
       
       <AddStemDialog
         isOpen={isAddStemOpen}
